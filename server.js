@@ -146,14 +146,17 @@ wss.on('connection', ws => {
 
         pushRoomList();
 
-        // Auto-start cuando esté llena
-        if (room.players.length >= room.max) startMatch(room);
+        // Auto-start cuando esté llena (pequeño delay para que el cliente procese room_joined primero)
+        if (room.players.length >= room.max) {
+          setTimeout(() => { if (!room.closed && room.state === 'waiting') startMatch(room); }, 300);
+        }
         break;
       }
 
       // ── FORZAR START (solo host) ──────────────────────────
       case 'force_start': {
-        if (!room || !me || me.slot !== 0 || room.state !== 'waiting' || room.players.length < 2) return;
+        if (!room || !me || me.slot !== 0 || room.state !== 'waiting') return;
+        if (room.players.length < 2) { send(me.ws, {type:'join_err', msg:'Necesitas al menos 2 jugadores'}); return; }
         startMatch(room);
         break;
       }
