@@ -1418,11 +1418,19 @@ function onShowScreen(id){
 // ── WEBSOCKET ─────────────────────────────────────────────────
 function onConnect(){
   if(onWS&&onWS.readyState<=1) return;
-  try{ onWS=new WebSocket(ONLINE_SRV); }catch(e){ onLobbyErr('No se pudo conectar'); return; }
-  onWS.onopen=()=>{};
-  onWS.onmessage=e=>onMsg(JSON.parse(e.data));
-  onWS.onclose=()=>{ if(onActive) onSetErr('Conexion perdida'); };
-  onWS.onerror=()=>onLobbyErr('Error de conexion');
+  const errEl=document.getElementById('duel-lobby-err');
+  if(errEl) errEl.textContent='Conectando...';
+  try{ onWS=new WebSocket(ONLINE_SRV); }catch(e){ onLobbyErr('No se pudo conectar al servidor'); return; }
+  onWS.onopen=()=>{
+    if(errEl) errEl.textContent='';
+    onSend({type:'get_rooms'});
+  };
+  onWS.onmessage=e=>{ try{ onMsg(JSON.parse(e.data)); }catch(err){ console.error('onMsg error:',err); } };
+  onWS.onclose=e=>{
+    if(onActive) onSetErr('Conexion perdida');
+    else onLobbyErr('Desconectado (code '+e.code+')');
+  };
+  onWS.onerror=()=>onLobbyErr('Error de conexion con el servidor');
 }
 function onDisconnect(){ if(onWS){onWS.onclose=null;onWS.close();onWS=null;} }
 function onSend(msg){ if(onWS&&onWS.readyState===1) onWS.send(JSON.stringify(msg)); }
@@ -1456,13 +1464,25 @@ function onRoomJoined(msg){
     ONLINE_SRV.replace('wss://','https://').replace('ws://','http://');
   document.getElementById('duel-force-start').style.display=msg.slot===0?'block':'none';
   onRenderWaitingPlayers(msg.max);
+  onUpdateStartBtn();
   onShowScreen('duel-waiting-screen');
 }
 function onPlayerJoined(p){
   if(!onWaitPlayers.find(x=>x.slot===p.slot)) onWaitPlayers.push(p);
   onPlayerNames.set(p.slot,p.name);
   onRenderWaitingPlayers();
+  onUpdateStartBtn();
   if(onThreeReady) onAddOppMesh(p.slot,p.team);
+}
+function onUpdateStartBtn(){
+  const btn=document.getElementById('duel-force-start');
+  if(!btn) return;
+  const ready=onWaitPlayers.length>=2;
+  btn.style.background=ready?'#00ff88':'#555566';
+  btn.style.color=ready?'#000':'#aaa';
+  btn.style.boxShadow=ready?'0 0 18px rgba(0,255,136,.5)':'none';
+  btn.textContent=ready?'\u25ba INICIAR PARTIDA':'\u23f3 ESPERANDO JUGADORES...';
+  btn.style.cursor=ready?'pointer':'default';
 }
 function onRenderWaitingPlayers(max){
   const el=document.getElementById('duel-players-in-room'); el.innerHTML='';
@@ -1641,7 +1661,7 @@ function onBuildLights(){
   onScene.add(new THREE.AmbientLight(0xffffff,.78));
   const sun=new THREE.DirectionalLight(0xfff4cc,1.3); sun.position.set(12,22,8); sun.castShadow=true;
   sun.shadow.mapSize.width=sun.shadow.mapSize.height=2048; onScene.add(sun);
-  onScene.add(Object.assign(new THREE.DirectionalLight(0x88aaff,.35),{position:new THREE.Vector3(-10,10,-15)}));
+  const fill=new THREE.DirectionalLight(0x88aaff,.35); fill.position.set(-10,10,-15); onScene.add(fill);
 }
 
 // ── PERSONAJE ROBLOX ──────────────────────────────────────────
@@ -1679,8 +1699,8 @@ function onCreateRobloxChar(teamColor){
 
   // Zapatos
   const sg=new THREE.BoxGeometry(.23,.1,.26);
-  g.add(Object.assign(new THREE.Mesh(sg,shoe),{position:new THREE.Vector3(-.13,.12,.03)}));
-  g.add(Object.assign(new THREE.Mesh(sg,shoe),{position:new THREE.Vector3(.13,.12,.03)}));
+  const sh1=new THREE.Mesh(sg,shoe); sh1.position.set(-.13,.12,.03); g.add(sh1);
+  const sh2=new THREE.Mesh(sg,shoe); sh2.position.set(.13,.12,.03); g.add(sh2);
 
   // Hitbox invisible
   const hb=new THREE.Mesh(new THREE.BoxGeometry(.52,1.95,.52),new THREE.MeshBasicMaterial({visible:false}));
