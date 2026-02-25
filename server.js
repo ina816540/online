@@ -82,6 +82,11 @@ wss.on('connection', ws => {
 
     switch (msg.type) {
 
+      // ── PING / PONG (medición de latencia) ────────────────
+      case 'ping':
+        send(ws, { type:'pong', t: msg.t });
+        break;
+
       // ── LISTAR SALAS ──────────────────────────────────────
       case 'get_rooms':
         send(ws, { type:'room_list', rooms: getRoomList() });
@@ -99,7 +104,8 @@ wss.on('connection', ws => {
           isPrivate: !!msg.isPrivate,
           password: msg.isPrivate ? (msg.password || '').substring(0, 20) : '',
           players: [], teamScores: [0, 0], pScores: {},
-          state: 'waiting', closed: false
+          state: 'waiting', closed: false,
+          chatHistory: []
         };
         rooms.set(room.id, room);
         me = { ws, slot:0, team:0, name:(msg.playerName||'Jugador').substring(0,20), alive:true };
@@ -136,7 +142,8 @@ wss.on('connection', ws => {
         send(ws, {
           type:'room_joined', roomId:room.id, slot, team, spawn,
           mode:room.mode, max:room.max, name:room.name, firstTo:room.firstTo,
-          players: room.players.map(p => ({ slot:p.slot, team:p.team, name:p.name, spawn:getSpawn(room,p) }))
+          players: room.players.map(p => ({ slot:p.slot, team:p.team, name:p.name, spawn:getSpawn(room,p) })),
+          chatHistory: room.chatHistory || []
         });
 
         // Notificar a los demás
@@ -144,12 +151,30 @@ wss.on('connection', ws => {
           if (p !== me) send(p.ws, { type:'player_joined', slot, team, name:me.name, spawn });
         });
 
+        // Mensaje de sistema en chat
+        const joinMsg = { type:'chat_msg', sender:'SISTEMA', text: me.name + ' se unió a la sala', system:true, t: Date.now() };
+        room.chatHistory.push(joinMsg);
+        if (room.chatHistory.length > 50) room.chatHistory.shift();
+        room.players.forEach(p => send(p.ws, joinMsg));
+
         pushRoomList();
 
-        // Auto-start cuando esté llena (pequeño delay para que el cliente procese room_joined primero)
+        // Auto-start cuando esté llena
         if (room.players.length >= room.max) {
           setTimeout(() => { if (!room.closed && room.state === 'waiting') startMatch(room); }, 300);
         }
+        break;
+      }
+
+      // ── CHAT ──────────────────────────────────────────────
+      case 'chat': {
+        if (!room || !me) return;
+        const text = (msg.text || '').substring(0, 80).trim();
+        if (!text) return;
+        const chatMsg = { type:'chat_msg', sender: me.name, slot: me.slot, text, system:false, t: Date.now() };
+        room.chatHistory.push(chatMsg);
+        if (room.chatHistory.length > 50) room.chatHistory.shift();
+        room.players.forEach(p => send(p.ws, chatMsg));
         break;
       }
 
@@ -161,11 +186,18 @@ wss.on('connection', ws => {
         break;
       }
 
-      // ── ESTADO (posición) ─────────────────────────────────
+      // ── ESTADO (posición + pitch) ─────────────────────────
       case 'state':
         if (!room || !me) return;
         room.players.forEach(p => {
-          if (p !== me) send(p.ws, { type:'opp_state', slot:me.slot, pos:msg.pos, yaw:msg.yaw });
+          if (p !== me) send(p.ws, {
+            type:'opp_state',
+            slot: me.slot,
+            pos:  msg.pos,
+            yaw:  msg.yaw,
+            pitch: msg.pitch || 0,   // ← ahora se retransmite el pitch
+            posY:  msg.posY  || 0    // ← y la altura (salto)
+          });
         });
         break;
 
