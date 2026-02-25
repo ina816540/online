@@ -5,136 +5,236 @@ const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 3000;
 
-// ── HTTP: serve index.html ──────────────────────────────────
 const server = http.createServer((req, res) => {
-  const filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
-  fs.readFile(filePath, (err, data) => {
+  const fp = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+  fs.readFile(fp, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not found'); return; }
-    const types = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css' };
-    res.writeHead(200, { 'Content-Type': types[path.extname(filePath)] || 'text/plain' });
+    const t = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css' };
+    res.writeHead(200, { 'Content-Type': t[path.extname(fp)] || 'text/plain' });
     res.end(data);
   });
 });
 
-// ── WebSocket ───────────────────────────────────────────────
 const wss = new WebSocketServer({ server });
 
-const rooms    = new Map();
-let   nextRoom = 1;
-const MAX_KILLS = 6;
+// ── CONFIGURACIÓN DE MODOS ───────────────────────────────────
+const MODE_CFG = {
+  '1v1': { perTeam:1, max:2,  firstTo:6,  teams:2 },
+  '2v2': { perTeam:2, max:4,  firstTo:10, teams:2 },
+  '3v3': { perTeam:3, max:6,  firstTo:15, teams:2 },
+  '4v4': { perTeam:4, max:8,  firstTo:20, teams:2 },
+  'ffa': { perTeam:0, max:8,  firstTo:10, teams:0 }
+};
 
-const SPAWNS = [
-  { x: -13, z: -10, yaw: 0.75 },              // slot 0 → equipo rojo
-  { x:  13, z:  10, yaw: -Math.PI + 0.75 }    // slot 1 → equipo azul
+// Spawns por equipo (hasta 4 por equipo)
+const TEAM_SP = [
+  [ {x:-14,z:-12,yaw:0.75}, {x:-12,z:-5,yaw:0.6}, {x:-15,z:1,yaw:0.35}, {x:-11,z:-17,yaw:0.9} ],
+  [ {x:14,z:12,yaw:-Math.PI+0.75}, {x:12,z:5,yaw:-Math.PI+0.6}, {x:15,z:-1,yaw:-Math.PI+0.35}, {x:11,z:17,yaw:-Math.PI+0.9} ]
+];
+const FFA_SP = [
+  {x:-14,z:-12,yaw:0.75}, {x:14,z:12,yaw:-Math.PI+0.75},
+  {x:-14,z:12,yaw:-0.75}, {x:14,z:-12,yaw:Math.PI-0.75},
+  {x:0,z:-16,yaw:0},      {x:0,z:16,yaw:Math.PI},
+  {x:-16,z:0,yaw:Math.PI/2}, {x:16,z:0,yaw:-Math.PI/2}
 ];
 
-function getRoom() {
-  for (const r of rooms.values())
-    if (r.players.length < 2 && !r.closed) return r;
-  const r = { id: nextRoom++, players: [], scores: [0, 0], closed: false };
-  rooms.set(r.id, r);
-  return r;
+const rooms   = new Map();
+const clients = new Set();
+let   nextId  = 1;
+
+// ── HELPERS ──────────────────────────────────────────────────
+function getSpawn(room, player) {
+  if (room.mode === 'ffa') return FFA_SP[player.slot % 8];
+  const teammates = room.players.filter(p => p.team === player.team);
+  const idx = teammates.findIndex(p => p === player);
+  return TEAM_SP[player.team][Math.max(0, idx) % 4];
 }
 
-function send(player, msg) {
-  if (player.ws.readyState === 1) player.ws.send(JSON.stringify(msg));
+function send(ws, msg) {
+  if (ws.readyState === 1) ws.send(JSON.stringify(msg));
 }
 
-function opp(room, player) {
-  return room.players.find(p => p !== player) || null;
+function broadcastAll(msg) {
+  const s = JSON.stringify(msg);
+  for (const ws of clients) if (ws.readyState === 1) ws.send(s);
 }
 
+function getRoomList() {
+  return Array.from(rooms.values())
+    .filter(r => !r.closed && r.state === 'waiting')
+    .map(r => ({ id:r.id, name:r.name, mode:r.mode, players:r.players.length, max:r.max, isPrivate:r.isPrivate }));
+}
+
+function pushRoomList() {
+  broadcastAll({ type:'room_list', rooms: getRoomList() });
+}
+
+// ── WEBSOCKET ────────────────────────────────────────────────
 wss.on('connection', ws => {
-  let room = null;
-  let me   = null;
+  clients.add(ws);
+  let room = null, me = null;
+
+  // Enviar lista al conectar
+  send(ws, { type:'room_list', rooms: getRoomList() });
 
   ws.on('message', raw => {
-    let msg;
-    try { msg = JSON.parse(raw.toString()); } catch { return; }
-
-    // ── JOIN ──────────────────────────────────────────────
-    if (msg.type === 'join') {
-      room = getRoom();
-      const slot = room.players.length;
-      me = { ws, slot, name: (msg.name || 'Jugador').substring(0, 20), alive: true };
-      room.players.push(me);
-
-      send(me, { type: 'joined', slot, spawn: SPAWNS[slot], name: me.name });
-
-      if (room.players.length === 2) {
-        const [p0, p1] = room.players;
-        send(p0, { type: 'start', opponent: { name: p1.name, slot: 1, spawn: SPAWNS[1] } });
-        send(p1, { type: 'start', opponent: { name: p0.name, slot: 0, spawn: SPAWNS[0] } });
-      } else {
-        send(me, { type: 'waiting' });
-      }
-      return;
-    }
-
-    if (!room || !me) return;
-    const opponent = opp(room, me);
+    let msg; try { msg = JSON.parse(raw.toString()); } catch { return; }
 
     switch (msg.type) {
 
-      // ── POSITION STATE ─────────────────────────────────
+      // ── LISTAR SALAS ──────────────────────────────────────
+      case 'get_rooms':
+        send(ws, { type:'room_list', rooms: getRoomList() });
+        break;
+
+      // ── CREAR SALA ────────────────────────────────────────
+      case 'create_room': {
+        if (room) return;
+        const mode = msg.mode in MODE_CFG ? msg.mode : '1v1';
+        const cfg  = MODE_CFG[mode];
+        room = {
+          id: nextId++,
+          name: (msg.name || 'Sala').substring(0, 30),
+          mode, max: cfg.max, firstTo: cfg.firstTo,
+          isPrivate: !!msg.isPrivate,
+          password: msg.isPrivate ? (msg.password || '').substring(0, 20) : '',
+          players: [], teamScores: [0, 0], pScores: {},
+          state: 'waiting', closed: false
+        };
+        rooms.set(room.id, room);
+        me = { ws, slot:0, team:0, name:(msg.playerName||'Jugador').substring(0,20), alive:true };
+        room.players.push(me);
+        room.pScores[me.name] = 0;
+        send(ws, {
+          type:'room_joined', roomId:room.id, slot:0, team:0,
+          spawn: getSpawn(room, me), mode:room.mode, max:room.max,
+          name:room.name, firstTo:room.firstTo,
+          players:[{ slot:0, team:0, name:me.name, spawn:getSpawn(room,me) }]
+        });
+        pushRoomList();
+        break;
+      }
+
+      // ── UNIRSE A SALA ─────────────────────────────────────
+      case 'join_room': {
+        if (room) return;
+        const r = rooms.get(msg.roomId);
+        if (!r)                            { send(ws,{type:'join_err',msg:'Sala no encontrada'}); return; }
+        if (r.state !== 'waiting')         { send(ws,{type:'join_err',msg:'Partida en curso'}); return; }
+        if (r.players.length >= r.max)     { send(ws,{type:'join_err',msg:'Sala llena'}); return; }
+        if (r.isPrivate && r.password !== (msg.password||'')) { send(ws,{type:'join_err',msg:'Contraseña incorrecta'}); return; }
+
+        room = r;
+        const slot = room.players.length;
+        const team = room.mode === 'ffa' ? slot : slot % 2;
+        me = { ws, slot, team, name:(msg.playerName||'Jugador').substring(0,20), alive:true };
+        room.players.push(me);
+        room.pScores[me.name] = 0;
+        const spawn = getSpawn(room, me);
+
+        // Enviar al que entra: info completa de la sala
+        send(ws, {
+          type:'room_joined', roomId:room.id, slot, team, spawn,
+          mode:room.mode, max:room.max, name:room.name, firstTo:room.firstTo,
+          players: room.players.map(p => ({ slot:p.slot, team:p.team, name:p.name, spawn:getSpawn(room,p) }))
+        });
+
+        // Notificar a los demás
+        room.players.forEach(p => {
+          if (p !== me) send(p.ws, { type:'player_joined', slot, team, name:me.name, spawn });
+        });
+
+        pushRoomList();
+
+        // Auto-start cuando esté llena
+        if (room.players.length >= room.max) startMatch(room);
+        break;
+      }
+
+      // ── FORZAR START (solo host) ──────────────────────────
+      case 'force_start': {
+        if (!room || !me || me.slot !== 0 || room.state !== 'waiting' || room.players.length < 2) return;
+        startMatch(room);
+        break;
+      }
+
+      // ── ESTADO (posición) ─────────────────────────────────
       case 'state':
-        if (opponent) send(opponent, {
-          type: 'opp_state',
-          pos:   msg.pos,
-          yaw:   msg.yaw,
-          pitch: msg.pitch
+        if (!room || !me) return;
+        room.players.forEach(p => {
+          if (p !== me) send(p.ws, { type:'opp_state', slot:me.slot, pos:msg.pos, yaw:msg.yaw });
         });
         break;
 
-      // ── SHOOT VISUAL ──────────────────────────────────
+      // ── DISPARO VISUAL ────────────────────────────────────
       case 'shoot':
-        if (opponent) send(opponent, { type: 'opp_shoot' });
+        if (!room || !me) return;
+        room.players.forEach(p => { if (p !== me) send(p.ws, { type:'opp_shoot', slot:me.slot }); });
         break;
 
-      // ── HIT ───────────────────────────────────────────
-      case 'hit':
-        if (!me.alive || !opponent || !opponent.alive) return;
+      // ── HIT ───────────────────────────────────────────────
+      case 'hit': {
+        if (!room || !me || !me.alive) return;
+        const victim = room.players.find(p => p.slot === msg.victimSlot);
+        if (!victim || !victim.alive) return;
+        if (room.mode !== 'ffa' && me.team === victim.team) return; // sin FF
 
-        opponent.alive = false;
-        room.scores[me.slot]++;
+        victim.alive = false;
 
-        const matchOver = room.scores[me.slot] >= MAX_KILLS;
-        const killMsg   = {
-          type:      'kill',
-          killer:    me.slot,
-          victim:    opponent.slot,
-          scores:    [...room.scores],
-          matchOver
+        if (room.mode === 'ffa') {
+          room.pScores[me.name] = (room.pScores[me.name] || 0) + 1;
+        } else {
+          room.teamScores[me.team]++;
+        }
+
+        const myScore = room.mode === 'ffa' ? room.pScores[me.name] : room.teamScores[me.team];
+        const matchOver = myScore >= room.firstTo;
+
+        const killMsg = {
+          type:'kill', killerSlot:me.slot, victimSlot:victim.slot,
+          killerTeam:me.team, teamScores:[...room.teamScores],
+          pScores:{...room.pScores}, matchOver
         };
-        room.players.forEach(p => send(p, killMsg));
+        room.players.forEach(p => send(p.ws, killMsg));
 
-        if (!matchOver) {
-          // Reaparición 3 s
+        if (matchOver) {
+          room.state = 'finished'; room.closed = true;
+          setTimeout(() => rooms.delete(room.id), 15000);
+          pushRoomList();
+        } else {
           setTimeout(() => {
             if (room.closed) return;
-            room.players.forEach(p => { p.alive = true; });
-            room.players.forEach((p, i) =>
-              send(p, { type: 'respawn', spawn: SPAWNS[i] })
-            );
+            victim.alive = true;
+            const vs = getSpawn(room, victim);
+            send(victim.ws, { type:'respawn', spawn:vs });
+            room.players.forEach(p => {
+              if (p !== victim) send(p.ws, { type:'player_respawn', slot:victim.slot, spawn:vs });
+            });
           }, 3000);
-        } else {
-          room.closed = true;
-          setTimeout(() => rooms.delete(room.id), 10000);
         }
         break;
+      }
     }
   });
 
-  // ── DISCONNECT ──────────────────────────────────────────
+  // ── DESCONEXIÓN ───────────────────────────────────────────
   ws.on('close', () => {
+    clients.delete(ws);
     if (!room || room.closed) return;
-    room.closed = true;
-    const opponent = opp(room, me);
-    if (opponent) send(opponent, { type: 'opp_disconnect' });
+    room.closed = true; room.state = 'finished';
+    room.players.forEach(p => {
+      if (p !== me) send(p.ws, { type:'opp_disconnect', slot:me?.slot??-1, name:me?.name??'' });
+    });
     rooms.delete(room.id);
+    pushRoomList();
   });
 });
 
-server.listen(PORT, () =>
-  console.log(`INA TRAINER 1v1 · servidor en puerto ${PORT}`)
-);
+function startMatch(room) {
+  room.state = 'playing';
+  const players = room.players.map(p => ({ slot:p.slot, team:p.team, name:p.name, spawn:getSpawn(room,p) }));
+  room.players.forEach(p => send(p.ws, { type:'start', players, mode:room.mode, firstTo:room.firstTo }));
+  pushRoomList();
+}
+
+server.listen(PORT, () => console.log(`INA TRAINER Online · puerto ${PORT}`));
