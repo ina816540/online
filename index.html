@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>INA TRAINER</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 :root{--bg:#05080f;--panel:#0a1020;--border:#0d2040;--accent:#e040fb;--accent2:#ff3d71;--accent3:#00e5ff;--green:#00ff88;--text:#dce8ff;--dim:#3a4a6a;}
@@ -240,29 +242,25 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 <!-- LOGIN -->
 <div class="screen" id="login-screen">
   <div class="login-logo"><h1>INA TRAINER</h1><p>ENTRENADOR FPS 3D · COMPETITIVO</p></div>
-  <div class="login-box">
+  <div class="login-box" style="align-items:center">
     <h3>✦ INICIAR SESIÓN</h3>
-    <div class="login-input-wrap">
-      <label>NOMBRE DE USUARIO</label>
-      <input class="login-input" id="username-input" type="text" placeholder="Tu nombre..." maxlength="20" autocomplete="off">
+    <p style="font-size:.6rem;color:var(--dim);text-align:center;letter-spacing:.1em">Inicia con tu cuenta de Google para guardar tus récords globales</p>
+    <div id="google-btn-wrap" style="margin:8px 0"></div>
+    <div style="font-size:.55rem;color:var(--dim);letter-spacing:.1em">— luego elige tu avatar —</div>
+    <div class="avatar-row" id="avatar-row" style="opacity:.4;pointer-events:none">
+      <span class="avatar-opt selected" data-av="🎯">🎯</span>
+      <span class="avatar-opt" data-av="🔫">🔫</span>
+      <span class="avatar-opt" data-av="⚡">⚡</span>
+      <span class="avatar-opt" data-av="🐺">🐺</span>
+      <span class="avatar-opt" data-av="🦊">🦊</span>
+      <span class="avatar-opt" data-av="💀">💀</span>
+      <span class="avatar-opt" data-av="🐉">🐉</span>
+      <span class="avatar-opt" data-av="🤖">🤖</span>
+      <span class="avatar-opt" data-av="👾">👾</span>
+      <span class="avatar-opt" data-av="🎮">🎮</span>
     </div>
-    <div class="login-input-wrap">
-      <label>ELIGE TU AVATAR</label>
-      <div class="avatar-row" id="avatar-row">
-        <span class="avatar-opt selected" data-av="🎯">🎯</span>
-        <span class="avatar-opt" data-av="🔫">🔫</span>
-        <span class="avatar-opt" data-av="⚡">⚡</span>
-        <span class="avatar-opt" data-av="🐺">🐺</span>
-        <span class="avatar-opt" data-av="🦊">🦊</span>
-        <span class="avatar-opt" data-av="💀">💀</span>
-        <span class="avatar-opt" data-av="🐉">🐉</span>
-        <span class="avatar-opt" data-av="🤖">🤖</span>
-        <span class="avatar-opt" data-av="👾">👾</span>
-        <span class="avatar-opt" data-av="🎮">🎮</span>
-      </div>
-    </div>
+    <button class="login-btn" id="login-btn" style="display:none;background:var(--accent)">▶ ENTRAR AL JUEGO</button>
     <div class="login-err" id="login-err"></div>
-    <button class="login-btn" id="login-btn">▶ ENTRAR</button>
   </div>
 </div>
 
@@ -545,7 +543,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 // ============================================================
 // USER SESSION
 // ============================================================
-let currentUser = null; // {name, avatar}
+let currentUser = null; // {name, avatar, googleId}
+
+const SUPABASE_URL = 'https://rcybdbmdxtmshljxkdid.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjeWJkYm1keHRtc2hsanhrZGlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Nzk1MDgsImV4cCI6MjA4NzU1NTUwOH0.kAe0HhfIwFbB49VP6jd8n7yUqH5Nhem-0OQuEsW-Nc8';
+const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function loadSession() {
   try {
@@ -558,8 +560,40 @@ function saveSession() {
 }
 loadSession();
 
-// Avatar selection
+// Google Sign-In
+let googleUser = null;
 let selectedAvatar = '🎯';
+
+function initGoogleSignIn() {
+  if(typeof google === 'undefined') { setTimeout(initGoogleSignIn, 200); return; }
+  google.accounts.id.initialize({
+    client_id: '504552503495-v6giesuen1q5umtt5m7ed0qnukht8ii0.apps.googleusercontent.com',
+    callback: onGoogleSignIn,
+    auto_select: false
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('google-btn-wrap'),
+    { theme:'filled_black', size:'large', text:'signin_with_google', locale:'es' }
+  );
+}
+
+function onGoogleSignIn(response) {
+  try {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    googleUser = { id: payload.sub, name: payload.name, email: payload.email, pic: payload.picture };
+    // Activar avatar picker y boton de entrar
+    const ar = document.getElementById('avatar-row');
+    ar.style.opacity='1'; ar.style.pointerEvents='auto';
+    document.getElementById('login-btn').style.display='block';
+    document.getElementById('login-err').textContent='';
+    document.getElementById('login-err').style.color='var(--green)';
+    document.getElementById('login-err').textContent='✓ Conectado como '+googleUser.name;
+  } catch(e) {
+    document.getElementById('login-err').style.color='var(--accent2)';
+    document.getElementById('login-err').textContent='⚠ Error al iniciar sesion';
+  }
+}
+
 document.querySelectorAll('.avatar-opt').forEach(o => o.addEventListener('click', () => {
   document.querySelectorAll('.avatar-opt').forEach(x => x.classList.remove('selected'));
   o.classList.add('selected');
@@ -567,14 +601,10 @@ document.querySelectorAll('.avatar-opt').forEach(o => o.addEventListener('click'
 }));
 
 document.getElementById('login-btn').addEventListener('click', doLogin);
-document.getElementById('username-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
 function doLogin() {
-  const name = document.getElementById('username-input').value.trim();
-  const err = document.getElementById('login-err');
-  if (!name) { err.textContent = '⚠ Ingresa un nombre de usuario'; return; }
-  if (name.length < 2) { err.textContent = '⚠ Mínimo 2 caracteres'; return; }
-  currentUser = { name, avatar: selectedAvatar };
+  if(!googleUser) { document.getElementById('login-err').textContent='⚠ Inicia sesion con Google primero'; return; }
+  currentUser = { name: googleUser.name.substring(0,20), avatar: selectedAvatar, googleId: googleUser.id };
   saveSession();
   showMenu();
 }
@@ -587,15 +617,21 @@ function showMenu() {
 }
 
 document.getElementById('logout-btn').addEventListener('click', () => {
-  currentUser = null;
+  currentUser = null; googleUser = null;
   try { localStorage.removeItem('ina_user'); } catch(e) {}
   document.getElementById('menu-screen').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
-  document.getElementById('username-input').value = '';
+  document.getElementById('login-err').textContent='';
+  document.getElementById('login-err').style.color='var(--accent2)';
+  google.accounts.id.disableAutoSelect();
 });
 
-// Auto login if session exists
-if (currentUser) showMenu();
+// Auto login si hay sesion guardada Y Google cargó
+if (currentUser) {
+  showMenu();
+} else {
+  initGoogleSignIn();
+}
 
 // ============================================================
 // STORAGE (leaderboard + stats)
@@ -628,26 +664,37 @@ function saveMyStats(stats) {
 }
 
 function submitScore(scoreData) {
-  // scoreData: {name, avatar, score, acc, mode, diff, ts}
+  // Local
   const entries = getLB();
   entries.push(scoreData);
-  // Keep only top 200
   entries.sort((a,b) => b.score-a.score);
   saveLB(entries.slice(0, 200));
-
-  // Update personal stats
   const stats = getMyStats();
   stats.games++;
   stats.totalHits += scoreData.hits || 0;
   stats.totalShots += scoreData.shots || 0;
   if (scoreData.score > stats.bestScore) stats.bestScore = scoreData.score;
   if ((scoreData.combo||0) > stats.bestCombo) stats.bestCombo = scoreData.combo||0;
-  // Mode record
   const mr = stats.modeRecords[scoreData.mode];
   if (!mr || scoreData.score > mr.score) {
     stats.modeRecords[scoreData.mode] = { score: scoreData.score, acc: scoreData.acc };
   }
   saveMyStats(stats);
+  // Global Supabase
+  if(currentUser && scoreData.score > 0) {
+    sbClient.from('scores').insert({
+      user_id: currentUser.googleId || currentUser.name,
+      name: currentUser.name,
+      avatar: currentUser.avatar,
+      score: scoreData.score,
+      accuracy: scoreData.acc || 0,
+      hits: scoreData.hits || 0,
+      shots: scoreData.shots || 0,
+      combo: scoreData.combo || 0,
+      mode: scoreData.mode,
+      difficulty: scoreData.diff || 'medium'
+    }).then(({error}) => { if(error) console.warn('Supabase insert error:', error.message); });
+  }
 }
 
 // ============================================================
@@ -672,38 +719,62 @@ document.getElementById('lb-tabs').querySelectorAll('.lb-tab').forEach(t => t.ad
   loadLB();
 }));
 
-function loadLB() {
+async function loadLB() {
   const body = document.getElementById('lb-body');
-  body.innerHTML = '<tr><td colspan="6" class="lb-loading">⟳ CARGANDO...</td></tr>';
+  body.innerHTML = '<tr><td colspan="6" class="lb-loading">⟳ CARGANDO RÉCORDS GLOBALES...</td></tr>';
+  try {
+    let q = sbClient.from('scores').select('*').order('score', {ascending:false}).limit(200);
+    if (lbMode !== 'all') q = q.eq('mode', lbMode);
+    const { data, error } = await q;
+    if (error) throw error;
+    // Dedup: best per user per mode
+    const best = {};
+    (data||[]).forEach(e => {
+      const key = (e.user_id||e.name) + '_' + e.mode;
+      if (!best[key] || e.score > best[key].score) best[key] = e;
+    });
+    let top = Object.values(best).sort((a,b) => b.score-a.score).slice(0,50);
+    if (top.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" class="lb-empty">🏆 Sin récords aún. ¡Sé el primero!</td></tr>';
+      return;
+    }
+    const entries = top; // continua el render abajo
+    renderLBRows(body, entries);
+    return;
+  } catch(e) {
+    console.warn('Supabase LB error:', e); // fallback a local
+  }
   let entries = getLB();
   if (lbMode !== 'all') entries = entries.filter(e => e.mode === lbMode);
-  // Sort by score, deduplicate (keep best per user per mode)
   const best = {};
   entries.forEach(e => {
     const key = e.name + '_' + e.mode;
     if (!best[key] || e.score > best[key].score) best[key] = e;
   });
   let top = Object.values(best).sort((a,b) => b.score-a.score).slice(0,50);
-
   if (top.length === 0) {
     body.innerHTML = '<tr><td colspan="6" class="lb-empty">🏆 Sin récords aún. ¡Sé el primero!</td></tr>';
     return;
   }
 
+  renderLBRows(body, top);
+}
+function renderLBRows(body, top) {
   body.innerHTML = '';
   top.forEach((e,i) => {
     const tr = document.createElement('tr');
-    const isMe = currentUser && e.name === currentUser.name;
+    const isMe = currentUser && (e.name === currentUser.name || e.user_id === currentUser.googleId);
     if (isMe) tr.classList.add('lb-me');
     const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'';
     const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-    const diffLabel = {easy:'FÁCIL',medium:'MEDIO',hard:'DIFÍCIL'}[e.diff]||e.diff||'—';
+    const diffLabel = {easy:'FÁCIL',medium:'MEDIO',hard:'DIFÍCIL'}[e.diff||e.difficulty]||(e.diff||e.difficulty||'—');
     const modeLabel = (MODES[e.mode]?.name)||e.mode||'—';
+    const acc = e.acc ?? e.accuracy ?? 0;
     tr.innerHTML = `
       <td><span class="lb-rank ${rankClass}">${medal||('#'+(i+1))}</span></td>
       <td><div class="lb-player"><span>${e.avatar||'🎯'}</span><span>${e.name}${isMe?' ★':''}</span></div></td>
       <td><span class="lb-score-val">${(e.score||0).toLocaleString()}</span></td>
-      <td><span class="lb-acc">${e.acc||0}%</span></td>
+      <td><span class="lb-acc">${acc}%</span></td>
       <td style="color:var(--dim)">${modeLabel}</td>
       <td style="color:var(--dim)">${diffLabel}</td>`;
     body.appendChild(tr);
@@ -1442,7 +1513,10 @@ function onMsg(msg){
     case 'player_joined': onPlayerJoined(msg); break;
     case 'start':       setTimeout(()=>onStartGame(msg), 150); break;
     case 'opp_state':   onUpdateOpp(msg.slot,msg.pos,msg.yaw); break;
-    case 'opp_shoot':   break;
+    case 'opp_shoot': {
+      const o=onOpps.get(msg.slot); if(o&&o.group.userData.anim) o.group.userData.anim.shootT=1;
+      break;
+    }
     case 'kill':        onTeamScores=msg.teamScores; onPScores=msg.pScores; onHandleKill(msg); break;
     case 'respawn':     onHandleRespawn(msg.spawn); break;
     case 'player_respawn': onHandlePlayerRespawn(msg.slot,msg.spawn); break;
@@ -1673,39 +1747,85 @@ function onCreateRobloxChar(teamColor){
   const skin=new THREE.MeshPhongMaterial({color:0xffcc99});
   const shoe=new THREE.MeshPhongMaterial({color:0x111111});
 
-  // Cabeza cuadrada
+  // Cabeza
   const head=new THREE.Mesh(new THREE.BoxGeometry(.46,.46,.46),skin); head.position.y=1.62; head.castShadow=true; g.add(head);
-  // Ojos
   const eyeM=new THREE.MeshBasicMaterial({color:0x111122});
-  [-1,1].forEach(sx=>{
-    const e=new THREE.Mesh(new THREE.BoxGeometry(.09,.09,.02),eyeM); e.position.set(sx*.12,1.65,.24); g.add(e);
-  });
-  // Casco (color del equipo)
+  [-1,1].forEach(sx=>{ const e=new THREE.Mesh(new THREE.BoxGeometry(.09,.09,.02),eyeM); e.position.set(sx*.12,1.65,.24); g.add(e); });
   const hat=new THREE.Mesh(new THREE.BoxGeometry(.5,.1,.5),mat); hat.position.y=1.88; g.add(hat);
   const hatTop=new THREE.Mesh(new THREE.BoxGeometry(.38,.14,.38),mat); hatTop.position.y=1.98; g.add(hatTop);
 
   // Torso
   const torso=new THREE.Mesh(new THREE.BoxGeometry(.5,.56,.26),mat); torso.position.y=1.09; torso.castShadow=true; g.add(torso);
 
-  // Brazos (box style)
-  const ag=new THREE.BoxGeometry(.19,.5,.19);
-  const aL=new THREE.Mesh(ag,mat); aL.position.set(-.35,1.1,0); g.add(aL);
-  const aR=new THREE.Mesh(ag,dark); aR.position.set(.35,1.1,0); g.add(aR);
+  // Brazos con pivot en el hombro
+  const aLPivot=new THREE.Object3D(); aLPivot.position.set(-.35,1.37,0); g.add(aLPivot);
+  const aLMesh=new THREE.Mesh(new THREE.BoxGeometry(.19,.5,.19),mat); aLMesh.position.y=-.25; aLPivot.add(aLMesh);
+  const aRPivot=new THREE.Object3D(); aRPivot.position.set(.35,1.37,0); g.add(aRPivot);
+  const aRMesh=new THREE.Mesh(new THREE.BoxGeometry(.19,.5,.19),dark); aRMesh.position.y=-.25; aRPivot.add(aRMesh);
 
-  // Piernas
-  const lg=new THREE.BoxGeometry(.21,.5,.21);
-  const lL=new THREE.Mesh(lg,dark); lL.position.set(-.13,.43,0); g.add(lL);
-  const lR=new THREE.Mesh(lg,dark); lR.position.set(.13,.43,0); g.add(lR);
+  // Piernas con pivot en la cadera
+  const lLPivot=new THREE.Object3D(); lLPivot.position.set(-.13,.72,0); g.add(lLPivot);
+  const lLMesh=new THREE.Mesh(new THREE.BoxGeometry(.21,.5,.21),dark); lLMesh.position.y=-.25; lLPivot.add(lLMesh);
+  const lRPivot=new THREE.Object3D(); lRPivot.position.set(.13,.72,0); g.add(lRPivot);
+  const lRMesh=new THREE.Mesh(new THREE.BoxGeometry(.21,.5,.21),dark); lRMesh.position.y=-.25; lRPivot.add(lRMesh);
 
   // Zapatos
   const sg=new THREE.BoxGeometry(.23,.1,.26);
   const sh1=new THREE.Mesh(sg,shoe); sh1.position.set(-.13,.12,.03); g.add(sh1);
   const sh2=new THREE.Mesh(sg,shoe); sh2.position.set(.13,.12,.03); g.add(sh2);
 
-  // Hitbox invisible
+  // Hitbox
   const hb=new THREE.Mesh(new THREE.BoxGeometry(.52,1.95,.52),new THREE.MeshBasicMaterial({visible:false}));
   hb.position.y=.975; g.add(hb); g.userData.hitbox=hb;
+
+  // Guardar refs para animar
+  g.userData.limbs={head,torso,aL:aLPivot,aR:aRPivot,lL:lLPivot,lR:lRPivot};
+  g.userData.anim={walkPhase:0,shootT:0,deathT:0,dead:false,prevX:null,prevZ:null,idleT:Math.random()*100};
   return g;
+}
+
+function onAnimateChar(g, dt){
+  const L=g.userData.limbs; const A=g.userData.anim;
+  if(!L||!A) return;
+  A.idleT+=dt;
+
+  // Detectar movimiento
+  const px=g.position.x, pz=g.position.z;
+  const moved = A.prevX!==null && (Math.abs(px-A.prevX)>.004||Math.abs(pz-A.prevZ)>.004);
+  A.prevX=px; A.prevZ=pz;
+
+  // DEATH
+  if(A.dead){
+    A.deathT=Math.min(1,A.deathT+dt*3.5);
+    g.rotation.z=A.deathT*Math.PI*.48;
+    g.position.y=-A.deathT*.55;
+    return;
+  }
+
+  // Idle bob
+  const idleY=Math.sin(A.idleT*1.1)*.018;
+  g.position.y=idleY;
+
+  // Walk
+  if(moved) A.walkPhase+=dt*9;
+  const sw=Math.sin(A.walkPhase);
+  const blend=moved?1:0;
+  const walkAmt=sw*.52*blend;
+  L.lL.rotation.x=walkAmt; L.lR.rotation.x=-walkAmt;
+  L.aL.rotation.x=-walkAmt*.7; L.aR.rotation.x=walkAmt*.7;
+  if(!moved){ L.lL.rotation.x*=.85; L.lR.rotation.x*=.85; L.aL.rotation.x*=.85; L.aR.rotation.x*=.85; }
+
+  // Head bob (walk)
+  L.head.position.y=1.62+Math.abs(sw)*.025*blend;
+
+  // Shoot
+  if(A.shootT>0){
+    A.shootT=Math.max(0,A.shootT-dt*7);
+    L.aR.rotation.x=-Math.PI*.35*A.shootT;
+    L.torso.rotation.x=A.shootT*.12;
+  } else {
+    L.torso.rotation.x*=.88;
+  }
 }
 
 function onAddOppMesh(slot,team){
@@ -1752,7 +1872,9 @@ function onUpdateOpp(slot,pos,yaw){
   o.group.visible=true; o.group.position.set(pos.x,0,pos.z); o.group.rotation.y=yaw;
 }
 function onHandlePlayerRespawn(slot,spawn){
-  const o=onOpps.get(slot); if(o&&spawn) o.group.position.set(spawn.x,0,spawn.z);
+  const o=onOpps.get(slot);
+  if(o&&spawn){ o.group.position.set(spawn.x,0,spawn.z); }
+  if(o&&o.group.userData.anim){ const a=o.group.userData.anim; a.dead=false; a.deathT=0; o.group.rotation.z=0; o.group.position.y=0; }
 }
 
 // ── DISPARO (con colision de paredes) ─────────────────────────
@@ -1837,7 +1959,7 @@ function onStartGame(msg){
     const dt=Math.min((now-last)/1000,.05); last=now;
     fF++; fA+=dt;
     if(fA>=.5){ document.getElementById('duel-fps-hud').textContent=Math.round(fF/fA)+' FPS'; fF=0; fA=0; }
-    if(onActive){ onMove(dt); onApplyCam(); onAnimGun(dt); }
+    if(onActive){ onMove(dt); onApplyCam(); onAnimGun(dt); onAnimateAllChars(dt); }
     onRenderer.render(onScene,onCamera);
   }
   onLoop(performance.now());
@@ -1857,8 +1979,10 @@ function onHandleKill(msg){
     document.getElementById('duel-kill-notif').style.opacity='1';
     setTimeout(()=>document.getElementById('duel-kill-notif').style.opacity='0',1600);
     onAddFeed(onMyName+' \u27a4 '+victimName,'#44ff88');
+    const vOpp=onOpps.get(msg.victimSlot); if(vOpp&&vOpp.group.userData.anim){vOpp.group.userData.anim.dead=true;vOpp.group.userData.anim.deathT=0;}
   } else {
     onAddFeed(killerName+' \u27a4 '+victimName,'#aaaaaa');
+    const vOpp2=onOpps.get(msg.victimSlot); if(vOpp2&&vOpp2.group.userData.anim){vOpp2.group.userData.anim.dead=true;vOpp2.group.userData.anim.deathT=0;}
   }
   if(msg.matchOver){
     const won=msg.killerTeam===onMyTeam||msg.killerSlot===onMySlot;
@@ -1934,6 +2058,14 @@ document.getElementById('duel-canvas').addEventListener('click',()=>{
 });
 document.addEventListener('keydown',e=>{ onKeys[e.key]=true; });
 document.addEventListener('keyup',  e=>{ onKeys[e.key]=false; });
+
+
+function onAnimateAllChars(dt){
+  onOpps.forEach(opp=>{ if(opp.group&&opp.group.visible) onAnimateChar(opp.group,dt); });
+}
+function onAnimateAllChars(dt){
+  onOpps.forEach(opp=>{ if(opp.group.visible) onAnimateChar(opp.group,dt); });
+}
 
 </script>
 </body>
