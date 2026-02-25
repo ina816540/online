@@ -259,6 +259,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <span class="avatar-opt" data-av="👾">👾</span>
       <span class="avatar-opt" data-av="🎮">🎮</span>
     </div>
+    <div class="login-input-wrap" id="username-wrap" style="opacity:.4;pointer-events:none;width:100%">
+      <label>NOMBRE EN EL JUEGO <span style="color:var(--dim);font-size:.5rem">(puedes cambiarlo para mayor privacidad)</span></label>
+      <input class="login-input" id="custom-username" maxlength="20" placeholder="Tu nombre en el juego..." autocomplete="off">
+    </div>
     <button class="login-btn" id="login-btn" style="display:none;background:var(--accent)">▶ ENTRAR AL JUEGO</button>
     <div class="login-err" id="login-err"></div>
   </div>
@@ -524,7 +528,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <!-- Kill feed -->
   <div id="duel-kill-feed" style="position:absolute;top:82px;right:14px;display:flex;flex-direction:column;gap:4px"></div>
   <!-- Controls hint -->
-  <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">WASD MOVER · MOUSE APUNTAR · CLIC DISPARAR</div>
+  <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">WASD MOVER · MOUSE APUNTAR · CLIC DISPARAR · ESPACIO SALTAR</div>
 </div>
 
 <!-- 1v1 LOCK OVERLAY -->
@@ -532,7 +536,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div style="font-family:'Orbitron',monospace;font-size:1.5rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">⚔ 1v1 · INA MAP</div>
   <div style="font-size:.68rem;letter-spacing:.13em;color:var(--dim);text-align:center;line-height:2">
     VS <strong id="duel-opp-name-lock" style="color:#ff3d71">Rival</strong><br>
-    <strong style="color:var(--accent)">WASD</strong> mover · <strong style="color:var(--accent)">MOUSE</strong> apuntar · <strong style="color:var(--accent)">CLIC</strong> disparar · <strong style="color:var(--accent)">ESC</strong> pausar
+    <strong style="color:var(--accent)">WASD</strong> mover · <strong style="color:var(--accent)">MOUSE</strong> apuntar · <strong style="color:var(--accent)">CLIC</strong> disparar · <strong style="color:var(--accent)">ESPACIO</strong> saltar · <strong style="color:var(--accent)">ESC</strong> pausar
   </div>
   <button class="lock-btn" id="duel-lock-btn" style="background:#ff3d71">🖱 CLIC PARA JUGAR</button>
   <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim)" id="duel-lock-team">—</div>
@@ -584,6 +588,9 @@ function onGoogleSignIn(response) {
     // Activar avatar picker y boton de entrar
     const ar = document.getElementById('avatar-row');
     ar.style.opacity='1'; ar.style.pointerEvents='auto';
+    const uw = document.getElementById('username-wrap');
+    uw.style.opacity='1'; uw.style.pointerEvents='auto';
+    document.getElementById('custom-username').value = googleUser.name.substring(0,20);
     document.getElementById('login-btn').style.display='block';
     document.getElementById('login-err').textContent='';
     document.getElementById('login-err').style.color='var(--green)';
@@ -604,7 +611,10 @@ document.getElementById('login-btn').addEventListener('click', doLogin);
 
 function doLogin() {
   if(!googleUser) { document.getElementById('login-err').textContent='⚠ Inicia sesion con Google primero'; return; }
-  currentUser = { name: googleUser.name.substring(0,20), avatar: selectedAvatar, googleId: googleUser.id };
+  const rawName = document.getElementById('custom-username').value.trim();
+  const displayName = rawName.length >= 2 ? rawName : googleUser.name;
+  if(rawName.length > 0 && rawName.length < 2) { document.getElementById('login-err').textContent='⚠ El nombre debe tener al menos 2 caracteres'; return; }
+  currentUser = { name: displayName.substring(0,20), avatar: selectedAvatar, googleId: googleUser.id };
   saveSession();
   showMenu();
 }
@@ -1431,6 +1441,8 @@ const onKeys={};
 let onMX=0,onMY=0,onThreeReady=false;
 
 const ON_H=1.65,ON_SPD=7.5,ON_SENS=.002,ON_CD=180;
+const ON_GRAVITY=22, ON_JUMP_FORCE=8.0;
+let onVelY=0, onPosY=0, onIsGrounded=true;
 
 // ── NAVEGACION ───────────────────────────────────────────────
 document.getElementById('open-1v1-btn').addEventListener('click',()=>{
@@ -1512,7 +1524,7 @@ function onMsg(msg){
     case 'room_joined': onRoomJoined(msg); break;
     case 'player_joined': onPlayerJoined(msg); break;
     case 'start':       setTimeout(()=>onStartGame(msg), 150); break;
-    case 'opp_state':   onUpdateOpp(msg.slot,msg.pos,msg.yaw); break;
+    case 'opp_state':   onUpdateOpp(msg.slot,msg.pos,msg.yaw,msg.pitch||0,msg.posY||0); break;
     case 'opp_shoot': {
       const o=onOpps.get(msg.slot); if(o&&o.group.userData.anim) o.group.userData.anim.shootT=1;
       break;
@@ -1778,9 +1790,22 @@ function onCreateRobloxChar(teamColor){
   const hb=new THREE.Mesh(new THREE.BoxGeometry(.52,1.95,.52),new THREE.MeshBasicMaterial({visible:false}));
   hb.position.y=.975; g.add(hb); g.userData.hitbox=hb;
 
+  // Arma en el brazo derecho (visible para los demas jugadores)
+  const gm1=new THREE.MeshLambertMaterial({color:0x1a1a2a});
+  const gm2=new THREE.MeshLambertMaterial({color:0x0a0a0f});
+  const gm3=new THREE.MeshLambertMaterial({color:teamColor,emissive:teamColor,emissiveIntensity:.5});
+  const gunGrp=new THREE.Group();
+  const gb=new THREE.Mesh(new THREE.BoxGeometry(.05,.065,.32),gm1); gunGrp.add(gb);
+  const gsl=new THREE.Mesh(new THREE.BoxGeometry(.04,.032,.28),new THREE.MeshLambertMaterial({color:0x333348})); gsl.position.set(0,.05,-.01); gunGrp.add(gsl);
+  const gbar=new THREE.Mesh(new THREE.BoxGeometry(.024,.024,.14),gm2); gbar.position.set(0,.024,-.23); gunGrp.add(gbar);
+  const gstr=new THREE.Mesh(new THREE.BoxGeometry(.052,.006,.14),gm3); gstr.position.set(0,.038,.0); gunGrp.add(gstr);
+  const ghand=new THREE.Mesh(new THREE.BoxGeometry(.044,.095,.052),gm1); ghand.position.set(0,-.08,.05); ghand.rotation.x=.2; gunGrp.add(ghand);
+  gunGrp.position.set(.12,-.18,-.16); gunGrp.rotation.y=-.05;
+  aRPivot.add(gunGrp);
+
   // Guardar refs para animar
   g.userData.limbs={head,torso,aL:aLPivot,aR:aRPivot,lL:lLPivot,lR:lRPivot};
-  g.userData.anim={walkPhase:0,shootT:0,deathT:0,dead:false,prevX:null,prevZ:null,idleT:Math.random()*100};
+  g.userData.anim={walkPhase:0,shootT:0,deathT:0,dead:false,prevX:null,prevZ:null,idleT:Math.random()*100,jumping:false};
   return g;
 }
 
@@ -1802,9 +1827,9 @@ function onAnimateChar(g, dt){
     return;
   }
 
-  // Idle bob
+  // Idle bob (solo cuando está en el suelo)
   const idleY=Math.sin(A.idleT*1.1)*.018;
-  g.position.y=idleY;
+  if(!A.jumping) g.position.y=idleY;
 
   // Walk
   if(moved) A.walkPhase+=dt*9;
@@ -1839,6 +1864,7 @@ function onAddOppMesh(slot,team){
 function onSpawnPlayer(spawn){
   if(!spawn) spawn=onMySpawn;
   onPos={x:spawn.x,z:spawn.z}; onYaw=spawn.yaw; onPitch=0; onAlive=true;
+  onVelY=0; onPosY=0; onIsGrounded=true;
   onYawObj.position.set(spawn.x,ON_H,spawn.z);
   onYawObj.rotation.y=onYaw; onPitchObj.rotation.x=0;
 }
@@ -1850,13 +1876,27 @@ function onMove(dt){
   if(!onAlive||!onActive) return;
   const fw=(onKeys['w']||onKeys['W']?1:0)-(onKeys['s']||onKeys['S']?1:0);
   const ri=(onKeys['d']||onKeys['D']?1:0)-(onKeys['a']||onKeys['A']?1:0);
+
+  // Salto
+  if((onKeys[' ']||onKeys['Spacebar']) && onIsGrounded){
+    onVelY=ON_JUMP_FORCE;
+    onIsGrounded=false;
+  }
+
+  // Gravedad
+  onVelY-=ON_GRAVITY*dt;
+  onPosY+=onVelY*dt;
+  if(onPosY<=0){ onPosY=0; onVelY=0; onIsGrounded=true; }
+
+  onYawObj.position.y=ON_H+onPosY;
+
   if(!fw&&!ri) return;
   const len=Math.sqrt(fw*fw+ri*ri), sp=ON_SPD*dt;
   const nx=onPos.x+((fw/len)*(-Math.sin(onYaw))+(ri/len)*Math.cos(onYaw))*sp;
   const nz=onPos.z+((fw/len)*(-Math.cos(onYaw))+(ri/len)*(-Math.sin(onYaw)))*sp;
   if(!onCollides(nx,onPos.z)) onPos.x=nx;
   if(!onCollides(onPos.x,nz)) onPos.z=nz;
-  onYawObj.position.set(onPos.x,ON_H,onPos.z);
+  onYawObj.position.set(onPos.x,ON_H+onPosY,onPos.z);
 }
 function onApplyCam(){
   if(!onMX&&!onMY) return;
@@ -1867,9 +1907,19 @@ function onApplyCam(){
 }
 
 // ── ACTUALIZACION OPONENTES ───────────────────────────────────
-function onUpdateOpp(slot,pos,yaw){
+function onUpdateOpp(slot,pos,yaw,pitch,posY){
   const o=onOpps.get(slot); if(!o) return;
-  o.group.visible=true; o.group.position.set(pos.x,0,pos.z); o.group.rotation.y=yaw;
+  const oy=posY||0;
+  o.group.visible=true; o.group.position.set(pos.x,oy,pos.z); o.group.rotation.y=yaw;
+  if(o.group.userData.anim) o.group.userData.anim.jumping=(oy>0.05);
+  // Aplicar pitch a la cabeza y torso del oponente para que se vea hacia donde apunta
+  if(pitch!==undefined && o.group.userData.limbs){
+    const L=o.group.userData.limbs;
+    const clampedPitch=Math.max(-0.7,Math.min(0.7,pitch));
+    L.head.rotation.x=clampedPitch;
+    L.aR.rotation.x=-clampedPitch*.6;
+    L.torso.rotation.x=clampedPitch*.25;
+  }
 }
 function onHandlePlayerRespawn(slot,spawn){
   const o=onOpps.get(slot);
@@ -1948,7 +1998,7 @@ function onStartGame(msg){
   // Broadcast state 20/s
   clearInterval(onStateIv);
   onStateIv=setInterval(()=>{
-    if(onAlive&&onActive) onSend({type:'state',pos:{...onPos},yaw:onYaw});
+    if(onAlive&&onActive) onSend({type:'state',pos:{...onPos},yaw:onYaw,pitch:onPitch,posY:onPosY});
   },50);
 
   // Render loop (sin cap de FPS)
@@ -2063,9 +2113,7 @@ document.addEventListener('keyup',  e=>{ onKeys[e.key]=false; });
 function onAnimateAllChars(dt){
   onOpps.forEach(opp=>{ if(opp.group&&opp.group.visible) onAnimateChar(opp.group,dt); });
 }
-function onAnimateAllChars(dt){
-  onOpps.forEach(opp=>{ if(opp.group.visible) onAnimateChar(opp.group,dt); });
-}
+
 
 </script>
 </body>
