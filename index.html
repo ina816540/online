@@ -189,6 +189,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .lock-btn:hover{box-shadow:0 0 30px var(--accent);}
 #pause-menu-btn:hover{border-color:var(--accent3)!important;color:var(--accent3)!important;}
 #pause-quit-btn:hover{border-color:var(--accent2)!important;background:rgba(255,61,113,.08)!important;}
+/* ONLINE ROOMS */
+.room-card{background:var(--panel);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px));transition:border-color .15s;}
+.room-card:hover{border-color:rgba(255,61,113,.4);}
+.room-nm{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--text);}
+.room-join{background:#ff3d71;border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.15em;padding:7px 14px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);transition:box-shadow .15s;}
+.room-join:hover{box-shadow:0 0 12px rgba(255,61,113,.5);}
+.player-slot{background:rgba(255,255,255,.03);border:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;gap:8px;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px));}
 </style>
 </head>
 <body>
@@ -409,29 +416,68 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 <!-- ════════════════════════════════════════════
      1v1 ONLINE SCREENS
 ════════════════════════════════════════════ -->
-<div class="screen hidden" id="duel-connect-screen" style="gap:0;background:radial-gradient(ellipse at center,rgba(255,61,113,.07) 0%,transparent 70%)">
+<!-- ONLINE LOBBY -->
+<div class="screen hidden" id="duel-lobby-screen" style="gap:0;background:radial-gradient(ellipse at center,rgba(255,61,113,.07) 0%,transparent 70%)">
   <div class="login-logo">
-    <h1 style="color:#ff3d71;animation:glow 3s ease-in-out infinite">⚔ 1v1 ONLINE</h1>
-    <p style="letter-spacing:.4em;color:var(--dim)">ENFRENTAMIENTO DIRECTO · INA MAP</p>
+    <h1 style="color:#ff3d71;animation:glow 3s ease-in-out infinite">⚔ ONLINE</h1>
+    <p style="letter-spacing:.4em;color:var(--dim)">SALAS MULTIJUGADOR · INA MAP</p>
   </div>
-  <div class="login-box" style="border-color:rgba(255,61,113,.3)">
-    <h3 style="color:#ff3d71">BUSCAR RIVAL</h3>
-    <div class="login-input-wrap">
-      <label>TU NOMBRE EN PARTIDA</label>
-      <input class="login-input" id="duel-name-inp" type="text" placeholder="Nombre..." maxlength="20" autocomplete="off">
+  <div style="max-width:680px;width:100%;padding:0 20px">
+    <div style="display:flex;gap:8px;margin-bottom:14px;justify-content:center;flex-wrap:wrap">
+      <button class="login-btn" id="duel-open-create" style="background:#ff3d71;width:auto;padding:10px 24px;font-size:.78rem">+ CREAR SALA</button>
+      <button class="extra-btn" id="duel-refresh-rooms">&#8635; ACTUALIZAR</button>
+      <button class="extra-btn" id="duel-lobby-back">&#8592; VOLVER</button>
     </div>
-    <button class="login-btn" id="duel-connect-btn" style="background:#ff3d71">⚡ CONECTAR AL SERVIDOR</button>
-    <div class="login-err" id="duel-err"></div>
-    <button class="login-btn" id="duel-back-btn" style="background:transparent;border:1px solid var(--border);color:var(--dim);margin-top:-6px">← VOLVER AL MENÚ</button>
+    <div id="duel-room-list" style="display:flex;flex-direction:column;gap:7px;max-height:50vh;overflow-y:auto;padding-right:4px"></div>
+    <div class="login-err" id="duel-lobby-err" style="margin-top:10px;text-align:center"></div>
   </div>
 </div>
 
-<div class="screen hidden" id="duel-waiting-screen">
-  <div style="font-family:'Orbitron',monospace;font-size:1.5rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71;margin-bottom:12px">⏳ ESPERANDO RIVAL...</div>
-  <div style="font-size:.62rem;letter-spacing:.3em;color:var(--dim);margin-bottom:18px">COMPARTE ESTE LINK CON TU OPONENTE</div>
-  <div id="duel-share-url" style="font-size:.65rem;color:var(--accent3);background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);padding:12px 20px;max-width:560px;word-break:break-all;text-align:center;letter-spacing:.05em">cargando...</div>
-  <div style="margin-top:22px;font-size:.55rem;letter-spacing:.2em;color:var(--dim)">Tú eres el <span id="duel-my-team" style="font-weight:700">—</span></div>
-  <button class="btn btn-s" id="duel-waiting-back" style="margin-top:18px">✕ CANCELAR</button>
+<!-- CREATE ROOM -->
+<div class="screen hidden" id="duel-create-screen" style="gap:0">
+  <div class="login-box" style="border-color:rgba(255,61,113,.3);width:410px">
+    <h3 style="color:#ff3d71">&#10022; CREAR SALA</h3>
+    <div class="login-input-wrap">
+      <label>NOMBRE DE LA SALA</label>
+      <input class="login-input" id="duel-room-name" placeholder="Ej: La sala de ina..." maxlength="30" autocomplete="off">
+    </div>
+    <div class="login-input-wrap">
+      <label>MODO DE JUEGO</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="duel-mode-pills">
+        <button class="diff-btn act" data-mode="1v1">1v1</button>
+        <button class="diff-btn" data-mode="2v2">2v2</button>
+        <button class="diff-btn" data-mode="3v3">3v3</button>
+        <button class="diff-btn" data-mode="4v4">4v4</button>
+        <button class="diff-btn" data-mode="ffa">FFA</button>
+      </div>
+    </div>
+    <div class="login-input-wrap">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <label class="toggle" style="flex-shrink:0"><input type="checkbox" id="duel-is-private"><div class="ttrack"></div><div class="tthumb"></div></label>
+        SALA PRIVADA (con contrasena)
+      </label>
+    </div>
+    <div class="login-input-wrap" id="duel-password-wrap" style="display:none">
+      <label>CONTRASENA</label>
+      <input class="login-input" id="duel-room-password" type="password" placeholder="Contrasena..." maxlength="20">
+    </div>
+    <div class="login-err" id="duel-create-err"></div>
+    <button class="login-btn" id="duel-do-create" style="background:#ff3d71">&#9889; CREAR Y ENTRAR</button>
+    <button class="login-btn" id="duel-create-back-btn" style="background:transparent;border:1px solid var(--border);color:var(--dim);margin-top:-6px">&#8592; VOLVER</button>
+  </div>
+</div>
+
+<!-- WAITING ROOM -->
+<div class="screen hidden" id="duel-waiting-screen" style="gap:12px">
+  <div style="font-family:'Orbitron',monospace;font-size:1.4rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">&#9203; SALA DE ESPERA</div>
+  <div id="duel-room-info" style="font-size:.6rem;letter-spacing:.2em;color:var(--dim)"></div>
+  <div id="duel-players-in-room" style="display:flex;flex-direction:column;gap:5px;min-width:320px;max-width:500px;width:90%"></div>
+  <div style="font-size:.55rem;letter-spacing:.2em;color:var(--dim);margin-top:4px">COMPARTE EL LINK:</div>
+  <div id="duel-share-url" style="font-size:.6rem;color:var(--accent3);background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);padding:10px 18px;max-width:520px;word-break:break-all;text-align:center">cargando...</div>
+  <div style="display:flex;gap:8px;margin-top:6px">
+    <button class="login-btn" id="duel-force-start" style="background:#ff3d71;width:auto;padding:10px 20px;display:none">&#9654; INICIAR PARTIDA</button>
+    <button class="btn btn-s" id="duel-waiting-back">&#10005; SALIR</button>
+  </div>
 </div>
 
 <div class="screen hidden" id="duel-gameover-screen" style="gap:18px">
@@ -466,7 +512,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-my-name-hud">YO</div>
       <div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#ff4444;text-shadow:0 0 12px #ff4444;line-height:1" id="duel-my-kills">0</div>
     </div>
-    <div style="text-align:center;color:var(--dim);font-size:.7rem">⚔<br><span style="font-size:.4rem;letter-spacing:.2em">FIRST TO 6</span></div>
+    <div style="text-align:center;color:var(--dim);font-size:.7rem">⚔<br><span style="font-size:.4rem;letter-spacing:.2em">FIRST TO <span id="duel-firstto">6</span></span></div>
     <div style="text-align:center">
       <div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-opp-name-hud">RIVAL</div>
       <div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#4488ff;text-shadow:0 0 12px #4488ff;line-height:1" id="duel-opp-kills">0</div>
@@ -1283,453 +1329,591 @@ document.getElementById('play-again-btn').addEventListener('click',()=>{ results
 document.getElementById('menu-btn').addEventListener('click',()=>{ resultsScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); });
 
 // ============================================================
-// ⚔ MODO 1v1 ONLINE
+
 // ============================================================
-const DUEL_SERVER = location.protocol === 'https:' 
-  ? 'wss://' + location.host 
-  : 'ws://' + location.host;
-const DUEL_MAX_KILLS   = 6;
-const DUEL_MOVE_SPEED  = 7.5;
-const DUEL_SENSITIVITY = 0.0020;
-const DUEL_MAP_HALF    = 20;
-const DUEL_PLAYER_R    = 0.45;
-const DUEL_HEIGHT      = 1.65;
-const DUEL_SHOOT_CD    = 180;
+// ============================================================
+// MODO ONLINE MULTIJUGADOR
+// ============================================================
+const ONLINE_SRV = location.protocol==='https:' ? 'wss://'+location.host : 'ws://'+location.host;
+const TEAM_COLORS=[0xff4444,0x4488ff,0x44cc66,0xffcc00,0xcc44ff,0x44cccc,0xff8844,0x88ff44];
+const TEAM_HEX   =['#ff4444','#4488ff','#44cc66','#ffcc00','#cc44ff','#44cccc','#ff8844','#88ff44'];
+const TEAM_LBL   =['ROJO','AZUL','VERDE','AMARILLO','MORADO','CYAN','NARANJA','LIMA'];
 
-const DUEL_SPAWNS = [
-  { x:-13, z:-10, yaw: 0.75 },           // rojo: frente al edificio rojo
-  { x: 13, z:  10, yaw: -Math.PI+0.75 }  // azul: frente al edificio azul
-];
+// Estado
+let onWS=null;
+let onMySlot=-1,onMyTeam=-1,onMySpawn=null,onMyName='';
+let onRoomMode='1v1',onFirstTo=6;
+let onActive=false,onLocked=false,onAlive=true;
+let onPos={x:0,z:0},onYaw=0,onPitch=0;
+const onOpps=new Map(); // slot -> {group,hitbox}
+const onPlayerNames=new Map(); // slot -> name
+let onTeamScores=[0,0],onPScores={};
+let onCreateMode='1v1';
+let onWaitPlayers=[];
 
-let duelWS=null, duelSlot=-1, duelOppSlot=-1, duelMyName='', duelOppName='';
-let duelMySpawn=null, duelScores=[0,0];
-let duelAlive=true, duelActive=false, duelLocked=false;
-let duelMouseDX=0, duelMouseDY=0;
-const duelKeys={};
-let duelScene=null, duelCamera=null, duelRenderer=null, duelRaycaster=null;
-let duelYaw=null, duelPitch=null;
-let duelOppMesh=null, duelOppHitbox=null;
-let duelPos={x:0,z:0}, duelPlayerYaw=0, duelPlayerPitch=0;
-let duelAnimId=null, duelStateIv=null, duelCanShoot=true;
-const duelObstacles=[];
-let duelThreeReady=false;
+// Three.js online
+let onScene=null,onCamera=null,onRenderer=null,onRaycaster=null;
+let onYawObj=null,onPitchObj=null,onGun=null,onGunAnim=0;
+let onAnimId=null,onStateIv=null,onCanShoot=true;
+const onWalls=[],onObs=[];
+const onKeys={};
+let onMX=0,onMY=0,onThreeReady=false;
 
-// ── NAVIGATION ───────────────────────────────────────────────
+const ON_H=1.65,ON_SPD=7.5,ON_SENS=.002,ON_CD=180;
+
+// ── NAVEGACION ───────────────────────────────────────────────
 document.getElementById('open-1v1-btn').addEventListener('click',()=>{
   menuScreen.classList.add('hidden');
-  duelShowScreen('duel-connect-screen');
-  document.getElementById('duel-name-inp').value = currentUser?.name||'';
+  onShowScreen('duel-lobby-screen');
+  onMyName=currentUser?.name||'Jugador';
+  onConnect();
 });
-document.getElementById('duel-back-btn').addEventListener('click',()=>{
-  duelShowScreen(null);
-  menuScreen.classList.remove('hidden');
+document.getElementById('duel-lobby-back').addEventListener('click',()=>{
+  onDisconnect(); onShowScreen(null); menuScreen.classList.remove('hidden');
+});
+document.getElementById('duel-refresh-rooms').addEventListener('click',()=>{
+  onSend({type:'get_rooms'});
+});
+document.getElementById('duel-open-create').addEventListener('click',()=>{
+  document.getElementById('duel-room-name').value='';
+  document.getElementById('duel-create-err').textContent='';
+  document.getElementById('duel-is-private').checked=false;
+  document.getElementById('duel-password-wrap').style.display='none';
+  onShowScreen('duel-create-screen');
+});
+document.getElementById('duel-create-back-btn').addEventListener('click',()=>onShowScreen('duel-lobby-screen'));
+document.getElementById('duel-is-private').addEventListener('change',function(){
+  document.getElementById('duel-password-wrap').style.display=this.checked?'block':'none';
+});
+document.querySelectorAll('#duel-mode-pills .diff-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#duel-mode-pills .diff-btn').forEach(x=>x.classList.remove('act'));
+  b.classList.add('act'); onCreateMode=b.dataset.mode;
+}));
+document.getElementById('duel-do-create').addEventListener('click',()=>{
+  const name=document.getElementById('duel-room-name').value.trim();
+  const isPrivate=document.getElementById('duel-is-private').checked;
+  const pw=document.getElementById('duel-room-password').value;
+  if(!name){document.getElementById('duel-create-err').textContent='Pon un nombre a la sala';return;}
+  if(isPrivate&&!pw){document.getElementById('duel-create-err').textContent='Pon una contrasena';return;}
+  if(!onWS||onWS.readyState!==1){document.getElementById('duel-create-err').textContent='Sin conexion al servidor';return;}
+  onSend({type:'create_room',name,mode:onCreateMode,isPrivate,password:pw,playerName:onMyName});
 });
 document.getElementById('duel-waiting-back').addEventListener('click',()=>{
-  if(duelWS) duelWS.close();
-  duelShowScreen('duel-connect-screen');
+  onWS?.close(); onCleanup(); onShowScreen('duel-lobby-screen'); onConnect();
 });
+document.getElementById('duel-force-start').addEventListener('click',()=>onSend({type:'force_start'}));
 document.getElementById('duel-rematch-btn').addEventListener('click',()=>{
-  if(duelWS) duelWS.close();
-  duelShowScreen('duel-connect-screen');
-  document.getElementById('duel-name-inp').value=duelMyName;
+  onWS?.close(); onCleanup(); onShowScreen('duel-lobby-screen'); onConnect();
 });
 document.getElementById('duel-menu-btn').addEventListener('click',()=>{
-  if(duelWS) duelWS.close();
-  duelCleanup();
-  duelShowScreen(null);
-  menuScreen.classList.remove('hidden');
+  onWS?.close(); onCleanup(); onShowScreen(null); menuScreen.classList.remove('hidden');
 });
 
-document.getElementById('duel-connect-btn').addEventListener('click', duelDoConnect);
-document.getElementById('duel-name-inp').addEventListener('keydown',e=>{ if(e.key==='Enter') duelDoConnect(); });
-
-function duelShowScreen(id){
-  document.querySelectorAll('#duel-connect-screen,#duel-waiting-screen,#duel-gameover-screen')
-    .forEach(s=>s.classList.add('hidden'));
-  if(id){ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); }
+function onShowScreen(id){
+  ['duel-lobby-screen','duel-create-screen','duel-waiting-screen','duel-gameover-screen']
+    .forEach(s=>document.getElementById(s).classList.add('hidden'));
+  if(id) document.getElementById(id).classList.remove('hidden');
 }
 
-// ── WEBSOCKET ────────────────────────────────────────────────
-function duelDoConnect(){
-  const name=document.getElementById('duel-name-inp').value.trim();
-  if(!name||name.length<2){ document.getElementById('duel-err').textContent='⚠ Mínimo 2 caracteres'; return; }
-  duelMyName=name;
-  document.getElementById('duel-err').textContent='Conectando...';
-  try{ duelWS=new WebSocket(DUEL_SERVER); }
-  catch(e){ document.getElementById('duel-err').textContent='⚠ No se pudo conectar'; return; }
-  duelWS.onopen =()=> duelWS.send(JSON.stringify({type:'join',name}));
-  duelWS.onmessage=e=> duelOnMsg(JSON.parse(e.data));
-  duelWS.onclose=()=>{ if(duelActive) duelSetErr('Conexión perdida'); };
-  duelWS.onerror=()=> document.getElementById('duel-err').textContent='⚠ Error de conexión';
+// ── WEBSOCKET ─────────────────────────────────────────────────
+function onConnect(){
+  if(onWS&&onWS.readyState<=1) return;
+  try{ onWS=new WebSocket(ONLINE_SRV); }catch(e){ onLobbyErr('No se pudo conectar'); return; }
+  onWS.onopen=()=>{};
+  onWS.onmessage=e=>onMsg(JSON.parse(e.data));
+  onWS.onclose=()=>{ if(onActive) onSetErr('Conexion perdida'); };
+  onWS.onerror=()=>onLobbyErr('Error de conexion');
 }
+function onDisconnect(){ if(onWS){onWS.onclose=null;onWS.close();onWS=null;} }
+function onSend(msg){ if(onWS&&onWS.readyState===1) onWS.send(JSON.stringify(msg)); }
 
-function duelSend(msg){ if(duelWS&&duelWS.readyState===1) duelWS.send(JSON.stringify(msg)); }
-
-function duelOnMsg(msg){
+function onMsg(msg){
   switch(msg.type){
-    case 'joined':
-      duelSlot=msg.slot; duelMySpawn=msg.spawn;
-      break;
-    case 'waiting':
-      duelShowScreen('duel-waiting-screen');
-      document.getElementById('duel-share-url').textContent=DUEL_SERVER.replace('wss://','https://');
-      document.getElementById('duel-my-team').textContent=duelSlot===0?'🔴 EQUIPO ROJO':'🔵 EQUIPO AZUL';
-      document.getElementById('duel-my-team').style.color=duelSlot===0?'#ff4444':'#4488ff';
-      break;
-    case 'start':
-      duelOppSlot=msg.opponent.slot; duelOppName=msg.opponent.name;
-      document.getElementById('duel-opp-name-lock').textContent=duelOppName;
-      duelStartGame();
-      break;
-    case 'opp_state':
-      if(duelOppMesh) duelUpdateOpp(msg.pos, msg.yaw);
-      break;
-    case 'kill':{
-      duelScores=msg.scores; duelRefreshScore();
-      if(msg.killer===duelSlot){ duelShowKillNotif(); duelAddFeed(`${duelMyName} ➜ ${duelOppName}`); }
-      else{ duelHandleDeath(); duelAddFeed(`${duelOppName} ➜ ${duelMyName}`); }
-      if(msg.matchOver) setTimeout(()=>duelShowGameOver(msg.killer===duelSlot),1800);
-      break;
+    case 'room_list':   onUpdateRoomList(msg.rooms); break;
+    case 'room_joined': onRoomJoined(msg); break;
+    case 'player_joined': onPlayerJoined(msg); break;
+    case 'start':       onStartGame(msg); break;
+    case 'opp_state':   onUpdateOpp(msg.slot,msg.pos,msg.yaw); break;
+    case 'opp_shoot':   break;
+    case 'kill':        onTeamScores=msg.teamScores; onPScores=msg.pScores; onHandleKill(msg); break;
+    case 'respawn':     onHandleRespawn(msg.spawn); break;
+    case 'player_respawn': onHandlePlayerRespawn(msg.slot,msg.spawn); break;
+    case 'join_err':    onLobbyErr(msg.msg); break;
+    case 'opp_disconnect': onSetErr((msg.name||'Un jugador')+' se desconecto'); break;
+  }
+}
+
+// ── SALA DE ESPERA ────────────────────────────────────────────
+function onRoomJoined(msg){
+  onMySlot=msg.slot; onMyTeam=msg.team; onMySpawn=msg.spawn;
+  onRoomMode=msg.mode; onFirstTo=msg.firstTo;
+  onWaitPlayers=msg.players||[{slot:msg.slot,team:msg.team,name:onMyName}];
+  onPlayerNames.clear();
+  onWaitPlayers.forEach(p=>onPlayerNames.set(p.slot,p.name));
+  document.getElementById('duel-room-info').textContent=
+    msg.name+' \u00b7 '+msg.mode.toUpperCase()+' \u00b7 Primero en '+msg.firstTo+' kills gana';
+  document.getElementById('duel-share-url').textContent=
+    ONLINE_SRV.replace('wss://','https://').replace('ws://','http://');
+  document.getElementById('duel-force-start').style.display=msg.slot===0?'block':'none';
+  onRenderWaitingPlayers(msg.max);
+  onShowScreen('duel-waiting-screen');
+}
+function onPlayerJoined(p){
+  if(!onWaitPlayers.find(x=>x.slot===p.slot)) onWaitPlayers.push(p);
+  onPlayerNames.set(p.slot,p.name);
+  onRenderWaitingPlayers();
+  if(onThreeReady) onAddOppMesh(p.slot,p.team);
+}
+function onRenderWaitingPlayers(max){
+  const el=document.getElementById('duel-players-in-room'); el.innerHTML='';
+  const total=max||onWaitPlayers.length;
+  for(let i=0;i<total;i++){
+    const p=onWaitPlayers[i];
+    const div=document.createElement('div'); div.className='player-slot';
+    if(p){
+      const col=TEAM_HEX[p.team]||'#fff';
+      const isMe=p.slot===onMySlot;
+      div.innerHTML=`<span style="width:10px;height:10px;border-radius:2px;background:${col};display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:.68rem;color:${isMe?'var(--accent)':'var(--text)'}">${esc(p.name)}${isMe?' (Tu)':''}</span>
+        <span style="margin-left:auto;font-size:.55rem;letter-spacing:.15em;font-weight:700;color:${col}">${TEAM_LBL[p.team]||'?'}</span>`;
+    } else {
+      div.innerHTML=`<span style="width:10px;height:10px;border-radius:2px;background:var(--border);display:inline-block"></span>
+        <span style="font-size:.6rem;color:var(--dim);font-style:italic">Esperando jugador...</span>`;
     }
-    case 'respawn': duelHandleRespawn(msg.spawn); break;
-    case 'opp_disconnect': duelSetErr('El rival se desconectó'); break;
+    el.appendChild(div);
   }
 }
 
-// ── THREE.JS MAP ─────────────────────────────────────────────
-function duelInitThree(){
-  const canvas=document.getElementById('duel-canvas');
-  duelRenderer=new THREE.WebGLRenderer({canvas,antialias:true});
-  duelRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  duelRenderer.setSize(window.innerWidth,window.innerHeight);
-  duelRenderer.shadowMap.enabled=true;
-  duelScene=new THREE.Scene();
-  duelScene.background=new THREE.Color(0x87CEEB);
-  duelScene.fog=new THREE.Fog(0x87CEEB,30,70);
+// ── ROOM LIST UI ──────────────────────────────────────────────
+function onUpdateRoomList(rooms){
+  const el=document.getElementById('duel-room-list');
+  if(!rooms||!rooms.length){
+    el.innerHTML='<div style="text-align:center;color:var(--dim);font-size:.68rem;letter-spacing:.15em;padding:28px">No hay salas disponibles. Crea la primera!</div>';
+    return;
+  }
+  el.innerHTML='';
+  rooms.forEach(r=>{
+    const card=document.createElement('div'); card.className='room-card';
+    const ml={'1v1':'1v1','2v2':'2v2','3v3':'3v3','4v4':'4v4','ffa':'FFA'}[r.mode]||r.mode;
+    card.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span class="room-nm">${r.isPrivate?'&#128274; ':''}${esc(r.name)}</span>
+        <span style="font-size:.54rem;color:var(--dim)">${ml} &middot; ${r.players}/${r.max} jugadores</span>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <span style="font-size:.52rem;letter-spacing:.2em;color:var(--accent);background:rgba(224,64,251,.1);padding:2px 8px">${ml}</span>
+        <button class="room-join" onclick="onJoinClick(${r.id},${r.isPrivate})">ENTRAR &rarr;</button>
+      </div>`;
+    el.appendChild(card);
+  });
+}
+function onJoinClick(roomId,isPrivate){
+  if(isPrivate){
+    const pw=prompt('Contrasena de la sala:');
+    if(pw===null) return;
+    onSend({type:'join_room',roomId,playerName:onMyName,password:pw});
+  } else {
+    onSend({type:'join_room',roomId,playerName:onMyName,password:''});
+  }
+}
+function onLobbyErr(msg){
+  const el=document.getElementById('duel-lobby-err');
+  if(el){el.textContent='\u26a0 '+msg; setTimeout(()=>el.textContent='',4000);}
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-  duelYaw=new THREE.Object3D(); duelPitch=new THREE.Object3D();
-  duelYaw.add(duelPitch); duelScene.add(duelYaw);
-  duelCamera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.05,200);
-  duelPitch.add(duelCamera);
-  duelRaycaster=new THREE.Raycaster(); duelRaycaster.far=200;
-
+// ── THREE.JS (ONLINE) ─────────────────────────────────────────
+function onInitThree(){
+  const cv=document.getElementById('duel-canvas');
+  onRenderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
+  onRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  onRenderer.setSize(window.innerWidth,window.innerHeight);
+  onRenderer.shadowMap.enabled=true;
+  onScene=new THREE.Scene();
+  onScene.background=new THREE.Color(0x87ceeb);
+  onScene.fog=new THREE.Fog(0x87ceeb,28,70);
+  onYawObj=new THREE.Object3D(); onPitchObj=new THREE.Object3D();
+  onYawObj.add(onPitchObj); onScene.add(onYawObj);
+  onCamera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.05,200);
+  onPitchObj.add(onCamera);
+  onRaycaster=new THREE.Raycaster(); onRaycaster.far=150;
   window.addEventListener('resize',()=>{
-    duelCamera.aspect=window.innerWidth/window.innerHeight;
-    duelCamera.updateProjectionMatrix();
-    duelRenderer.setSize(window.innerWidth,window.innerHeight);
+    onCamera.aspect=window.innerWidth/window.innerHeight;
+    onCamera.updateProjectionMatrix();
+    onRenderer.setSize(window.innerWidth,window.innerHeight);
   });
-
-  duelBuildMap(); duelBuildOpp(); duelBuildLights();
+  onBuildMap(); onBuildLights(); onBuildGun();
+  onThreeReady=true;
 }
 
-function duelBuildMap(){
-  // Ground texture
-  const gc=document.createElement('canvas'); gc.width=gc.height=1024;
+// ── PISTOLA ROBLOX STYLE ──────────────────────────────────────
+function onBuildGun(){
+  onGun=new THREE.Group();
+  const m1=new THREE.MeshLambertMaterial({color:0x1a1a2a});
+  const m2=new THREE.MeshLambertMaterial({color:0x0a0a0f});
+  const m3=new THREE.MeshLambertMaterial({color:0xff3d71,emissive:0xff3d71,emissiveIntensity:.6});
+  const m4=new THREE.MeshLambertMaterial({color:0x333348});
+  // Cuerpo principal (box style - Roblox)
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.065,.085,.4),m1); onGun.add(body);
+  // Slide encima
+  const slide=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.36),m4); slide.position.set(0,.065,-.01); onGun.add(slide);
+  // Canon
+  const barrel=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,.18),m2); barrel.position.set(0,.03,-.29); onGun.add(barrel);
+  // Punta del canon
+  const tip=new THREE.Mesh(new THREE.BoxGeometry(.034,.034,.04),m2); tip.position.set(0,.03,-.39); onGun.add(tip);
+  // Mango
+  const handle=new THREE.Mesh(new THREE.BoxGeometry(.055,.12,.065),m1); handle.position.set(0,-.1,.06); handle.rotation.x=.2; onGun.add(handle);
+  // Linea acento neón
+  const stripe=new THREE.Mesh(new THREE.BoxGeometry(.067,.007,.18),m3); stripe.position.set(0,.048,.0); onGun.add(stripe);
+  // Protector del gatillo
+  const tg=new THREE.Mesh(new THREE.BoxGeometry(.01,.055,.06),m2); tg.position.set(0,-.048,.01); onGun.add(tg);
+
+  onGun.position.set(.19,-.19,-.33); onGun.rotation.y=.05;
+  onCamera.add(onGun);
+}
+
+function onAnimGun(dt){
+  if(!onGun) return;
+  if(onGunAnim>0){
+    onGunAnim=Math.max(0,onGunAnim-dt*9);
+    onGun.position.z=-.33+onGunAnim*.06; onGun.rotation.x=onGunAnim*.12;
+  } else {
+    onGun.position.z+=(-.33-onGun.position.z)*dt*9;
+    onGun.rotation.x*=(1-dt*9);
+  }
+  onGun.position.y=-.19+Math.sin(performance.now()*.0009)*.003;
+}
+
+// ── MAPA ──────────────────────────────────────────────────────
+function onBuildMap(){
+  // Suelo
+  const gc=document.createElement('canvas'); gc.width=gc.height=512;
   const gx=gc.getContext('2d');
-  gx.fillStyle='#9a7245'; gx.fillRect(0,0,1024,1024);
-  gx.fillStyle='#4a7c3f';
-  [0,1024-130].forEach(y=>gx.fillRect(0,y,1024,130));
-  [0,1024-130].forEach(x=>gx.fillRect(x,0,130,1024));
-  for(let i=0;i<3000;i++){ gx.fillStyle=`rgba(0,0,0,${Math.random()*.05})`; gx.fillRect(Math.random()*1024,Math.random()*1024,3,3); }
-  gx.save(); gx.translate(512,512); gx.font='bold 160px Arial Black,Arial'; gx.textAlign='center'; gx.textBaseline='middle';
-  gx.fillStyle='rgba(255,255,255,0.16)'; gx.fillText('INA',0,0); gx.restore();
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(DUEL_MAP_HALF*2,DUEL_MAP_HALF*2),
-    new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(gc)}));
-  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; duelScene.add(ground);
+  gx.fillStyle='#9a7245'; gx.fillRect(0,0,512,512);
+  gx.fillStyle='#4a7c3f'; [0,382].forEach(y=>gx.fillRect(0,y,512,130)); [0,382].forEach(x=>gx.fillRect(x,0,130,512));
+  gx.save(); gx.globalAlpha=.12; gx.font='bold 140px Arial Black'; gx.textAlign='center'; gx.textBaseline='middle';
+  gx.fillStyle='#fff'; gx.fillText('INA',256,256); gx.restore();
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(gc)}));
+  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; onScene.add(ground);
 
-  // Cover walls
-  const wallMat=new THREE.MeshLambertMaterial({color:0x8a9aaa});
-  const capMat =new THREE.MeshLambertMaterial({color:0xa0b0bb});
-  [[-3,-9,0],[4,-7,0.25],[-8,-2,1.57],[7,-1,1.57],[-7,3,1.57],[4,2,0.25],[-2,8,0],[6,7,1.57]].forEach(([x,z,ry])=>{
-    const W=2.6,H=1.6,D=0.5;
-    const w=new THREE.Mesh(new THREE.BoxGeometry(W,H,D),wallMat);
-    w.position.set(x,H/2,z); w.rotation.y=ry; w.castShadow=w.receiveShadow=true; duelScene.add(w);
-    const cap=new THREE.Mesh(new THREE.BoxGeometry(W+.08,0.1,D+.08),capMat);
-    cap.position.set(x,H+.05,z); cap.rotation.y=ry; duelScene.add(cap);
-    const hw=ry>0.5?D/2:W/2, hd=ry>0.5?W/2:D/2;
-    duelObstacles.push({x,z,hw:hw+DUEL_PLAYER_R,hd:hd+DUEL_PLAYER_R});
+  // Coberturas
+  const wm=new THREE.MeshLambertMaterial({color:0x8a9aaa});
+  const wm2=new THREE.MeshLambertMaterial({color:0xa0b0bb});
+  [[-3,-9,0],[4,-7,.25],[-8,-2,1.57],[7,-1,1.57],[-7,3,1.57],[4,2,.25],[-2,8,0],[6,7,1.57]].forEach(([x,z,ry])=>{
+    const W=2.6,H=1.6,D=.5;
+    const w=new THREE.Mesh(new THREE.BoxGeometry(W,H,D),wm);
+    w.position.set(x,H/2,z); w.rotation.y=ry; w.castShadow=true; onScene.add(w);
+    onWalls.push(w); // bloquea balas
+    const cap=new THREE.Mesh(new THREE.BoxGeometry(W+.08,.1,D+.08),wm2); cap.position.set(x,H+.05,z); cap.rotation.y=ry; onScene.add(cap);
+    const hw=ry>.5?D/2:W/2, hd=ry>.5?W/2:D/2;
+    onObs.push({x,z,hw:hw+.45,hd:hd+.45});
   });
 
-  // Buildings
-  duelAddBuilding(-15,-15,0xdd3311,'red');
-  duelAddBuilding(15,15,0x2255dd,'blue');
+  // Edificios (con paredes que bloquean)
+  onAddBuilding(-15,-15,0xdd3311,'red');
+  onAddBuilding(15,15,0x2255dd,'blue');
 
-  // Borders
-  const edgeMat=new THREE.MeshLambertMaterial({color:0x4a5a3a});
-  [{x:0,z:-DUEL_MAP_HALF,w:DUEL_MAP_HALF*2+2,d:.6},{x:0,z:DUEL_MAP_HALF,w:DUEL_MAP_HALF*2+2,d:.6},
-   {x:-DUEL_MAP_HALF,z:0,w:.6,d:DUEL_MAP_HALF*2+2},{x:DUEL_MAP_HALF,z:0,w:.6,d:DUEL_MAP_HALF*2+2}].forEach(({x,z,w,d})=>{
-    const b=new THREE.Mesh(new THREE.BoxGeometry(w,.5,d),edgeMat); b.position.set(x,.25,z); duelScene.add(b);
-    duelObstacles.push({x,z,hw:w/2+DUEL_PLAYER_R,hd:d/2+DUEL_PLAYER_R});
-  });
-
-  // Rocks
-  const rMat=new THREE.MeshLambertMaterial({color:0x778877});
-  [[12,-12],[-11,14],[16,-8],[-14,10],[8,16],[-16,6],[14,8],[-8,-15]].forEach(([x,z])=>{
-    const s=.2+Math.random()*.3;
-    const r=new THREE.Mesh(new THREE.SphereGeometry(s,5,4),rMat);
-    r.position.set(x+Math.random()*.5,s*.5,z+Math.random()*.5); r.scale.set(1,.65,1); duelScene.add(r);
+  // Bordes del mapa
+  const bm=new THREE.MeshLambertMaterial({color:0x4a5a3a});
+  [{x:0,z:-20,w:42,d:.6},{x:0,z:20,w:42,d:.6},{x:-20,z:0,w:.6,d:42},{x:20,z:0,w:.6,d:42}].forEach(({x,z,w,d})=>{
+    const b=new THREE.Mesh(new THREE.BoxGeometry(w,.5,d),bm); b.position.set(x,.25,z); onScene.add(b);
+    onObs.push({x,z,hw:w/2+.45,hd:d/2+.45});
   });
 }
 
-function duelAddBuilding(cx,cz,color,team){
+function onAddBuilding(cx,cz,color,team){
   const mat=new THREE.MeshLambertMaterial({color});
-  const darkMat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.35)});
-  const roofMat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.65)});
-  const stepMat=new THREE.MeshLambertMaterial({color:0x888888});
+  const dmat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.35)});
+  const roofmat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.65)});
   const body=new THREE.Mesh(new THREE.BoxGeometry(5,2.6,4),mat);
-  body.position.set(cx,1.3,cz); body.castShadow=body.receiveShadow=true; duelScene.add(body);
-  const roof=new THREE.Mesh(new THREE.BoxGeometry(5.4,.2,4.4),roofMat); roof.position.set(cx,2.7,cz); duelScene.add(roof);
-  const faceZ=team==='red'?cz+2.05:cz-2.05;
+  body.position.set(cx,1.3,cz); body.castShadow=true; onScene.add(body);
+  onWalls.push(body); // edificio bloquea balas
+  onObs.push({x:cx,z:cz,hw:2.5+.45,hd:2.0+.45});
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(5.4,.2,4.4),roofmat); roof.position.set(cx,2.7,cz); onScene.add(roof);
+  const fz=team==='red'?cz+2.05:cz-2.05;
   [-1.4,1.4].forEach(ox=>{
-    const win=new THREE.Mesh(new THREE.BoxGeometry(.7,.55,.1),darkMat); win.position.set(cx+ox,1.7,faceZ); duelScene.add(win);
+    const win=new THREE.Mesh(new THREE.BoxGeometry(.7,.55,.1),dmat); win.position.set(cx+ox,1.7,fz); onScene.add(win);
   });
-  const door=new THREE.Mesh(new THREE.BoxGeometry(1,1.4,.1),darkMat); door.position.set(cx,.7,faceZ); duelScene.add(door);
-  for(let i=0;i<3;i++){
-    const step=new THREE.Mesh(new THREE.BoxGeometry(2.6,.14,.42),stepMat);
-    const sz=team==='red'?cz+2.1+i*.42:cz-2.1-i*.42; step.position.set(cx,i*.14,sz); duelScene.add(step);
-  }
-  const bMat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.8)});
-  const rMat2=new THREE.MeshLambertMaterial({color:0x333333});
-  for(let i=0;i<3;i++){
-    const bx=team==='red'?cx-2.9+i*.56:cx+2.9-i*.56;
-    const bz=team==='red'?cz-1.8:cz+1.8;
-    const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.65,8),bMat);
-    barrel.position.set(bx,.32,bz); duelScene.add(barrel);
-    const rim=new THREE.Mesh(new THREE.TorusGeometry(.22,.03,6,12),rMat2);
-    rim.rotation.x=Math.PI/2; rim.position.set(bx,.55,bz); duelScene.add(rim);
-  }
-  duelObstacles.push({x:cx,z:cz,hw:2.5+DUEL_PLAYER_R,hd:2.0+DUEL_PLAYER_R});
+  const door=new THREE.Mesh(new THREE.BoxGeometry(1,1.4,.1),dmat); door.position.set(cx,.7,fz); onScene.add(door);
 }
 
-function duelBuildOpp(){
-  duelOppMesh=duelCreateSilhouette(0x4488ff); duelOppMesh.visible=false;
-  const hitGeo=new THREE.CylinderGeometry(.38,.38,1.75,8);
-  duelOppHitbox=new THREE.Mesh(hitGeo,new THREE.MeshBasicMaterial({visible:false}));
-  duelOppHitbox.position.y=0.875; duelOppMesh.add(duelOppHitbox);
-  duelScene.add(duelOppMesh);
+function onBuildLights(){
+  onScene.add(new THREE.AmbientLight(0xffffff,.78));
+  const sun=new THREE.DirectionalLight(0xfff4cc,1.3); sun.position.set(12,22,8); sun.castShadow=true;
+  sun.shadow.mapSize.width=sun.shadow.mapSize.height=2048; onScene.add(sun);
+  onScene.add(Object.assign(new THREE.DirectionalLight(0x88aaff,.35),{position:new THREE.Vector3(-10,10,-15)}));
 }
 
-function duelCreateSilhouette(color){
+// ── PERSONAJE ROBLOX ──────────────────────────────────────────
+function onCreateRobloxChar(teamColor){
   const g=new THREE.Group();
-  const mat=new THREE.MeshPhongMaterial({color,emissive:new THREE.Color(color).multiplyScalar(.15)});
-  const dark=new THREE.MeshPhongMaterial({color:new THREE.Color(color).multiplyScalar(.55)});
-  [-0.14,0.14].forEach(ox=>{
-    const leg=new THREE.Mesh(new THREE.CylinderGeometry(.10,.09,.72,7),mat); leg.position.set(ox,.36,0); g.add(leg);
-    const foot=new THREE.Mesh(new THREE.BoxGeometry(.18,.08,.28),dark); foot.position.set(ox,.04,.06); g.add(foot);
+  const col=new THREE.Color(teamColor);
+  const mat=new THREE.MeshPhongMaterial({color:teamColor,shininess:25});
+  const dark=new THREE.MeshPhongMaterial({color:col.clone().multiplyScalar(.5),shininess:15});
+  const skin=new THREE.MeshPhongMaterial({color:0xffcc99});
+  const shoe=new THREE.MeshPhongMaterial({color:0x111111});
+
+  // Cabeza cuadrada
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.46,.46,.46),skin); head.position.y=1.62; head.castShadow=true; g.add(head);
+  // Ojos
+  const eyeM=new THREE.MeshBasicMaterial({color:0x111122});
+  [-1,1].forEach(sx=>{
+    const e=new THREE.Mesh(new THREE.BoxGeometry(.09,.09,.02),eyeM); e.position.set(sx*.12,1.65,.24); g.add(e);
   });
-  const torso=new THREE.Mesh(new THREE.CylinderGeometry(.27,.22,.88,8),mat); torso.position.y=1.08; g.add(torso);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),mat); head.position.y=1.67; g.add(head);
-  const visor=new THREE.Mesh(new THREE.SphereGeometry(.17,8,6,0,Math.PI),
-    new THREE.MeshPhongMaterial({color:0x111122,shininess:120}));
-  visor.rotation.x=-Math.PI/2; visor.position.set(0,1.65,.12); g.add(visor);
-  const armGeo=new THREE.CylinderGeometry(.08,.07,.68,6);
-  const aL=new THREE.Mesh(armGeo,dark); aL.rotation.z=Math.PI/5; aL.position.set(-.38,1.08,.08); g.add(aL);
-  const aR=new THREE.Mesh(armGeo,dark); aR.rotation.z=-Math.PI/5; aR.position.set(.38,1.08,-.08); g.add(aR);
+  // Casco (color del equipo)
+  const hat=new THREE.Mesh(new THREE.BoxGeometry(.5,.1,.5),mat); hat.position.y=1.88; g.add(hat);
+  const hatTop=new THREE.Mesh(new THREE.BoxGeometry(.38,.14,.38),mat); hatTop.position.y=1.98; g.add(hatTop);
+
+  // Torso
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(.5,.56,.26),mat); torso.position.y=1.09; torso.castShadow=true; g.add(torso);
+
+  // Brazos (box style)
+  const ag=new THREE.BoxGeometry(.19,.5,.19);
+  const aL=new THREE.Mesh(ag,mat); aL.position.set(-.35,1.1,0); g.add(aL);
+  const aR=new THREE.Mesh(ag,dark); aR.position.set(.35,1.1,0); g.add(aR);
+
+  // Piernas
+  const lg=new THREE.BoxGeometry(.21,.5,.21);
+  const lL=new THREE.Mesh(lg,dark); lL.position.set(-.13,.43,0); g.add(lL);
+  const lR=new THREE.Mesh(lg,dark); lR.position.set(.13,.43,0); g.add(lR);
+
+  // Zapatos
+  const sg=new THREE.BoxGeometry(.23,.1,.26);
+  g.add(Object.assign(new THREE.Mesh(sg,shoe),{position:new THREE.Vector3(-.13,.12,.03)}));
+  g.add(Object.assign(new THREE.Mesh(sg,shoe),{position:new THREE.Vector3(.13,.12,.03)}));
+
+  // Hitbox invisible
+  const hb=new THREE.Mesh(new THREE.BoxGeometry(.52,1.95,.52),new THREE.MeshBasicMaterial({visible:false}));
+  hb.position.y=.975; g.add(hb); g.userData.hitbox=hb;
   return g;
 }
 
-function duelBuildLights(){
-  duelScene.add(new THREE.AmbientLight(0xffffff,.75));
-  const sun=new THREE.DirectionalLight(0xfff4cc,1.3); sun.position.set(12,22,8); sun.castShadow=true;
-  sun.shadow.mapSize.width=sun.shadow.mapSize.height=2048;
-  ['left','right','top','bottom'].forEach((k,i)=>sun.shadow.camera[k]=[-28,28,28,-28][i]);
-  sun.shadow.camera.far=80; duelScene.add(sun);
-  const fill=new THREE.DirectionalLight(0x88aaff,.35); fill.position.set(-10,10,-15); duelScene.add(fill);
+function onAddOppMesh(slot,team){
+  if(onOpps.has(slot)) return;
+  const group=onCreateRobloxChar(TEAM_COLORS[team]||0x4488ff);
+  group.visible=false; onScene.add(group);
+  onOpps.set(slot,{group,hitbox:group.userData.hitbox});
 }
 
-function duelUpdateOpp(pos,yaw){
-  if(!duelOppMesh) return;
-  duelOppMesh.visible=true;
-  duelOppMesh.position.set(pos.x,0,pos.z);
-  duelOppMesh.rotation.y=yaw;
+// ── MOVIMIENTO ────────────────────────────────────────────────
+function onSpawnPlayer(spawn){
+  if(!spawn) spawn=onMySpawn;
+  onPos={x:spawn.x,z:spawn.z}; onYaw=spawn.yaw; onPitch=0; onAlive=true;
+  onYawObj.position.set(spawn.x,ON_H,spawn.z);
+  onYawObj.rotation.y=onYaw; onPitchObj.rotation.x=0;
 }
-
-// ── PLAYER ───────────────────────────────────────────────────
-function duelSpawnPlayer(spawn){
-  if(!spawn) spawn=duelMySpawn;
-  duelPos={x:spawn.x,z:spawn.z};
-  duelPlayerYaw=spawn.yaw; duelPlayerPitch=0;
-  duelYaw.position.set(spawn.x,DUEL_HEIGHT,spawn.z);
-  duelYaw.rotation.y=duelPlayerYaw; duelPitch.rotation.x=0;
-  duelAlive=true;
-}
-
-function duelCollides(nx,nz){
-  for(const o of duelObstacles)
-    if(nx>o.x-o.hw&&nx<o.x+o.hw&&nz>o.z-o.hd&&nz<o.z+o.hd) return true;
+function onCollides(nx,nz){
+  for(const o of onObs) if(nx>o.x-o.hw&&nx<o.x+o.hw&&nz>o.z-o.hd&&nz<o.z+o.hd) return true;
   return false;
 }
-
-function duelMove(dt){
-  if(!duelAlive||!duelActive) return;
-  const fw=(duelKeys['w']||duelKeys['W']?1:0)-(duelKeys['s']||duelKeys['S']?1:0);
-  const ri=(duelKeys['d']||duelKeys['D']?1:0)-(duelKeys['a']||duelKeys['A']?1:0);
+function onMove(dt){
+  if(!onAlive||!onActive) return;
+  const fw=(onKeys['w']||onKeys['W']?1:0)-(onKeys['s']||onKeys['S']?1:0);
+  const ri=(onKeys['d']||onKeys['D']?1:0)-(onKeys['a']||onKeys['A']?1:0);
   if(!fw&&!ri) return;
-  const len=Math.sqrt(fw*fw+ri*ri);
-  const y=duelPlayerYaw;
-  const mx=(fw/len)*(-Math.sin(y))+(ri/len)*Math.cos(y);
-  const mz=(fw/len)*(-Math.cos(y))+(ri/len)*(-Math.sin(y));
-  const sp=DUEL_MOVE_SPEED*dt;
-  const nx=duelPos.x+mx*sp, nz=duelPos.z+mz*sp;
-  if(!duelCollides(nx,duelPos.z)) duelPos.x=nx;
-  if(!duelCollides(duelPos.x,nz)) duelPos.z=nz;
-  duelYaw.position.set(duelPos.x,DUEL_HEIGHT,duelPos.z);
+  const len=Math.sqrt(fw*fw+ri*ri), sp=ON_SPD*dt;
+  const nx=onPos.x+((fw/len)*(-Math.sin(onYaw))+(ri/len)*Math.cos(onYaw))*sp;
+  const nz=onPos.z+((fw/len)*(-Math.cos(onYaw))+(ri/len)*(-Math.sin(onYaw)))*sp;
+  if(!onCollides(nx,onPos.z)) onPos.x=nx;
+  if(!onCollides(onPos.x,nz)) onPos.z=nz;
+  onYawObj.position.set(onPos.x,ON_H,onPos.z);
+}
+function onApplyCam(){
+  if(!onMX&&!onMY) return;
+  onYaw-=onMX*ON_SENS; onPitch-=onMY*ON_SENS;
+  onPitch=Math.max(-Math.PI/2+.04,Math.min(Math.PI/2-.04,onPitch));
+  onYawObj.rotation.y=onYaw; onPitchObj.rotation.x=onPitch;
+  onMX=onMY=0;
 }
 
-function duelApplyCam(){
-  if(!duelMouseDX&&!duelMouseDY) return;
-  duelPlayerYaw-=duelMouseDX*DUEL_SENSITIVITY;
-  duelPlayerPitch-=duelMouseDY*DUEL_SENSITIVITY;
-  duelPlayerPitch=Math.max(-Math.PI/2+.04,Math.min(Math.PI/2-.04,duelPlayerPitch));
-  duelYaw.rotation.y=duelPlayerYaw; duelPitch.rotation.x=duelPlayerPitch;
-  duelMouseDX=duelMouseDY=0;
+// ── ACTUALIZACION OPONENTES ───────────────────────────────────
+function onUpdateOpp(slot,pos,yaw){
+  const o=onOpps.get(slot); if(!o) return;
+  o.group.visible=true; o.group.position.set(pos.x,0,pos.z); o.group.rotation.y=yaw;
+}
+function onHandlePlayerRespawn(slot,spawn){
+  const o=onOpps.get(slot); if(o&&spawn) o.group.position.set(spawn.x,0,spawn.z);
 }
 
-// ── SHOOT ────────────────────────────────────────────────────
-function duelTryShoot(){
-  if(!duelAlive||!duelActive||!duelCanShoot) return;
-  duelCanShoot=false; setTimeout(()=>duelCanShoot=true,DUEL_SHOOT_CD);
-  playGunshot();
-  duelSend({type:'shoot'});
-  duelRaycaster.setFromCamera(new THREE.Vector2(0,0),duelCamera);
-  if(duelOppHitbox&&duelOppMesh&&duelOppMesh.visible){
-    if(duelRaycaster.intersectObject(duelOppHitbox,false).length>0){
-      duelSend({type:'hit'});
-      const f=document.getElementById('duel-hit-flash'); f.style.opacity='1'; setTimeout(()=>f.style.opacity='0',80);
+// ── DISPARO (con colision de paredes) ─────────────────────────
+function onTryShoot(){
+  if(!onAlive||!onActive||!onCanShoot) return;
+  onCanShoot=false; setTimeout(()=>onCanShoot=true,ON_CD);
+  playGunshot(); onGunAnim=1;
+  // Flash en el canon
+  const fl=new THREE.PointLight(0xff3d71,7,2); fl.position.set(0,.03,-.42); onCamera.add(fl); setTimeout(()=>onCamera.remove(fl),55);
+  onSend({type:'shoot'});
+  
+  onRaycaster.setFromCamera(new THREE.Vector2(0,0),onCamera);
+  // Distancia al muro mas cercano
+  const wallHits=onRaycaster.intersectObjects(onWalls,false);
+  const wallDist=wallHits.length>0?wallHits[0].distance:Infinity;
+  // Verificar hitboxes de oponentes
+  const hitboxes=[...onOpps.values()].map(o=>o.hitbox).filter(Boolean);
+  const oppHits=onRaycaster.intersectObjects(hitboxes,false);
+  
+  if(oppHits.length>0 && oppHits[0].distance<wallDist){
+    const hitHB=oppHits[0].object;
+    for(const [slot,opp] of onOpps){
+      if(opp.hitbox===hitHB){
+        onSend({type:'hit',victimSlot:slot});
+        const f=document.getElementById('duel-hit-flash');
+        f.style.opacity='1'; setTimeout(()=>f.style.opacity='0',80);
+        break;
+      }
     }
   }
 }
 
-// ── GAME FLOW ─────────────────────────────────────────────────
-function duelStartGame(){
-  if(!duelThreeReady){ duelInitThree(); duelThreeReady=true; }
+// ── INICIO DE PARTIDA ─────────────────────────────────────────
+function onStartGame(msg){
+  if(!onThreeReady) onInitThree();
+  onRoomMode=msg.mode; onFirstTo=msg.firstTo;
+  onTeamScores=[0,0]; onPScores={};
+  onActive=true; onWaitPlayers=[];
 
-  // Set opp color
-  const oppColor=duelOppSlot===0?0xff4444:0x4488ff;
-  duelOppMesh.traverse(c=>{
-    if(c.isMesh&&c.material&&c.material.visible!==false){
-      c.material.color.set(oppColor);
-      if(c.material.emissive) c.material.emissive.set(new THREE.Color(oppColor).multiplyScalar(.15));
-    }
+  // Setup players
+  msg.players.forEach(p=>{
+    onPlayerNames.set(p.slot,p.name);
+    if(p.slot===onMySlot){ onMySpawn=p.spawn; onMyTeam=p.team; }
+    else onAddOppMesh(p.slot,p.team);
   });
-  duelOppMesh.visible=false;
+  onSpawnPlayer(onMySpawn);
 
   // HUD
-  document.getElementById('duel-my-name-hud').textContent=duelMyName.toUpperCase();
-  document.getElementById('duel-opp-name-hud').textContent=duelOppName.toUpperCase();
-  const myColor=duelSlot===0?'#ff4444':'#4488ff';
-  document.getElementById('duel-my-kills').style.color=myColor;
-  document.getElementById('duel-my-kills').style.textShadow=`0 0 12px ${myColor}`;
-  document.getElementById('duel-team-label').textContent=duelSlot===0?'🔴 ROJO':'🔵 AZUL';
-  document.getElementById('duel-team-label').style.color=duelSlot===0?'#ff4444':'#4488ff';
-  document.getElementById('duel-lock-team').textContent=`Eres el equipo ${duelSlot===0?'ROJO':'AZUL'}`;
+  const myCol=TEAM_HEX[onMyTeam]||'#ff4444';
+  document.getElementById('duel-my-name-hud').textContent=onMyName.toUpperCase();
+  document.getElementById('duel-opp-name-hud').textContent=msg.mode==='ffa'?'FFA':'RIVAL';
+  document.getElementById('duel-team-label').textContent=TEAM_LBL[onMyTeam]||'?';
+  document.getElementById('duel-team-label').style.color=myCol;
+  document.getElementById('duel-my-kills').style.color=myCol;
+  document.getElementById('duel-my-kills').style.textShadow='0 0 12px '+myCol;
+  const ft=document.getElementById('duel-firstto');
+  if(ft) ft.textContent=msg.firstTo;
+  onRefreshHUD();
 
-  duelScores=[0,0]; duelRefreshScore(); duelActive=true;
-  duelSpawnPlayer(duelMySpawn);
+  // Lock screen
+  const oppNames=msg.players.filter(p=>p.slot!==onMySlot).map(p=>p.name).join(', ');
+  document.getElementById('duel-opp-name-lock').textContent=oppNames||'Rival';
+  document.getElementById('duel-lock-team').textContent='Equipo: '+TEAM_LBL[onMyTeam];
 
-  // Show game UI
-  duelShowScreen(null);
+  // Show game
+  onShowScreen(null);
   document.getElementById('duel-canvas').style.display='block';
   document.getElementById('duel-hud').style.display='block';
   document.getElementById('duel-lock-screen').style.display='flex';
 
-  // State broadcast 20/s
-  clearInterval(duelStateIv);
-  duelStateIv=setInterval(()=>{
-    if(duelAlive&&duelActive)
-      duelSend({type:'state',pos:{x:duelPos.x,z:duelPos.z},yaw:duelPlayerYaw,pitch:duelPlayerPitch});
+  // Broadcast state 20/s
+  clearInterval(onStateIv);
+  onStateIv=setInterval(()=>{
+    if(onAlive&&onActive) onSend({type:'state',pos:{...onPos},yaw:onYaw});
   },50);
 
-  // Render loop
-  if(duelAnimId) cancelAnimationFrame(duelAnimId);
-  let last=performance.now(), fpsF=0, fpsA=0;
-  function duelLoop(now){
-    duelAnimId=requestAnimationFrame(duelLoop);
+  // Render loop (sin cap de FPS)
+  if(onAnimId) cancelAnimationFrame(onAnimId);
+  let last=performance.now(),fF=0,fA=0;
+  function onLoop(now){
+    onAnimId=requestAnimationFrame(onLoop);
     const dt=Math.min((now-last)/1000,.05); last=now;
-    fpsF++; fpsA+=dt;
-    if(fpsA>=.5){
-      document.getElementById('duel-fps-hud').textContent=Math.round(fpsF/fpsA)+' FPS';
-      fpsF=0; fpsA=0;
-    }
-    if(duelActive){ duelMove(dt); duelApplyCam(); }
-    duelRenderer.render(duelScene,duelCamera);
+    fF++; fA+=dt;
+    if(fA>=.5){ document.getElementById('duel-fps-hud').textContent=Math.round(fF/fA)+' FPS'; fF=0; fA=0; }
+    if(onActive){ onMove(dt); onApplyCam(); onAnimGun(dt); }
+    onRenderer.render(onScene,onCamera);
   }
-  duelLoop(performance.now());
+  onLoop(performance.now());
 }
 
-function duelHandleDeath(){
-  duelAlive=false;
-  document.getElementById('duel-death-vignette').style.display='block';
-  document.getElementById('duel-respawn-msg').style.display='block';
+// ── KILLS / RESPAWN ───────────────────────────────────────────
+function onHandleKill(msg){
+  onRefreshHUD();
+  const killerName=onPlayerNames.get(msg.killerSlot)||'?';
+  const victimName=onPlayerNames.get(msg.victimSlot)||'?';
+  if(msg.victimSlot===onMySlot){
+    onAlive=false;
+    document.getElementById('duel-death-vignette').style.display='block';
+    document.getElementById('duel-respawn-msg').style.display='block';
+    onAddFeed(killerName+' \u27a4 '+onMyName,'#ff4444');
+  } else if(msg.killerSlot===onMySlot){
+    document.getElementById('duel-kill-notif').style.opacity='1';
+    setTimeout(()=>document.getElementById('duel-kill-notif').style.opacity='0',1600);
+    onAddFeed(onMyName+' \u27a4 '+victimName,'#44ff88');
+  } else {
+    onAddFeed(killerName+' \u27a4 '+victimName,'#aaaaaa');
+  }
+  if(msg.matchOver){
+    const won=msg.killerTeam===onMyTeam||msg.killerSlot===onMySlot;
+    setTimeout(()=>onShowGameOver(won),1800);
+  }
 }
-function duelHandleRespawn(spawn){
-  duelSpawnPlayer(spawn||duelMySpawn);
+function onHandleRespawn(spawn){
+  onSpawnPlayer(spawn||onMySpawn);
   document.getElementById('duel-death-vignette').style.display='none';
   document.getElementById('duel-respawn-msg').style.display='none';
 }
-function duelShowKillNotif(){
-  const el=document.getElementById('duel-kill-notif'); el.style.opacity='1';
-  setTimeout(()=>el.style.opacity='0',1600);
+function onRefreshHUD(){
+  if(onRoomMode==='ffa'){
+    document.getElementById('duel-my-kills').textContent=onPScores[onMyName]||0;
+    document.getElementById('duel-opp-kills').textContent='FFA';
+  } else {
+    document.getElementById('duel-my-kills').textContent=onTeamScores[onMyTeam]||0;
+    document.getElementById('duel-opp-kills').textContent=onTeamScores[onMyTeam===0?1:0]||0;
+  }
 }
-function duelAddFeed(text){
+function onAddFeed(text,color){
   const feed=document.getElementById('duel-kill-feed');
   const el=document.createElement('div');
-  el.style.cssText='font-size:.62rem;letter-spacing:.08em;background:rgba(5,8,15,.85);padding:5px 11px;border-left:3px solid #ff3d71;color:var(--text)';
+  el.style.cssText='font-size:.6rem;letter-spacing:.06em;background:rgba(5,8,15,.88);padding:4px 10px;border-left:3px solid '+color+';color:'+color;
   el.textContent=text; feed.appendChild(el);
-  setTimeout(()=>el.remove(),5000);
+  if(feed.children.length>6) feed.removeChild(feed.firstChild);
+  setTimeout(()=>{try{el.remove();}catch(e){}},5000);
 }
-function duelRefreshScore(){
-  document.getElementById('duel-my-kills').textContent=duelScores[duelSlot]??0;
-  document.getElementById('duel-opp-kills').textContent=duelScores[duelOppSlot]??0;
+function onShowGameOver(won){
+  onCleanup();
+  const t=document.getElementById('duel-go-title');
+  t.textContent=won?'\u00a1VICTORIA!':'DERROTA';
+  t.style.color=won?'var(--green)':'var(--accent2)';
+  t.style.textShadow='0 0 30px '+(won?'var(--green)':'var(--accent2)');
+  const myK=onRoomMode==='ffa'?(onPScores[onMyName]||0):onTeamScores[onMyTeam];
+  const oppK=onRoomMode==='ffa'?'?':onTeamScores[onMyTeam===0?1:0];
+  document.getElementById('duel-go-vs').textContent='Modo: '+onRoomMode.toUpperCase();
+  document.getElementById('duel-go-score').textContent=onRoomMode==='ffa'?('Tu score: '+myK):(myK+' \u2014 '+oppK);
+  onShowScreen('duel-gameover-screen');
 }
-function duelShowGameOver(won){
-  duelCleanup();
-  const title=document.getElementById('duel-go-title');
-  title.textContent=won?'¡VICTORIA!':'DERROTA';
-  title.style.color=won?'var(--green)':'var(--accent2)';
-  title.style.textShadow=`0 0 30px ${won?'var(--green)':'var(--accent2)'}`;
-  document.getElementById('duel-go-vs').textContent=`${duelMyName} vs ${duelOppName}`;
-  document.getElementById('duel-go-score').textContent=`${duelScores[duelSlot]} — ${duelScores[duelOppSlot]}`;
-  duelShowScreen('duel-gameover-screen');
+function onSetErr(msg){
+  onCleanup(); onLobbyErr(msg); onShowScreen('duel-lobby-screen'); onConnect();
 }
-function duelSetErr(msg){
-  duelCleanup();
-  duelShowScreen('duel-connect-screen');
-  document.getElementById('duel-err').textContent='⚠ '+msg;
-}
-function duelCleanup(){
-  duelActive=false;
-  clearInterval(duelStateIv);
-  try{ document.exitPointerLock(); }catch(e){}
+function onCleanup(){
+  onActive=false; clearInterval(onStateIv);
+  try{document.exitPointerLock();}catch(e){}
   document.getElementById('duel-canvas').style.display='none';
   document.getElementById('duel-hud').style.display='none';
   document.getElementById('duel-crosshair').style.display='none';
   document.getElementById('duel-lock-screen').style.display='none';
   document.getElementById('duel-death-vignette').style.display='none';
   document.getElementById('duel-respawn-msg').style.display='none';
-  if(duelAnimId){ cancelAnimationFrame(duelAnimId); duelAnimId=null; }
+  onOpps.forEach(o=>{if(onScene)onScene.remove(o.group);}); onOpps.clear();
+  if(onAnimId){cancelAnimationFrame(onAnimId);onAnimId=null;}
 }
 
 // ── POINTER LOCK ─────────────────────────────────────────────
 document.addEventListener('pointerlockchange',()=>{
-  // Solo procesar si el canvas activo es el duel
-  if(!duelActive) return;
-  duelLocked=document.pointerLockElement===document.getElementById('duel-canvas');
-  document.getElementById('duel-crosshair').style.display=duelLocked?'block':'none';
-  document.getElementById('duel-lock-screen').style.display=duelLocked||!duelActive?'none':'flex';
+  if(!onActive) return;
+  onLocked=document.pointerLockElement===document.getElementById('duel-canvas');
+  document.getElementById('duel-crosshair').style.display=onLocked?'block':'none';
+  document.getElementById('duel-lock-screen').style.display=onLocked?'none':'flex';
 });
-document.getElementById('duel-lock-btn').addEventListener('click',()=>
-  document.getElementById('duel-canvas').requestPointerLock()
-);
+document.getElementById('duel-lock-btn').addEventListener('click',()=>{
+  document.getElementById('duel-canvas').requestPointerLock();
+});
 document.addEventListener('mousemove',e=>{
-  if(!duelLocked||!duelActive) return;
-  duelMouseDX+=e.movementX; duelMouseDY+=e.movementY;
+  if(!onLocked||!onActive) return;
+  onMX+=e.movementX; onMY+=e.movementY;
 });
 document.getElementById('duel-canvas').addEventListener('click',()=>{
-  if(duelLocked&&duelActive) duelTryShoot();
+  if(onLocked&&onActive) onTryShoot();
 });
-document.addEventListener('keydown',e=>{ duelKeys[e.key]=true; });
-document.addEventListener('keyup',  e=>{ duelKeys[e.key]=false; });
+document.addEventListener('keydown',e=>{ onKeys[e.key]=true; });
+document.addEventListener('keyup',  e=>{ onKeys[e.key]=false; });
 
 </script>
 </body>
