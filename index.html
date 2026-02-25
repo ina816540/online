@@ -1285,7 +1285,9 @@ document.getElementById('menu-btn').addEventListener('click',()=>{ resultsScreen
 // ============================================================
 // ⚔ MODO 1v1 ONLINE
 // ============================================================
-const DUEL_SERVER = 'wss://inatrainerjuego-production.up.railway.app';
+const DUEL_SERVER = location.protocol === 'https:' 
+  ? 'wss://' + location.host 
+  : 'ws://' + location.host;
 const DUEL_MAX_KILLS   = 6;
 const DUEL_MOVE_SPEED  = 7.5;
 const DUEL_SENSITIVITY = 0.0020;
