@@ -1432,7 +1432,7 @@ function onMsg(msg){
     case 'room_list':   onUpdateRoomList(msg.rooms); break;
     case 'room_joined': onRoomJoined(msg); break;
     case 'player_joined': onPlayerJoined(msg); break;
-    case 'start':       onStartGame(msg); break;
+    case 'start':       setTimeout(()=>onStartGame(msg), 150); break;
     case 'opp_state':   onUpdateOpp(msg.slot,msg.pos,msg.yaw); break;
     case 'opp_shoot':   break;
     case 'kill':        onTeamScores=msg.teamScores; onPScores=msg.pScores; onHandleKill(msg); break;
