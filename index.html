@@ -51,33 +51,23 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .screen.hidden{opacity:0;pointer-events:none;}
 @keyframes glow{0%,100%{text-shadow:0 0 30px var(--accent),0 0 60px rgba(224,64,251,.3);}50%{text-shadow:0 0 50px var(--accent),0 0 100px rgba(224,64,251,.5);}}
 
-/* ═══════════════════════════════════════════
-   LOGIN — NUEVO DISEÑO
-═══════════════════════════════════════════ */
+/* LOGIN */
 #login-screen{gap:0;background:radial-gradient(ellipse at center,rgba(224,64,251,.06) 0%,transparent 70%);}
 .login-logo{text-align:center;margin-bottom:28px;}
 .login-logo h1{font-family:'Orbitron',monospace;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;letter-spacing:.3em;color:var(--accent);animation:glow 3s ease-in-out infinite;}
 .login-logo p{font-size:.68rem;letter-spacing:.5em;color:var(--dim);margin-top:6px;}
-
 .auth-box{background:var(--panel);border:1px solid var(--border);padding:0;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));width:380px;overflow:hidden;}
-
-/* Tabs */
 .auth-tabs{display:flex;border-bottom:1px solid var(--border);}
 .auth-tab{flex:1;background:none;border:none;color:var(--dim);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.25em;padding:14px 10px;cursor:pointer;transition:all .2s;position:relative;}
 .auth-tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s;}
 .auth-tab.active{color:var(--accent);background:rgba(224,64,251,.05);}
 .auth-tab.active::after{transform:scaleX(1);}
 .auth-tab:hover:not(.active){color:var(--text);}
-
 .auth-panel{padding:28px 32px;display:flex;flex-direction:column;gap:14px;}
-
-/* Avatar */
 .avatar-row{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;}
 .avatar-opt{font-size:1.4rem;cursor:pointer;padding:4px 8px;border:2px solid transparent;border-radius:8px;transition:all .15s;background:#030608;}
 .avatar-opt:hover{border-color:var(--accent);transform:scale(1.1);}
 .avatar-opt.selected{border-color:var(--accent);background:rgba(224,64,251,.15);transform:scale(1.15);}
-
-/* Input fields */
 .field-wrap{display:flex;flex-direction:column;gap:5px;}
 .field-wrap label{font-size:.56rem;letter-spacing:.3em;color:var(--dim);}
 .field-input-row{display:flex;align-items:center;gap:0;position:relative;}
@@ -85,29 +75,19 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .auth-input{background:#030608;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.95rem;padding:11px 12px 11px 36px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s;letter-spacing:.08em;}
 .auth-input:focus{border-color:var(--accent);box-shadow:0 0 14px rgba(224,64,251,.18);}
 .auth-input.no-icon{padding-left:12px;}
-
-/* Password strength */
 .pw-strength{height:2px;background:var(--border);margin-top:4px;border-radius:1px;overflow:hidden;}
 .pw-strength-fill{height:100%;border-radius:1px;transition:width .3s,background .3s;width:0%;}
-
-/* Submit button */
 .auth-submit{background:var(--accent);border:none;color:#000;font-family:'Orbitron',monospace;font-size:.82rem;font-weight:900;letter-spacing:.2em;padding:13px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;width:100%;position:relative;overflow:hidden;}
 .auth-submit:hover{box-shadow:0 0 30px rgba(224,64,251,.6);}
 .auth-submit:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
 .auth-submit .btn-loader{display:none;position:absolute;inset:0;background:inherit;align-items:center;justify-content:center;}
 .auth-submit.loading .btn-loader{display:flex;}
 .auth-submit.loading .btn-text{opacity:0;}
-
-/* Spinner */
 @keyframes spin{to{transform:rotate(360deg);}}
 .spinner{width:18px;height:18px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;}
-
-/* Messages */
 .auth-msg{font-size:.62rem;text-align:center;letter-spacing:.1em;min-height:16px;padding:2px 0;}
 .auth-msg.error{color:var(--accent2);}
 .auth-msg.success{color:var(--green);}
-
-/* Divider */
 .auth-divider{display:flex;align-items:center;gap:10px;margin:2px 0;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .auth-divider span{font-size:.52rem;letter-spacing:.2em;color:var(--dim);}
@@ -135,6 +115,7 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .lb-me td{background:rgba(224,64,251,.06)!important;}
 .lb-loading,.lb-empty{text-align:center;color:var(--dim);font-size:.7rem;letter-spacing:.2em;padding:30px;}
 .lb-footer{display:flex;gap:10px;justify-content:center;margin-top:18px;margin-bottom:28px;}
+
 /* STATS */
 #stats-screen{gap:0;justify-content:flex-start;padding-top:26px;overflow-y:auto;}
 .stats-hdr{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;letter-spacing:.3em;color:var(--accent);margin-bottom:16px;text-align:center;}
@@ -155,6 +136,7 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .mr-score{font-family:'Orbitron',monospace;font-size:.78rem;color:var(--accent);font-weight:700;}
 .mr-acc{font-size:.62rem;color:var(--green);}
 .stats-footer{display:flex;gap:10px;justify-content:center;margin-top:16px;margin-bottom:28px;}
+
 /* MENU */
 #menu-screen{gap:0;background:radial-gradient(ellipse at center,rgba(224,64,251,.04) 0%,transparent 70%);}
 .logo{text-align:center;margin-bottom:20px;}
@@ -183,10 +165,11 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .cfg-btn{background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:8px 13px;cursor:pointer;transition:all .15s;}
 .cfg-btn:hover{border-color:var(--accent3);color:var(--accent3);}
 .menu-extra-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;}
-.extra-btn{background:var(--panel);border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.15em;padding:7px 13px;cursor:pointer;transition:all .15s;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);}
+.extra-btn{background:var(--panel);border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.15em;padding:7px 13px;cursor:pointer;transition:all .15px;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);}
 .extra-btn:hover{border-color:var(--accent3);color:var(--accent3);}
 .user-badge{display:flex;align-items:center;gap:7px;background:var(--panel);border:1px solid rgba(224,64,251,.3);padding:7px 13px;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);}
 .user-badge span{font-size:.63rem;color:var(--text);letter-spacing:.1em;}
+
 /* SETTINGS */
 #settings-screen{gap:0;justify-content:flex-start;padding-top:26px;overflow-y:auto;}
 .cfg-hdr{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;letter-spacing:.3em;color:var(--accent);margin-bottom:16px;text-align:center;}
@@ -212,6 +195,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .color-opt:hover{transform:scale(1.2);}
 .color-opt.active{border-color:#fff;transform:scale(1.15);}
 .cfg-footer{margin-top:14px;display:flex;gap:11px;margin-bottom:26px;}
+
 /* RESULTS */
 #results-screen{gap:20px;}
 #results-screen h2{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;letter-spacing:.3em;color:var(--accent);text-shadow:0 0 20px var(--accent);}
@@ -226,6 +210,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .btn-p:hover{box-shadow:0 0 25px var(--accent);}
 .btn-s{background:transparent;color:var(--text);border:1px solid var(--border);}
 .btn-s:hover{border-color:var(--accent);color:var(--accent);}
+
 /* POINTER LOCK */
 #lock-overlay{position:fixed;inset:0;z-index:80;background:rgba(5,8,15,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
 #lock-overlay h2{font-family:'Orbitron',monospace;font-size:1.3rem;letter-spacing:.2em;color:var(--accent);text-shadow:0 0 20px var(--accent);}
@@ -234,6 +219,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .lock-btn:hover{box-shadow:0 0 30px var(--accent);}
 #pause-menu-btn:hover{border-color:var(--accent3)!important;color:var(--accent3)!important;}
 #pause-quit-btn:hover{border-color:var(--accent2)!important;background:rgba(255,61,113,.08)!important;}
+
 /* ONLINE ROOMS */
 .room-card{background:var(--panel);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px));transition:border-color .15s;}
 .room-card:hover{border-color:rgba(255,61,113,.4);}
@@ -241,46 +227,51 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .room-join{background:#ff3d71;border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.15em;padding:7px 14px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);transition:box-shadow .15s;}
 .room-join:hover{box-shadow:0 0 12px rgba(255,61,113,.5);}
 .player-slot{background:rgba(255,255,255,.03);border:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;gap:8px;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px));}
+
 /* CHAT */
 #duel-chat-msgs::-webkit-scrollbar{width:4px;}
 #duel-chat-msgs::-webkit-scrollbar-track{background:transparent;}
 #duel-chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
 /* PING */
 @keyframes ping-pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
 .ping-bad{animation:ping-pulse .8s infinite;}
+
 /* login anim */
 @keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .auth-panel{animation:slideIn .25s ease-out;}
 
 /* ═══════════════════════════════════════
-   MOBILE CONTROLS
+   MOBILE CONTROLS — SOLO
 ═══════════════════════════════════════ */
 #mobile-controls{position:fixed;inset:0;z-index:55;pointer-events:none;display:none;}
 #mobile-controls.active{display:block;}
-
-/* Joystick zone — left half bottom */
 #joy-zone{position:absolute;left:0;bottom:0;width:50%;height:55%;pointer-events:all;}
 #joy-base{position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);transform:translate(-50%,-50%);display:none;transition:opacity .15s;}
 #joy-knob{position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(224,64,251,.7);box-shadow:0 0 18px rgba(224,64,251,.5);border:2px solid rgba(224,64,251,.9);transform:translate(-50%,-50%);display:none;transition:box-shadow .1s;}
-
-/* Look zone — right half (camera drag) */
 #look-zone{position:absolute;right:0;bottom:0;width:50%;height:100%;pointer-events:all;}
-
-/* Fire button */
 #btn-fire{position:absolute;right:24px;bottom:90px;width:80px;height:80px;border-radius:50%;background:rgba(255,61,113,.25);border:3px solid rgba(255,61,113,.7);color:#ff3d71;font-size:1.8rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;transition:all .1s;-webkit-tap-highlight-color:transparent;user-select:none;}
 #btn-fire:active{background:rgba(255,61,113,.55);transform:scale(.9);box-shadow:0 0 24px rgba(255,61,113,.6);}
-
-/* Jump button */
 #btn-jump{position:absolute;right:120px;bottom:90px;width:60px;height:60px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid rgba(0,229,255,.5);color:#00e5ff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;transition:all .1s;-webkit-tap-highlight-color:transparent;user-select:none;}
 #btn-jump:active{background:rgba(0,229,255,.4);transform:scale(.9);}
-
-/* Pause button mobile */
 #btn-pause-mob{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(5,8,15,.75);border:1px solid rgba(224,64,251,.3);color:var(--accent);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.2em;padding:8px 16px;pointer-events:all;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);-webkit-tap-highlight-color:transparent;}
 
-/* Mobile toggle button (shown in lock overlay & menu) */
+/* Mobile toggle button */
 .mob-toggle-btn{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.4);color:var(--accent3);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:10px 22px;cursor:pointer;clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .mob-toggle-btn:hover,.mob-toggle-btn:active{background:rgba(0,229,255,.25);box-shadow:0 0 18px rgba(0,229,255,.3);}
 .mob-toggle-btn.on{background:rgba(0,229,255,.25);border-color:var(--accent3);box-shadow:0 0 14px rgba(0,229,255,.35);}
+
+/* ═══════════════════════════════════════
+   DUEL MOBILE CONTROLS
+   FIX: display:none en CSS (no inline) para que .active pueda sobreescribirlo
+═══════════════════════════════════════ */
+#duel-mobile-controls{
+  position:fixed;inset:0;z-index:56;pointer-events:none;
+  display:none;  /* ← AQUÍ en CSS, no como inline style */
+}
+#duel-mobile-controls.active{
+  display:block !important;  /* ← !important garantiza que sobreescribe todo */
+}
 </style>
 </head>
 <body>
@@ -303,7 +294,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div class="acc-wrap"><div class="acc-lbl">ACCURACY · <span id="acc-pct">0</span>%</div><div class="acc-bg"><div class="acc-fill" id="acc-fill"></div></div></div>
   <button class="quit-btn" id="quit-btn">[ SALIR ]</button>
 </div>
-<!-- MOBILE CONTROLS OVERLAY -->
+
+<!-- SOLO MOBILE CONTROLS -->
 <div id="mobile-controls">
   <div id="joy-zone">
     <div id="joy-base"></div>
@@ -335,9 +327,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div style="font-size:.54rem;letter-spacing:.25em;color:var(--dim);margin-top:6px;">Presiona <strong style="color:var(--accent)">ESC</strong> o haz clic en Reanudar para continuar</div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     LOGIN — NUEVO
-═══════════════════════════════════════════ -->
+<!-- LOGIN -->
 <div class="screen" id="login-screen">
   <div class="login-logo">
     <h1>INA TRAINER</h1>
@@ -348,8 +338,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">⚡ INICIAR SESIÓN</button>
       <button class="auth-tab" id="tab-register" onclick="switchTab('register')">✦ REGISTRARSE</button>
     </div>
-
-    <!-- LOGIN PANEL -->
     <div class="auth-panel" id="panel-login">
       <div class="field-wrap">
         <label>USUARIO</label>
@@ -373,10 +361,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <div class="auth-divider"><span>¿Aún no tienes cuenta?</span></div>
       <button style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:9px;cursor:pointer;transition:all .2s;width:100%" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'" onclick="switchTab('register')">CREAR CUENTA GRATIS →</button>
     </div>
-
-    <!-- REGISTER PANEL -->
     <div class="auth-panel" id="panel-register" style="display:none">
-      <!-- Avatar -->
       <div class="field-wrap">
         <label>ELIGE TU AVATAR</label>
         <div class="avatar-row" id="avatar-row">
@@ -697,8 +682,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">WASD MOVER · MOUSE APUNTAR · CLIC DISPARAR · ESPACIO SALTAR</div>
 </div>
 
-<!-- DUEL MOBILE CONTROLS (PVP only) -->
-<div id="duel-mobile-controls" style="position:fixed;inset:0;z-index:56;pointer-events:none;display:none;">
+<!-- ══════════════════════════════════════════
+     DUEL MOBILE CONTROLS (PVP only)
+     FIX: Sin display:none inline — el CSS lo maneja
+══════════════════════════════════════════ -->
+<div id="duel-mobile-controls">
   <!-- Joystick zone left -->
   <div id="duel-joy-zone" style="position:absolute;left:0;bottom:0;width:50%;height:55%;pointer-events:all;"></div>
   <div id="duel-joy-base" style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,61,113,.4);transform:translate(-50%,-50%);display:none;"></div>
@@ -711,16 +699,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div id="duel-btn-jump" style="position:absolute;right:120px;bottom:90px;width:60px;height:60px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid rgba(0,229,255,.5);color:#00e5ff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">⬆</div>
   <!-- Pause button -->
   <button id="duel-btn-pause-mob" style="position:absolute;top:80px;left:50%;transform:translateX(-50%);background:rgba(5,8,15,.75);border:1px solid rgba(255,61,113,.3);color:#ff3d71;font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.2em;padding:8px 16px;pointer-events:all;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);-webkit-tap-highlight-color:transparent;">⏸ PAUSA</button>
+  <!-- Mobile toggle for duel -->
+  <button class="mob-toggle-btn" id="mob-toggle-duel-btn" style="position:absolute;top:14px;right:14px;padding:6px 12px;font-size:.52rem;pointer-events:all;">📱</button>
 </div>
-<style>
-#duel-mobile-controls.active{display:block;}
-</style>
 
 <div id="duel-lock-screen" style="position:fixed;inset:0;z-index:80;background:rgba(5,8,15,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="font-family:'Orbitron',monospace;font-size:1.5rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">⚔ 1v1 · INA MAP</div>
   <div style="font-size:.68rem;letter-spacing:.13em;color:var(--dim);text-align:center;line-height:2">VS <strong id="duel-opp-name-lock" style="color:#ff3d71">Rival</strong><br><strong style="color:var(--accent)">WASD</strong> mover · <strong style="color:var(--accent)">MOUSE</strong> apuntar · <strong style="color:var(--accent)">CLIC</strong> disparar · <strong style="color:var(--accent)">ESPACIO</strong> saltar · <strong style="color:var(--accent)">ESC</strong> pausar</div>
   <button class="lock-btn" id="duel-lock-btn" style="background:#ff3d71">🖱 CLIC PARA JUGAR</button>
-  <button class="mob-toggle-btn" id="mob-toggle-duel-btn" style="margin-top:2px">📱 MODO MÓVIL</button>
+  <button class="mob-toggle-btn" id="mob-toggle-duel-btn-lock" style="margin-top:2px">📱 MODO MÓVIL</button>
   <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim)" id="duel-lock-team">—</div>
 </div>
 
@@ -734,13 +721,12 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
-// AUTH — USUARIO + CONTRASEÑA PROPIO
+// AUTH
 // ============================================================
-let currentUser = null;   // { id, name, avatar }
+let currentUser = null;
 let selectedAvatar = '🎯';
 let usernameCheckTimer = null;
 
-// Hash SHA-256 con salt
 async function hashPassword(pw) {
   const enc = new TextEncoder();
   const data = enc.encode('inatrainer_2025_' + pw);
@@ -748,7 +734,6 @@ async function hashPassword(pw) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── Cargar sesión guardada ───────────────────────────────────
 function loadSession() {
   try { const s = localStorage.getItem('ina_session'); if (s) currentUser = JSON.parse(s); } catch(e) {}
 }
@@ -762,25 +747,21 @@ function clearSession() {
 
 loadSession();
 
-// ── Tab switcher ─────────────────────────────────────────────
 function switchTab(tab) {
   document.getElementById('tab-login').classList.toggle('active', tab === 'login');
   document.getElementById('tab-register').classList.toggle('active', tab === 'register');
   document.getElementById('panel-login').style.display    = tab === 'login'    ? 'flex' : 'none';
   document.getElementById('panel-register').style.display = tab === 'register' ? 'flex' : 'none';
-  // clear messages
   document.getElementById('login-msg').textContent = '';
   document.getElementById('register-msg').textContent = '';
 }
 
-// ── Avatar picker ────────────────────────────────────────────
 document.querySelectorAll('.avatar-opt').forEach(o => o.addEventListener('click', () => {
   document.querySelectorAll('.avatar-opt').forEach(x => x.classList.remove('selected'));
   o.classList.add('selected');
   selectedAvatar = o.dataset.av;
 }));
 
-// ── Password strength ────────────────────────────────────────
 function updatePwStrength() {
   const pw = document.getElementById('reg-password').value;
   const fill = document.getElementById('pw-strength-fill');
@@ -795,7 +776,6 @@ function updatePwStrength() {
   fill.style.background = pw.length ? colors[score-1] || '#ff3d71' : 'transparent';
 }
 
-// ── Username availability check ──────────────────────────────
 function checkUsernameAvail() {
   const el  = document.getElementById('username-avail');
   const val = document.getElementById('reg-username').value.trim();
@@ -818,96 +798,54 @@ function checkUsernameAvail() {
   }, 500);
 }
 
-// ── SET button loading state ─────────────────────────────────
 function setBtnLoading(id, loading) {
   const btn = document.getElementById(id);
   btn.classList.toggle('loading', loading);
   btn.disabled = loading;
 }
 
-// ── REGISTER ─────────────────────────────────────────────────
 async function doRegister() {
   const msgEl    = document.getElementById('register-msg');
   const username = document.getElementById('reg-username').value.trim();
   const password = document.getElementById('reg-password').value;
   const confirm  = document.getElementById('reg-confirm').value;
-
-  msgEl.className = 'auth-msg';
-  msgEl.textContent = '';
-
-  // Validaciones
+  msgEl.className = 'auth-msg'; msgEl.textContent = '';
   if (username.length < 3) { showAuthMsg('register', 'El nombre debe tener al menos 3 caracteres', true); return; }
   if (!/^[a-zA-Z0-9_\-\.]+$/.test(username)) { showAuthMsg('register', 'Solo letras, números, _ - .', true); return; }
   if (password.length < 6) { showAuthMsg('register', 'La contraseña debe tener al menos 6 caracteres', true); return; }
   if (password !== confirm) { showAuthMsg('register', 'Las contraseñas no coinciden', true); return; }
-
   setBtnLoading('register-submit', true);
   try {
-    // Verificar si el usuario ya existe
     const { data: existing } = await sbClient.from('game_users').select('id').eq('username', username.toLowerCase()).limit(1);
-    if (existing && existing.length > 0) {
-      showAuthMsg('register', '⚠ Ese nombre de usuario ya está en uso', true);
-      setBtnLoading('register-submit', false);
-      return;
-    }
+    if (existing && existing.length > 0) { showAuthMsg('register', '⚠ Ese nombre de usuario ya está en uso', true); setBtnLoading('register-submit', false); return; }
     const hash = await hashPassword(password);
-    const { data, error } = await sbClient.from('game_users').insert({
-      username:      username.toLowerCase(),
-      display_name:  username,
-      password_hash: hash,
-      avatar:        selectedAvatar,
-      created_at:    new Date().toISOString()
-    }).select().single();
-
+    const { data, error } = await sbClient.from('game_users').insert({ username: username.toLowerCase(), display_name: username, password_hash: hash, avatar: selectedAvatar, created_at: new Date().toISOString() }).select().single();
     if (error) throw error;
-
     currentUser = { id: data.id, name: data.display_name, avatar: data.avatar };
     saveSession();
     showAuthMsg('register', '✓ ¡Cuenta creada! Entrando...', false);
     setTimeout(showMenu, 800);
-  } catch(e) {
-    console.error(e);
-    showAuthMsg('register', '⚠ Error al crear cuenta. Inténtalo de nuevo.', true);
-  }
+  } catch(e) { console.error(e); showAuthMsg('register', '⚠ Error al crear cuenta. Inténtalo de nuevo.', true); }
   setBtnLoading('register-submit', false);
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────
 async function doLogin() {
   const msgEl    = document.getElementById('login-msg');
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value;
-
   msgEl.textContent = '';
   if (!username || !password) { showAuthMsg('login', '⚠ Rellena todos los campos', true); return; }
-
   setBtnLoading('login-submit', true);
   try {
     const hash = await hashPassword(password);
-    const { data, error } = await sbClient.from('game_users')
-      .select('id, display_name, avatar, password_hash')
-      .eq('username', username.toLowerCase())
-      .single();
-
-    if (error || !data) {
-      showAuthMsg('login', '⚠ Usuario no encontrado', true);
-      setBtnLoading('login-submit', false);
-      return;
-    }
-    if (data.password_hash !== hash) {
-      showAuthMsg('login', '⚠ Contraseña incorrecta', true);
-      setBtnLoading('login-submit', false);
-      return;
-    }
-
+    const { data, error } = await sbClient.from('game_users').select('id, display_name, avatar, password_hash').eq('username', username.toLowerCase()).single();
+    if (error || !data) { showAuthMsg('login', '⚠ Usuario no encontrado', true); setBtnLoading('login-submit', false); return; }
+    if (data.password_hash !== hash) { showAuthMsg('login', '⚠ Contraseña incorrecta', true); setBtnLoading('login-submit', false); return; }
     currentUser = { id: data.id, name: data.display_name, avatar: data.avatar };
     saveSession();
     showAuthMsg('login', '✓ ¡Bienvenido ' + data.display_name + '!', false);
     setTimeout(showMenu, 600);
-  } catch(e) {
-    console.error(e);
-    showAuthMsg('login', '⚠ Error de conexión. Inténtalo de nuevo.', true);
-  }
+  } catch(e) { console.error(e); showAuthMsg('login', '⚠ Error de conexión. Inténtalo de nuevo.', true); }
   setBtnLoading('login-submit', false);
 }
 
@@ -917,20 +855,15 @@ function showAuthMsg(panel, text, isError) {
   el.textContent = text;
 }
 
-// Enter key submit
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const loginPanel = document.getElementById('panel-login');
   const regPanel   = document.getElementById('panel-register');
   if (loginPanel && loginPanel.style.display !== 'none' &&
      (document.activeElement === document.getElementById('login-username') ||
-      document.activeElement === document.getElementById('login-password'))) {
-    doLogin();
-  }
+      document.activeElement === document.getElementById('login-password'))) { doLogin(); }
   if (regPanel && regPanel.style.display !== 'none' &&
-      document.activeElement === document.getElementById('reg-confirm')) {
-    doRegister();
-  }
+      document.activeElement === document.getElementById('reg-confirm')) { doRegister(); }
 });
 
 function showMenu() {
@@ -957,81 +890,41 @@ if (currentUser) showMenu();
 async function getMyStats() {
   if (!currentUser) return null;
   try {
-    const { data } = await sbClient.from('player_stats')
-      .select('*').eq('user_id', currentUser.id).single();
+    const { data } = await sbClient.from('player_stats').select('*').eq('user_id', currentUser.id).single();
     return data || { games:0, total_hits:0, total_shots:0, best_score:0, best_combo:0, mode_records:{} };
-  } catch(e) {
-    return { games:0, total_hits:0, total_shots:0, best_score:0, best_combo:0, mode_records:{} };
-  }
+  } catch(e) { return { games:0, total_hits:0, total_shots:0, best_score:0, best_combo:0, mode_records:{} }; }
 }
 
 async function saveMyStats(stats) {
   if (!currentUser) return;
   try {
-    await sbClient.from('player_stats').upsert({
-      user_id:      currentUser.id,
-      games:        stats.games,
-      total_hits:   stats.total_hits,
-      total_shots:  stats.total_shots,
-      best_score:   stats.best_score,
-      best_combo:   stats.best_combo,
-      mode_records: stats.mode_records,
-      updated_at:   new Date().toISOString()
-    }, { onConflict: 'user_id' });
+    await sbClient.from('player_stats').upsert({ user_id: currentUser.id, games: stats.games, total_hits: stats.total_hits, total_shots: stats.total_shots, best_score: stats.best_score, best_combo: stats.best_combo, mode_records: stats.mode_records, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
   } catch(e) { console.warn('saveMyStats:', e); }
 }
 
 async function submitScore(scoreData) {
   if (!currentUser || scoreData.score <= 0) return;
   try {
-    // Guardar score en tabla scores
-    await sbClient.from('scores').insert({
-      user_id:    currentUser.id,
-      name:       currentUser.name,
-      avatar:     currentUser.avatar,
-      score:      scoreData.score,
-      accuracy:   scoreData.acc || 0,
-      hits:       scoreData.hits || 0,
-      shots:      scoreData.shots || 0,
-      combo:      scoreData.combo || 0,
-      mode:       scoreData.mode,
-      difficulty: scoreData.diff || 'medium'
-    });
-
-    // Actualizar stats del jugador
+    await sbClient.from('scores').insert({ user_id: currentUser.id, name: currentUser.name, avatar: currentUser.avatar, score: scoreData.score, accuracy: scoreData.acc || 0, hits: scoreData.hits || 0, shots: scoreData.shots || 0, combo: scoreData.combo || 0, mode: scoreData.mode, difficulty: scoreData.diff || 'medium' });
     const stats = await getMyStats();
-    stats.games++;
-    stats.total_hits  += scoreData.hits  || 0;
-    stats.total_shots += scoreData.shots || 0;
+    stats.games++; stats.total_hits += scoreData.hits || 0; stats.total_shots += scoreData.shots || 0;
     if (scoreData.score > stats.best_score) stats.best_score = scoreData.score;
     if ((scoreData.combo||0) > stats.best_combo) stats.best_combo = scoreData.combo || 0;
     if (!stats.mode_records) stats.mode_records = {};
     const mr = stats.mode_records[scoreData.mode];
-    if (!mr || scoreData.score > mr.score) {
-      stats.mode_records[scoreData.mode] = { score: scoreData.score, acc: scoreData.acc };
-    }
+    if (!mr || scoreData.score > mr.score) stats.mode_records[scoreData.mode] = { score: scoreData.score, acc: scoreData.acc };
     await saveMyStats(stats);
   } catch(e) { console.warn('submitScore:', e); }
 }
 
 // ============================================================
-// LEADERBOARD UI
+// LEADERBOARD
 // ============================================================
 let lbMode = 'all';
-document.getElementById('open-lb-btn').addEventListener('click', () => {
-  document.getElementById('menu-screen').classList.add('hidden');
-  document.getElementById('lb-screen').classList.remove('hidden');
-  loadLB();
-});
-document.getElementById('lb-back-btn').addEventListener('click', () => {
-  document.getElementById('lb-screen').classList.add('hidden');
-  document.getElementById('menu-screen').classList.remove('hidden');
-});
+document.getElementById('open-lb-btn').addEventListener('click', () => { document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('lb-screen').classList.remove('hidden'); loadLB(); });
+document.getElementById('lb-back-btn').addEventListener('click', () => { document.getElementById('lb-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); });
 document.getElementById('lb-refresh-btn').addEventListener('click', loadLB);
-document.getElementById('lb-tabs').querySelectorAll('.lb-tab').forEach(t => t.addEventListener('click', () => {
-  document.querySelectorAll('.lb-tab').forEach(x => x.classList.remove('active'));
-  t.classList.add('active'); lbMode = t.dataset.mode; loadLB();
-}));
+document.getElementById('lb-tabs').querySelectorAll('.lb-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.lb-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); lbMode = t.dataset.mode; loadLB(); }));
 
 async function loadLB() {
   const body = document.getElementById('lb-body');
@@ -1042,17 +935,11 @@ async function loadLB() {
     const { data, error } = await q;
     if (error) throw error;
     const best = {};
-    (data||[]).forEach(e => {
-      const key = (e.user_id||e.name)+'_'+e.mode;
-      if (!best[key] || e.score > best[key].score) best[key] = e;
-    });
+    (data||[]).forEach(e => { const key = (e.user_id||e.name)+'_'+e.mode; if (!best[key] || e.score > best[key].score) best[key] = e; });
     let top = Object.values(best).sort((a,b) => b.score-a.score).slice(0,50);
     if (top.length === 0) { body.innerHTML = '<tr><td colspan="6" class="lb-empty">🏆 Sin récords aún. ¡Sé el primero!</td></tr>'; return; }
     renderLBRows(body, top);
-  } catch(e) {
-    body.innerHTML = '<tr><td colspan="6" class="lb-empty">⚠ Error al cargar. Verifica tu conexión.</td></tr>';
-    console.warn('LB error:', e);
-  }
+  } catch(e) { body.innerHTML = '<tr><td colspan="6" class="lb-empty">⚠ Error al cargar. Verifica tu conexión.</td></tr>'; }
 }
 
 function renderLBRows(body, top) {
@@ -1074,24 +961,14 @@ function renderLBRows(body, top) {
 // ============================================================
 // STATS UI
 // ============================================================
-document.getElementById('open-stats-btn').addEventListener('click', () => {
-  document.getElementById('menu-screen').classList.add('hidden');
-  document.getElementById('stats-screen').classList.remove('hidden');
-  loadStats();
-});
-document.getElementById('stats-back-btn').addEventListener('click', () => {
-  document.getElementById('stats-screen').classList.add('hidden');
-  document.getElementById('menu-screen').classList.remove('hidden');
-});
+document.getElementById('open-stats-btn').addEventListener('click', () => { document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('stats-screen').classList.remove('hidden'); loadStats(); });
+document.getElementById('stats-back-btn').addEventListener('click', () => { document.getElementById('stats-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); });
 
 async function loadStats() {
   if (!currentUser) return;
   document.getElementById('profile-av').textContent   = currentUser.avatar;
   document.getElementById('profile-name').textContent = currentUser.name.toUpperCase();
-  // Show loading state
-  ['st-games','st-best','st-acc','st-hits','st-shots','st-combo'].forEach(id => {
-    document.getElementById(id).textContent = '…';
-  });
+  ['st-games','st-best','st-acc','st-hits','st-shots','st-combo'].forEach(id => { document.getElementById(id).textContent = '…'; });
   const s = await getMyStats();
   document.getElementById('st-games').textContent  = s.games || 0;
   document.getElementById('st-best').textContent   = (s.best_score||0).toLocaleString();
@@ -1103,8 +980,7 @@ async function loadStats() {
   const mrRows = document.getElementById('mr-rows'); mrRows.innerHTML = '';
   const recs = s.mode_records || {};
   Object.keys(MODES).forEach(id => {
-    const rec = recs[id];
-    const row = document.createElement('div'); row.className = 'mr-row';
+    const rec = recs[id]; const row = document.createElement('div'); row.className = 'mr-row';
     row.innerHTML = `<span class="mr-mode">${MODES[id]?.name||id}</span><span class="mr-score">${rec?(rec.score||0).toLocaleString():'—'}</span><span class="mr-acc">${rec?rec.acc+'%':'—'}</span>`;
     mrRows.appendChild(row);
   });
@@ -1118,7 +994,7 @@ const MODES = {
   flicking:  { id:'flicking',  tag:'FLICKING',    name:'Flick Shot',    desc:'Un objetivo a la vez en posición aleatoria. Reacciona rápido.', color:'#ff9500' },
   tracking:  { id:'tracking',  tag:'TRACKING',    name:'Tracking',      desc:'Un objetivo en movimiento. Apunta continuamente hacia él.', color:'#00ff88' },
   micro:     { id:'micro',     tag:'PRECISION',   name:'Micro Shot',    desc:'Objetivos pequeños. Máxima precisión requerida.', color:'#ff3d71' },
-  strafe:    { id:'strafe',    tag:'STRAFE',      name:'Strafe Aim',    desc:'Objetivos que se mueven lateralmente a alta velocidad.', color:'#a259ff' },
+  strafe:    { id:'strafe',    tag:'STRAFE',       name:'Strafe Aim',   desc:'Objetivos que se mueven lateralmente a alta velocidad.', color:'#a259ff' },
   survival:  { id:'survival',  tag:'SURVIVAL',    name:'Supervivencia', desc:'Sin tiempo. 3 vidas. Cada objetivo perdido cuesta una vida.', color:'#ffd700' },
   gridshot:  { id:'gridshot',  tag:'GRIDSHOT',    name:'Grid Shot',     desc:'Cuadrícula de objetivos. Elimina en orden lo más rápido posible.', color:'#e040fb' },
   wide:      { id:'wide',      tag:'WIDE ANGLE',  name:'Wide Angle',    desc:'Objetivos en los extremos. Entrena movimientos amplios.', color:'#ff6b35' },
@@ -1386,7 +1262,6 @@ function startGame(modeId,diff){
   else{ timerVal.textContent=DIFF[diff].time; document.getElementById('lives-hud').style.display='none'; }
   document.getElementById('lock-mode-name').textContent=m.name;
   if(mobileMode){
-    // Mobile: skip pointer lock, start directly
     document.getElementById('lock-overlay').style.display='none';
     document.getElementById('mobile-controls').classList.add('active');
     crosshairEl.style.display='block';
@@ -1406,10 +1281,7 @@ function startGame(modeId,diff){
       if(fpsVal){ fpsVal.textContent=fd; fpsVal.style.color=fd>=100?'var(--green)':fd>=60?'var(--accent3)':fd>=30?'#ffd700':'var(--accent2)'; }
     }
     last=now;
-    if(state.running){
-      updateCamera();
-      updateGun(dt);updateTargets(dt);if(modeId==='tracking')updateTracking(dt);
-    }
+    if(state.running){ updateCamera(); updateGun(dt); updateTargets(dt); if(modeId==='tracking')updateTracking(dt); }
     renderer.render(scene,camera);
   }
   renderLoop(performance.now());
@@ -1685,9 +1557,7 @@ document.getElementById('duel-do-create').addEventListener('click',()=>{
   if(!onWS||onWS.readyState!==1){document.getElementById('duel-create-err').textContent='Sin conexión al servidor';return;}
   onSend({type:'create_room',name,mode:onCreateMode,isPrivate,password:pw,playerName:onMyName});
 });
-document.getElementById('duel-waiting-back').addEventListener('click',()=>{
-  onWS?.close(); onCleanup(); onShowScreen('duel-lobby-screen'); onConnect();
-});
+document.getElementById('duel-waiting-back').addEventListener('click',()=>{ onWS?.close(); onCleanup(); onShowScreen('duel-lobby-screen'); onConnect(); });
 document.getElementById('duel-force-start').addEventListener('click',()=>onSend({type:'force_start'}));
 document.getElementById('duel-rematch-btn').addEventListener('click',()=>{ onWS?.close(); onCleanup(); onShowScreen('duel-lobby-screen'); onConnect(); });
 document.getElementById('duel-menu-btn').addEventListener('click',()=>{ onWS?.close(); onCleanup(); onShowScreen(null); menuScreen.classList.remove('hidden'); });
@@ -2019,6 +1889,9 @@ function onTryShoot(){
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// onStartGame — FIXED: mobile controls now properly shown
+// ══════════════════════════════════════════════════════════════
 function onStartGame(msg){
   if(!onThreeReady) onInitThree();
   onRoomMode=msg.mode; onFirstTo=msg.firstTo; onTeamScores=[0,0]; onPScores={}; onActive=true; onWaitPlayers=[];
@@ -2039,16 +1912,21 @@ function onStartGame(msg){
   onShowScreen(null);
   document.getElementById('duel-canvas').style.display='block';
   document.getElementById('duel-hud').style.display='block';
+
+  // ── MOBILE FIX: usar classList para mostrar controles ──────
   if(mobileMode){
-    // Mobile: skip pointer lock, start directly with touch controls
     document.getElementById('duel-lock-screen').style.display='none';
     document.getElementById('duel-crosshair').style.display='block';
+    // FIX: classList.add('active') ahora funciona porque el CSS
+    // maneja display:none (no el inline style)
     document.getElementById('duel-mobile-controls').classList.add('active');
-    onLocked=true; // treat as locked so movement/shoot work
+    onLocked=true;
+    onKeys['w']=onKeys['s']=onKeys['a']=onKeys['d']=false;
   } else {
     document.getElementById('duel-lock-screen').style.display='flex';
     document.getElementById('duel-mobile-controls').classList.remove('active');
   }
+
   clearInterval(onStateIv);
   onStateIv=setInterval(()=>{ if(onAlive&&onActive) onSend({type:'state',pos:{...onPos},yaw:onYaw,pitch:onPitch,posY:onPosY}); },50);
   if(onAnimId) cancelAnimationFrame(onAnimId);
@@ -2100,6 +1978,7 @@ function onCleanup(){
   document.getElementById('duel-canvas').style.display='none'; document.getElementById('duel-hud').style.display='none';
   document.getElementById('duel-crosshair').style.display='none'; document.getElementById('duel-lock-screen').style.display='none';
   document.getElementById('duel-death-vignette').style.display='none'; document.getElementById('duel-respawn-msg').style.display='none';
+  // FIX: usar classList para ocultar
   document.getElementById('duel-mobile-controls').classList.remove('active');
   onOpps.forEach(o=>{if(onScene)onScene.remove(o.group);}); onOpps.clear();
   if(onAnimId){cancelAnimationFrame(onAnimId);onAnimId=null;}
@@ -2113,7 +1992,16 @@ document.addEventListener('pointerlockchange',()=>{
     document.getElementById('duel-lock-screen').style.display=onLocked?'none':'flex';
   }
 });
-document.getElementById('duel-lock-btn').addEventListener('click',()=>{ document.getElementById('duel-canvas').requestPointerLock(); });
+document.getElementById('duel-lock-btn').addEventListener('click',()=>{
+  if(mobileMode && onActive){
+    onLocked=true;
+    document.getElementById('duel-lock-screen').style.display='none';
+    document.getElementById('duel-crosshair').style.display='block';
+    document.getElementById('duel-mobile-controls').classList.add('active');
+  } else {
+    document.getElementById('duel-canvas').requestPointerLock();
+  }
+});
 document.addEventListener('mousemove',e=>{ if((!onLocked&&!mobileMode)||!onActive) return; onMX+=e.movementX; onMY+=e.movementY; });
 document.getElementById('duel-canvas').addEventListener('click',()=>{ if(onLocked&&onActive&&!mobileMode) onTryShoot(); });
 document.addEventListener('keydown',e=>{ onKeys[e.key]=true; });
@@ -2127,15 +2015,11 @@ function onAnimateAllChars(dt){ onOpps.forEach(opp=>{ if(opp.group&&opp.group.vi
 let mobileMode = false;
 const isMobileDevice = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
 
-// Shared look state (solo)
 const mobLook = { active:false, id:-1, lastX:0, lastY:0 };
-// Duel joystick state
 const duelJoy = { active:false, id:-1, baseX:0, baseY:0 };
-// Duel look state
 const duelLook = { active:false, id:-1, lastX:0, lastY:0 };
 const DJOY_MAX = 50;
 
-// ── Toggle ────────────────────────────────────────────────────
 function setMobileMode(on) {
   mobileMode = on;
   try { localStorage.setItem('ina_mobile', on?'1':'0'); } catch(e){}
@@ -2146,12 +2030,11 @@ function setMobileMode(on) {
   const hint = document.getElementById('lock-hint');
   if(hint){
     hint.innerHTML = on
-      ? 'Arrastra el lado derecho para apuntar<br>🔴 Disparar'
+      ? 'Arrastra el lado derecho para apuntar<br>🔴 para disparar · ⬆ para saltar'
       : 'Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar';
   }
 }
 
-// Load preference
 (function(){
   try {
     const s = localStorage.getItem('ina_mobile');
@@ -2160,12 +2043,14 @@ function setMobileMode(on) {
   } catch(e){}
 })();
 
-// Wire all toggle buttons (including the new duel one)
 document.getElementById('mob-toggle-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
 document.getElementById('mob-toggle-menu-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
+// Botón de toggle dentro del duel-mobile-controls
 document.getElementById('mob-toggle-duel-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
+// Botón de toggle en la pantalla de lock del duel
+document.getElementById('mob-toggle-duel-btn-lock').addEventListener('click', ()=>setMobileMode(!mobileMode));
 
-// ── SOLO MODE — Look zone only (no movement, player stays fixed) ──
+// ── SOLO MODE — Look zone ─────────────────────────────────────
 const soloLookZone = document.getElementById('look-zone');
 
 soloLookZone.addEventListener('touchstart', e=>{
@@ -2194,7 +2079,6 @@ soloLookZone.addEventListener('touchmove', e=>{
 soloLookZone.addEventListener('touchend',    e=>{for(const t of e.changedTouches) if(t.identifier===mobLook.id){mobLook.active=false;mobLook.id=-1;} e.preventDefault();},{passive:false});
 soloLookZone.addEventListener('touchcancel', e=>{mobLook.active=false; mobLook.id=-1;},{passive:false});
 
-// ── SOLO FIRE BUTTON ──────────────────────────────────────────
 document.getElementById('btn-fire').addEventListener('touchstart', e=>{
   e.preventDefault();
   if(!mobileMode || !state.running) return;
@@ -2220,13 +2104,10 @@ function doMobileShoot(){
   } else recordMiss();
 }
 
-// ── SOLO PAUSE BUTTON ─────────────────────────────────────────
 document.getElementById('btn-pause-mob').addEventListener('touchstart', e=>{
   e.preventDefault(); if(state.running) showPause();
 },{passive:false});
 document.getElementById('btn-pause-mob').addEventListener('click', ()=>{ if(state.running) showPause(); });
-
-// Joystick zone in solo is unused (no movement in training), just show look hint
 document.getElementById('joy-zone').addEventListener('touchstart', e=>e.preventDefault(),{passive:false});
 
 // ── DUEL (PVP) MOBILE CONTROLS ────────────────────────────────
@@ -2235,7 +2116,6 @@ const duelJoyBase  = document.getElementById('duel-joy-base');
 const duelJoyKnob  = document.getElementById('duel-joy-knob');
 const duelLookZone = document.getElementById('duel-look-zone');
 
-// Duel joystick
 duelJoyZone.addEventListener('touchstart', e=>{
   if(!mobileMode||!onActive) return;
   e.preventDefault();
@@ -2275,7 +2155,6 @@ function duelJoyEnd(e){
 duelJoyZone.addEventListener('touchend',    duelJoyEnd,{passive:false});
 duelJoyZone.addEventListener('touchcancel', duelJoyEnd,{passive:false});
 
-// Duel look zone
 duelLookZone.addEventListener('touchstart', e=>{
   if(!mobileMode||!onActive) return;
   e.preventDefault();
@@ -2298,23 +2177,19 @@ duelLookZone.addEventListener('touchmove', e=>{
 duelLookZone.addEventListener('touchend',    e=>{for(const t of e.changedTouches) if(t.identifier===duelLook.id){duelLook.active=false;duelLook.id=-1;} e.preventDefault();},{passive:false});
 duelLookZone.addEventListener('touchcancel', e=>{duelLook.active=false; duelLook.id=-1;},{passive:false});
 
-// Duel fire button
 document.getElementById('duel-btn-fire').addEventListener('touchstart', e=>{
   e.preventDefault();
   if(mobileMode&&onActive) onTryShoot();
 },{passive:false});
 
-// Duel jump button
 document.getElementById('duel-btn-jump').addEventListener('touchstart', e=>{
   e.preventDefault();
   if(mobileMode&&onActive&&onIsGrounded){ onVelY=ON_JUMP_FORCE; onIsGrounded=false; }
 },{passive:false});
 
-// Duel pause button
 document.getElementById('duel-btn-pause-mob').addEventListener('touchstart', e=>{
   e.preventDefault();
   if(onActive){
-    // pause online: show lock screen to "pause"
     onLocked=false;
     document.getElementById('duel-mobile-controls').classList.remove('active');
     document.getElementById('duel-crosshair').style.display='none';
@@ -2330,19 +2205,6 @@ document.getElementById('duel-btn-pause-mob').addEventListener('click', ()=>{
   }
 });
 
-// When duel-lock-btn clicked in mobile mode, resume
-document.getElementById('duel-lock-btn').addEventListener('click', ()=>{
-  if(mobileMode && onActive){
-    onLocked=true;
-    document.getElementById('duel-lock-screen').style.display='none';
-    document.getElementById('duel-crosshair').style.display='block';
-    document.getElementById('duel-mobile-controls').classList.add('active');
-  } else {
-    document.getElementById('duel-canvas').requestPointerLock();
-  }
-});
-
-// Auto-enable on mobile
 if(isMobileDevice) setMobileMode(true);
 </script>
 </body>
