@@ -251,6 +251,36 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 /* login anim */
 @keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .auth-panel{animation:slideIn .25s ease-out;}
+
+/* ═══════════════════════════════════════
+   MOBILE CONTROLS
+═══════════════════════════════════════ */
+#mobile-controls{position:fixed;inset:0;z-index:55;pointer-events:none;display:none;}
+#mobile-controls.active{display:block;}
+
+/* Joystick zone — left half bottom */
+#joy-zone{position:absolute;left:0;bottom:0;width:50%;height:55%;pointer-events:all;}
+#joy-base{position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);transform:translate(-50%,-50%);display:none;transition:opacity .15s;}
+#joy-knob{position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(224,64,251,.7);box-shadow:0 0 18px rgba(224,64,251,.5);border:2px solid rgba(224,64,251,.9);transform:translate(-50%,-50%);display:none;transition:box-shadow .1s;}
+
+/* Look zone — right half (camera drag) */
+#look-zone{position:absolute;right:0;bottom:0;width:50%;height:100%;pointer-events:all;}
+
+/* Fire button */
+#btn-fire{position:absolute;right:24px;bottom:90px;width:80px;height:80px;border-radius:50%;background:rgba(255,61,113,.25);border:3px solid rgba(255,61,113,.7);color:#ff3d71;font-size:1.8rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;transition:all .1s;-webkit-tap-highlight-color:transparent;user-select:none;}
+#btn-fire:active{background:rgba(255,61,113,.55);transform:scale(.9);box-shadow:0 0 24px rgba(255,61,113,.6);}
+
+/* Jump button */
+#btn-jump{position:absolute;right:120px;bottom:90px;width:60px;height:60px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid rgba(0,229,255,.5);color:#00e5ff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;transition:all .1s;-webkit-tap-highlight-color:transparent;user-select:none;}
+#btn-jump:active{background:rgba(0,229,255,.4);transform:scale(.9);}
+
+/* Pause button mobile */
+#btn-pause-mob{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(5,8,15,.75);border:1px solid rgba(224,64,251,.3);color:var(--accent);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.2em;padding:8px 16px;pointer-events:all;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);-webkit-tap-highlight-color:transparent;}
+
+/* Mobile toggle button (shown in lock overlay & menu) */
+.mob-toggle-btn{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.4);color:var(--accent3);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:10px 22px;cursor:pointer;clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.mob-toggle-btn:hover,.mob-toggle-btn:active{background:rgba(0,229,255,.25);box-shadow:0 0 18px rgba(0,229,255,.3);}
+.mob-toggle-btn.on{background:rgba(0,229,255,.25);border-color:var(--accent3);box-shadow:0 0 14px rgba(0,229,255,.35);}
 </style>
 </head>
 <body>
@@ -273,11 +303,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div class="acc-wrap"><div class="acc-lbl">ACCURACY · <span id="acc-pct">0</span>%</div><div class="acc-bg"><div class="acc-fill" id="acc-fill"></div></div></div>
   <button class="quit-btn" id="quit-btn">[ SALIR ]</button>
 </div>
+<!-- MOBILE CONTROLS OVERLAY -->
+<div id="mobile-controls">
+  <div id="joy-zone">
+    <div id="joy-base"></div>
+    <div id="joy-knob"></div>
+  </div>
+  <div id="look-zone"></div>
+  <div id="btn-fire">🔴</div>
+  <div id="btn-jump">⬆</div>
+  <button id="btn-pause-mob">⏸ PAUSA</button>
+</div>
+
 <div id="lock-overlay" style="display:none">
   <h2>🎯 INA TRAINER</h2>
-  <p>Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar</p>
+  <p id="lock-hint">Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar</p>
   <button class="lock-btn" id="lock-btn">🖱 CLIC PARA JUGAR</button>
-  <div style="font-size:.56rem;letter-spacing:.2em;color:var(--dim);margin-top:4px">MODO: <span id="lock-mode-name" style="color:var(--accent)">—</span></div>
+  <button class="mob-toggle-btn" id="mob-toggle-btn" style="margin-top:4px">📱 MODO MÓVIL</button>
+  <div style="font-size:.56rem;letter-spacing:.2em;color:var(--dim);margin-top:6px">MODO: <span id="lock-mode-name" style="color:var(--accent)">—</span></div>
 </div>
 
 <!-- PAUSE OVERLAY -->
@@ -455,6 +498,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   </div>
   <div class="menu-extra-row" style="margin-top:8px">
     <button id="open-1v1-btn" style="background:linear-gradient(135deg,#ff3d71,#e040fb);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(224,64,251,.3);">⚔ 1v1 ONLINE</button>
+    <button class="mob-toggle-btn" id="mob-toggle-menu-btn">📱 MODO MÓVIL</button>
   </div>
 </div>
 
@@ -2029,6 +2073,285 @@ document.addEventListener('keydown',e=>{ onKeys[e.key]=true; });
 document.addEventListener('keyup',  e=>{ onKeys[e.key]=false; });
 
 function onAnimateAllChars(dt){ onOpps.forEach(opp=>{ if(opp.group&&opp.group.visible) onAnimateChar(opp.group,dt); }); }
+
+// ============================================================
+// MOBILE CONTROLS SYSTEM
+// ============================================================
+let mobileMode = false;
+
+// Auto-detect mobile
+const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1);
+
+// State
+const mobKeys = { w:false, s:false, a:false, d:false };
+let mobFireDown = false;
+let mobLookActive = false, mobLookId = -1;
+let mobLookLastX = 0, mobLookLastY = 0;
+let joyActive = false, joyId = -1;
+let joyBaseX = 0, joyBaseY = 0;
+const JOY_MAX = 48;
+
+function setMobileMode(on) {
+  mobileMode = on;
+  // Sync all toggle buttons
+  document.querySelectorAll('.mob-toggle-btn').forEach(b => {
+    b.classList.toggle('on', on);
+    b.textContent = on ? '📱 MÓVIL: ON' : '📱 MODO MÓVIL';
+  });
+  // Show/hide hint text
+  const hint = document.getElementById('lock-hint');
+  if (hint) {
+    if (on) {
+      hint.innerHTML = 'Joystick izquierdo para mover<br>Arrastra derecha para apuntar<br>🔴 Disparar · ⬆ Saltar';
+    } else {
+      hint.innerHTML = 'Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar';
+    }
+  }
+  // Save preference
+  try { localStorage.setItem('ina_mobile', on ? '1' : '0'); } catch(e) {}
+}
+
+// Load saved preference or auto-detect
+(function() {
+  try {
+    const saved = localStorage.getItem('ina_mobile');
+    if (saved !== null) setMobileMode(saved === '1');
+    else if (isMobile) setMobileMode(true);
+  } catch(e) {}
+})();
+
+// Toggle buttons
+document.getElementById('mob-toggle-btn').addEventListener('click', () => setMobileMode(!mobileMode));
+document.getElementById('mob-toggle-menu-btn').addEventListener('click', () => setMobileMode(!mobileMode));
+
+// ── JOYSTICK ─────────────────────────────────────────────────
+function joyStart(e) {
+  if (!mobileMode || !state.running) return;
+  const touch = e.changedTouches[0];
+  joyId = touch.identifier;
+  joyBaseX = touch.clientX;
+  joyBaseY = touch.clientY;
+  joyActive = true;
+  const base = document.getElementById('joy-base');
+  const knob = document.getElementById('joy-knob');
+  base.style.left = joyBaseX + 'px';
+  base.style.top  = joyBaseY + 'px';
+  base.style.display = 'block';
+  knob.style.left = joyBaseX + 'px';
+  knob.style.top  = joyBaseY + 'px';
+  knob.style.display = 'block';
+  e.preventDefault();
+}
+
+function joyMove(e) {
+  if (!joyActive) return;
+  for (const touch of e.changedTouches) {
+    if (touch.identifier !== joyId) continue;
+    const dx = touch.clientX - joyBaseX;
+    const dy = touch.clientY - joyBaseY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const clamp = Math.min(dist, JOY_MAX);
+    const angle = Math.atan2(dy, dx);
+    const kx = joyBaseX + Math.cos(angle) * clamp;
+    const ky = joyBaseY + Math.sin(angle) * clamp;
+    const knob = document.getElementById('joy-knob');
+    knob.style.left = kx + 'px';
+    knob.style.top  = ky + 'px';
+    // Map to WASD
+    const ndx = dx / JOY_MAX, ndy = dy / JOY_MAX;
+    mobKeys.w = ndy < -0.3;
+    mobKeys.s = ndy >  0.3;
+    mobKeys.a = ndx < -0.3;
+    mobKeys.d = ndx >  0.3;
+    // Inject into online keys too
+    onKeys['w'] = mobKeys.w; onKeys['s'] = mobKeys.s;
+    onKeys['a'] = mobKeys.a; onKeys['d'] = mobKeys.d;
+  }
+  e.preventDefault();
+}
+
+function joyEnd(e) {
+  for (const touch of e.changedTouches) {
+    if (touch.identifier !== joyId) continue;
+    joyActive = false; joyId = -1;
+    mobKeys.w = mobKeys.s = mobKeys.a = mobKeys.d = false;
+    onKeys['w'] = onKeys['s'] = onKeys['a'] = onKeys['d'] = false;
+    document.getElementById('joy-base').style.display = 'none';
+    document.getElementById('joy-knob').style.display = 'none';
+  }
+  e.preventDefault();
+}
+
+const joyZone = document.getElementById('joy-zone');
+joyZone.addEventListener('touchstart',  joyStart,  {passive:false});
+joyZone.addEventListener('touchmove',   joyMove,   {passive:false});
+joyZone.addEventListener('touchend',    joyEnd,    {passive:false});
+joyZone.addEventListener('touchcancel', joyEnd,    {passive:false});
+
+// ── CAMERA LOOK (right side drag) ────────────────────────────
+const lookZone = document.getElementById('look-zone');
+
+lookZone.addEventListener('touchstart', e => {
+  if (!mobileMode || !state.running) return;
+  const touch = e.changedTouches[0];
+  mobLookId = touch.identifier;
+  mobLookLastX = touch.clientX;
+  mobLookLastY = touch.clientY;
+  mobLookActive = true;
+  e.preventDefault();
+}, {passive:false});
+
+lookZone.addEventListener('touchmove', e => {
+  if (!mobLookActive) return;
+  for (const touch of e.changedTouches) {
+    if (touch.identifier !== mobLookId) continue;
+    const dx = touch.clientX - mobLookLastX;
+    const dy = touch.clientY - mobLookLastY;
+    mobLookLastX = touch.clientX;
+    mobLookLastY = touch.clientY;
+    // Apply to camera (single player)
+    if (state.running && yawObj) {
+      const sens = CFG.sens * 0.003;
+      yawObj.rotation.y  -= dx * sens;
+      pitchObj.rotation.x = Math.max(-Math.PI/2+.05, Math.min(Math.PI/2-.05, pitchObj.rotation.x - dy * sens));
+    }
+    // Apply to online camera
+    if (onActive && onYawObj) {
+      onMX += dx * 1.5;
+      onMY += dy * 1.5;
+    }
+  }
+  e.preventDefault();
+}, {passive:false});
+
+lookZone.addEventListener('touchend', e => {
+  for (const touch of e.changedTouches) {
+    if (touch.identifier === mobLookId) { mobLookActive = false; mobLookId = -1; }
+  }
+  e.preventDefault();
+}, {passive:false});
+
+lookZone.addEventListener('touchcancel', e => {
+  mobLookActive = false; mobLookId = -1;
+}, {passive:false});
+
+// ── FIRE BUTTON ───────────────────────────────────────────────
+const btnFire = document.getElementById('btn-fire');
+btnFire.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (!mobileMode) return;
+  if (state.running) mobShoot();
+  if (onActive)     onTryShoot();
+}, {passive:false});
+
+function mobShoot() {
+  if (!state.running) return;
+  const m = state.modeId;
+  if (m === 'tracking') return;
+  playGunshot(); triggerShoot();
+  const ch = document.getElementById('crosshair');
+  ch.classList.add('shoot'); setTimeout(() => ch.classList.remove('shoot'), 100);
+  if (m === 'gridshot') {
+    const at = state.targets.find(t => t.gridIdx === gridActive);
+    if (at) {
+      raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+      if (raycaster.intersectObject(at.mesh, false).length > 0) { gridHit(at); return; }
+    }
+    recordMiss(); return;
+  }
+  raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+  const hits = raycaster.intersectObjects(state.targets.map(t=>t.mesh).filter(Boolean), false);
+  if (hits.length > 0) {
+    const ht = state.targets.find(t => t.mesh===hits[0].object || t.mesh===hits[0].object.parent);
+    if (ht && ht.alive) { recordHit(ht); if (m==='flicking') setTimeout(spawnFor3D, 200); } else recordMiss();
+  } else recordMiss();
+}
+
+// ── JUMP BUTTON ───────────────────────────────────────────────
+const btnJump = document.getElementById('btn-jump');
+btnJump.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (!mobileMode) return;
+  // Single player: no gravity/jump in solo mode, but online yes
+  if (onActive && onIsGrounded) { onVelY = ON_JUMP_FORCE; onIsGrounded = false; }
+}, {passive:false});
+
+// ── PAUSE BUTTON ──────────────────────────────────────────────
+document.getElementById('btn-pause-mob').addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (state.running) showPause();
+}, {passive:false});
+document.getElementById('btn-pause-mob').addEventListener('click', () => {
+  if (state.running) showPause();
+});
+
+// ── SHOW/HIDE MOBILE CONTROLS DURING GAME ────────────────────
+function showMobileControls(show) {
+  const mc = document.getElementById('mobile-controls');
+  mc.classList.toggle('active', show && mobileMode);
+}
+
+// ── SOLO PLAYER: mobile movement tick ────────────────────────
+// Inject mob movement into solo camera movement each frame
+const _origUpdateCamera = updateCamera;
+function updateCamera() {
+  if (mobileMode && state.running) {
+    // Movement via mobKeys for solo mode (no 3D physics, just yaw)
+    if (mobKeys.w || mobKeys.s || mobKeys.a || mobKeys.d) {
+      const spd = 0.08;
+      const fw = (mobKeys.w?1:0)-(mobKeys.s?1:0);
+      const ri = (mobKeys.d?1:0)-(mobKeys.a?1:0);
+      const len = Math.sqrt(fw*fw+ri*ri)||1;
+      const yaw = yawObj.rotation.y;
+      yawObj.position.x += ((fw/len)*(-Math.sin(yaw))+(ri/len)*Math.cos(yaw))*spd;
+      yawObj.position.z += ((fw/len)*(-Math.cos(yaw))+(ri/len)*(-Math.sin(yaw)))*spd;
+      // Clamp inside room
+      yawObj.position.x = Math.max(-13, Math.min(13, yawObj.position.x));
+      yawObj.position.z = Math.max(-22, Math.min(0,  yawObj.position.z));
+    }
+    // Touch look already applied directly in touchmove handler
+    mouseDX = 0; mouseDY = 0;
+    return;
+  }
+  _origUpdateCamera();
+}
+
+// ── HOOK startGame to show/hide mobile controls ───────────────
+const _origStartGame = startGame;
+function startGame(modeId, diff) {
+  _origStartGame(modeId, diff);
+  if (mobileMode) {
+    // Skip pointer lock request, show controls directly
+    document.getElementById('lock-overlay').style.display = 'none';
+    showMobileControls(true);
+    crosshairEl.style.display = 'block';
+    if (!state.timerStarted) beginTimerAndSpawn();
+  }
+}
+
+// ── HOOK endGame to hide mobile controls ─────────────────────
+const _origEndGame = endGame;
+function endGame() {
+  showMobileControls(false);
+  _origEndGame();
+}
+
+// ── HOOK hidePause / showPause for mobile ─────────────────────
+const _origHidePause = hidePause;
+function hidePause() {
+  _origHidePause();
+  if (mobileMode) showMobileControls(true);
+}
+const _origShowPause = showPause;
+function showPause() {
+  _origShowPause();
+  if (mobileMode) showMobileControls(false);
+}
+
+// Auto-enable mobile mode if on mobile device and lock overlay appears
+if (isMobile) {
+  setMobileMode(true);
+}
 </script>
 </body>
 </html>
