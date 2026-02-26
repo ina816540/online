@@ -697,10 +697,30 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">WASD MOVER · MOUSE APUNTAR · CLIC DISPARAR · ESPACIO SALTAR</div>
 </div>
 
+<!-- DUEL MOBILE CONTROLS (PVP only) -->
+<div id="duel-mobile-controls" style="position:fixed;inset:0;z-index:56;pointer-events:none;display:none;">
+  <!-- Joystick zone left -->
+  <div id="duel-joy-zone" style="position:absolute;left:0;bottom:0;width:50%;height:55%;pointer-events:all;"></div>
+  <div id="duel-joy-base" style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,61,113,.4);transform:translate(-50%,-50%);display:none;"></div>
+  <div id="duel-joy-knob" style="position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(255,61,113,.7);box-shadow:0 0 18px rgba(255,61,113,.5);border:2px solid rgba(255,61,113,.9);transform:translate(-50%,-50%);display:none;"></div>
+  <!-- Look zone right -->
+  <div id="duel-look-zone" style="position:absolute;right:0;bottom:0;width:50%;height:100%;pointer-events:all;"></div>
+  <!-- Fire button -->
+  <div id="duel-btn-fire" style="position:absolute;right:24px;bottom:90px;width:80px;height:80px;border-radius:50%;background:rgba(255,61,113,.25);border:3px solid rgba(255,61,113,.7);color:#ff3d71;font-size:1.8rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">🔴</div>
+  <!-- Jump button -->
+  <div id="duel-btn-jump" style="position:absolute;right:120px;bottom:90px;width:60px;height:60px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid rgba(0,229,255,.5);color:#00e5ff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">⬆</div>
+  <!-- Pause button -->
+  <button id="duel-btn-pause-mob" style="position:absolute;top:80px;left:50%;transform:translateX(-50%);background:rgba(5,8,15,.75);border:1px solid rgba(255,61,113,.3);color:#ff3d71;font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.2em;padding:8px 16px;pointer-events:all;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);-webkit-tap-highlight-color:transparent;">⏸ PAUSA</button>
+</div>
+<style>
+#duel-mobile-controls.active{display:block;}
+</style>
+
 <div id="duel-lock-screen" style="position:fixed;inset:0;z-index:80;background:rgba(5,8,15,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="font-family:'Orbitron',monospace;font-size:1.5rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">⚔ 1v1 · INA MAP</div>
   <div style="font-size:.68rem;letter-spacing:.13em;color:var(--dim);text-align:center;line-height:2">VS <strong id="duel-opp-name-lock" style="color:#ff3d71">Rival</strong><br><strong style="color:var(--accent)">WASD</strong> mover · <strong style="color:var(--accent)">MOUSE</strong> apuntar · <strong style="color:var(--accent)">CLIC</strong> disparar · <strong style="color:var(--accent)">ESPACIO</strong> saltar · <strong style="color:var(--accent)">ESC</strong> pausar</div>
   <button class="lock-btn" id="duel-lock-btn" style="background:#ff3d71">🖱 CLIC PARA JUGAR</button>
+  <button class="mob-toggle-btn" id="mob-toggle-duel-btn" style="margin-top:2px">📱 MODO MÓVIL</button>
   <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim)" id="duel-lock-team">—</div>
 </div>
 
@@ -1387,7 +1407,7 @@ function startGame(modeId,diff){
     }
     last=now;
     if(state.running){
-      if(mobileMode) applyMobileMovement(); else updateCamera();
+      updateCamera();
       updateGun(dt);updateTargets(dt);if(modeId==='tracking')updateTracking(dt);
     }
     renderer.render(scene,camera);
@@ -2019,7 +2039,16 @@ function onStartGame(msg){
   onShowScreen(null);
   document.getElementById('duel-canvas').style.display='block';
   document.getElementById('duel-hud').style.display='block';
-  document.getElementById('duel-lock-screen').style.display='flex';
+  if(mobileMode){
+    // Mobile: skip pointer lock, start directly with touch controls
+    document.getElementById('duel-lock-screen').style.display='none';
+    document.getElementById('duel-crosshair').style.display='block';
+    document.getElementById('duel-mobile-controls').classList.add('active');
+    onLocked=true; // treat as locked so movement/shoot work
+  } else {
+    document.getElementById('duel-lock-screen').style.display='flex';
+    document.getElementById('duel-mobile-controls').classList.remove('active');
+  }
   clearInterval(onStateIv);
   onStateIv=setInterval(()=>{ if(onAlive&&onActive) onSend({type:'state',pos:{...onPos},yaw:onYaw,pitch:onPitch,posY:onPosY}); },50);
   if(onAnimId) cancelAnimationFrame(onAnimId);
@@ -2066,11 +2095,12 @@ function onShowGameOver(won){
 }
 function onSetErr(msg){ onCleanup(); onLobbyErr(msg); onShowScreen('duel-lobby-screen'); onConnect(); }
 function onCleanup(){
-  onActive=false; clearInterval(onStateIv);
+  onActive=false; onLocked=false; clearInterval(onStateIv);
   try{document.exitPointerLock();}catch(e){}
   document.getElementById('duel-canvas').style.display='none'; document.getElementById('duel-hud').style.display='none';
   document.getElementById('duel-crosshair').style.display='none'; document.getElementById('duel-lock-screen').style.display='none';
   document.getElementById('duel-death-vignette').style.display='none'; document.getElementById('duel-respawn-msg').style.display='none';
+  document.getElementById('duel-mobile-controls').classList.remove('active');
   onOpps.forEach(o=>{if(onScene)onScene.remove(o.group);}); onOpps.clear();
   if(onAnimId){cancelAnimationFrame(onAnimId);onAnimId=null;}
 }
@@ -2078,12 +2108,14 @@ function onCleanup(){
 document.addEventListener('pointerlockchange',()=>{
   if(!onActive) return;
   onLocked=document.pointerLockElement===document.getElementById('duel-canvas');
-  document.getElementById('duel-crosshair').style.display=onLocked?'block':'none';
-  document.getElementById('duel-lock-screen').style.display=onLocked?'none':'flex';
+  if(!mobileMode){
+    document.getElementById('duel-crosshair').style.display=onLocked?'block':'none';
+    document.getElementById('duel-lock-screen').style.display=onLocked?'none':'flex';
+  }
 });
 document.getElementById('duel-lock-btn').addEventListener('click',()=>{ document.getElementById('duel-canvas').requestPointerLock(); });
-document.addEventListener('mousemove',e=>{ if(!onLocked||!onActive) return; onMX+=e.movementX; onMY+=e.movementY; });
-document.getElementById('duel-canvas').addEventListener('click',()=>{ if(onLocked&&onActive) onTryShoot(); });
+document.addEventListener('mousemove',e=>{ if((!onLocked&&!mobileMode)||!onActive) return; onMX+=e.movementX; onMY+=e.movementY; });
+document.getElementById('duel-canvas').addEventListener('click',()=>{ if(onLocked&&onActive&&!mobileMode) onTryShoot(); });
 document.addEventListener('keydown',e=>{ onKeys[e.key]=true; });
 document.addEventListener('keyup',  e=>{ onKeys[e.key]=false; });
 
@@ -2095,15 +2127,15 @@ function onAnimateAllChars(dt){ onOpps.forEach(opp=>{ if(opp.group&&opp.group.vi
 let mobileMode = false;
 const isMobileDevice = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
 
-// Joystick state
-const mobJoy = { active:false, id:-1, baseX:0, baseY:0, dx:0, dy:0 };
-// Look state
+// Shared look state (solo)
 const mobLook = { active:false, id:-1, lastX:0, lastY:0 };
-// Movement vector (applied each frame)
-let mobMoveX = 0, mobMoveZ = 0;
-const JOY_MAX = 50;
+// Duel joystick state
+const duelJoy = { active:false, id:-1, baseX:0, baseY:0 };
+// Duel look state
+const duelLook = { active:false, id:-1, lastX:0, lastY:0 };
+const DJOY_MAX = 50;
 
-// ── Toggle mobile mode ────────────────────────────────────────
+// ── Toggle ────────────────────────────────────────────────────
 function setMobileMode(on) {
   mobileMode = on;
   try { localStorage.setItem('ina_mobile', on?'1':'0'); } catch(e){}
@@ -2114,7 +2146,7 @@ function setMobileMode(on) {
   const hint = document.getElementById('lock-hint');
   if(hint){
     hint.innerHTML = on
-      ? 'Joystick izquierdo para mover<br>Arrastra lado derecho para apuntar<br>🔴 Disparar &nbsp;·&nbsp; ⬆ Saltar'
+      ? 'Arrastra el lado derecho para apuntar<br>🔴 Disparar'
       : 'Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar';
   }
 }
@@ -2128,115 +2160,45 @@ function setMobileMode(on) {
   } catch(e){}
 })();
 
+// Wire all toggle buttons (including the new duel one)
 document.getElementById('mob-toggle-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
 document.getElementById('mob-toggle-menu-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
+document.getElementById('mob-toggle-duel-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
 
-// ── applyMobileMovement (called in renderLoop instead of updateCamera) ──
-function applyMobileMovement() {
-  // Apply look delta
-  if((mouseDX||mouseDY) && yawObj){
-    const s = CFG.sens*.001;
-    yawObj.rotation.y  -= mouseDX*s;
-    pitchObj.rotation.x = Math.max(-Math.PI/2+.05, Math.min(Math.PI/2-.05, pitchObj.rotation.x - mouseDY*s));
-    mouseDX=0; mouseDY=0;
-  }
-  // Apply joystick movement
-  if((mobMoveX||mobMoveZ) && yawObj){
-    const yaw = yawObj.rotation.y;
-    const nx = yawObj.position.x + (mobMoveX*(-Math.sin(yaw)) + mobMoveZ*Math.cos(yaw));
-    const nz = yawObj.position.z + (mobMoveX*(-Math.cos(yaw)) + mobMoveZ*(-Math.sin(yaw)));
-    yawObj.position.x = Math.max(-13, Math.min(13, nx));
-    yawObj.position.z = Math.max(-22, Math.min(0,  nz));
-  }
-}
+// ── SOLO MODE — Look zone only (no movement, player stays fixed) ──
+const soloLookZone = document.getElementById('look-zone');
 
-// ── JOYSTICK ─────────────────────────────────────────────────
-const joyZone = document.getElementById('joy-zone');
-const joyBase = document.getElementById('joy-base');
-const joyKnob = document.getElementById('joy-knob');
-
-joyZone.addEventListener('touchstart', e=>{
-  if(!mobileMode||!state.running) return;
+soloLookZone.addEventListener('touchstart', e=>{
+  if(!mobileMode || !state.running) return;
   e.preventDefault();
   const t = e.changedTouches[0];
-  mobJoy.active=true; mobJoy.id=t.identifier;
-  mobJoy.baseX=t.clientX; mobJoy.baseY=t.clientY;
-  joyBase.style.cssText=`left:${t.clientX}px;top:${t.clientY}px;display:block;`;
-  joyKnob.style.cssText=`left:${t.clientX}px;top:${t.clientY}px;display:block;`;
-},{passive:false});
-
-joyZone.addEventListener('touchmove', e=>{
-  if(!mobJoy.active) return;
-  e.preventDefault();
-  for(const t of e.changedTouches){
-    if(t.identifier!==mobJoy.id) continue;
-    const dx=t.clientX-mobJoy.baseX, dy=t.clientY-mobJoy.baseY;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    const clamp=Math.min(dist,JOY_MAX);
-    const ang=Math.atan2(dy,dx);
-    joyKnob.style.left=(mobJoy.baseX+Math.cos(ang)*clamp)+'px';
-    joyKnob.style.top =(mobJoy.baseY+Math.sin(ang)*clamp)+'px';
-    const spd=0.1;
-    const ndx=dx/JOY_MAX, ndy=dy/JOY_MAX;
-    mobMoveX = Math.abs(ndx)>.2 ? ndx*spd : 0;
-    mobMoveZ = Math.abs(ndy)>.2 ? ndy*spd : 0;
-    // also inject into online keys
-    onKeys['w']=ndy<-.25; onKeys['s']=ndy>.25;
-    onKeys['a']=ndx<-.25; onKeys['d']=ndx>.25;
-  }
-},{passive:false});
-
-function joyEnd(e){
-  for(const t of e.changedTouches){
-    if(t.identifier!==mobJoy.id) continue;
-    mobJoy.active=false; mobJoy.id=-1;
-    mobMoveX=0; mobMoveZ=0;
-    onKeys['w']=onKeys['s']=onKeys['a']=onKeys['d']=false;
-    joyBase.style.display='none'; joyKnob.style.display='none';
-  }
-  e.preventDefault();
-}
-joyZone.addEventListener('touchend',    joyEnd,{passive:false});
-joyZone.addEventListener('touchcancel', joyEnd,{passive:false});
-
-// ── LOOK ZONE ─────────────────────────────────────────────────
-const lookZone = document.getElementById('look-zone');
-
-lookZone.addEventListener('touchstart', e=>{
-  if(!mobileMode) return;
-  e.preventDefault();
-  const t=e.changedTouches[0];
   mobLook.active=true; mobLook.id=t.identifier;
   mobLook.lastX=t.clientX; mobLook.lastY=t.clientY;
 },{passive:false});
 
-lookZone.addEventListener('touchmove', e=>{
+soloLookZone.addEventListener('touchmove', e=>{
   if(!mobLook.active) return;
   e.preventDefault();
   for(const t of e.changedTouches){
     if(t.identifier!==mobLook.id) continue;
     const dx=t.clientX-mobLook.lastX, dy=t.clientY-mobLook.lastY;
     mobLook.lastX=t.clientX; mobLook.lastY=t.clientY;
-    const sens=CFG.sens*0.004;
-    // Solo mode — apply directly
     if(state.running && yawObj){
-      yawObj.rotation.y  -= dx*sens;
-      pitchObj.rotation.x = Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitchObj.rotation.x-dy*sens));
+      const sens = CFG.sens * 0.004;
+      yawObj.rotation.y   -= dx * sens;
+      pitchObj.rotation.x  = Math.max(-Math.PI/2+.05, Math.min(Math.PI/2-.05, pitchObj.rotation.x - dy*sens));
     }
-    // Online mode
-    if(onActive){ onMX+=dx*2; onMY+=dy*2; }
   }
 },{passive:false});
 
-lookZone.addEventListener('touchend',    e=>{ for(const t of e.changedTouches) if(t.identifier===mobLook.id){mobLook.active=false;mobLook.id=-1;} e.preventDefault();},{passive:false});
-lookZone.addEventListener('touchcancel', e=>{ mobLook.active=false; mobLook.id=-1;},{passive:false});
+soloLookZone.addEventListener('touchend',    e=>{for(const t of e.changedTouches) if(t.identifier===mobLook.id){mobLook.active=false;mobLook.id=-1;} e.preventDefault();},{passive:false});
+soloLookZone.addEventListener('touchcancel', e=>{mobLook.active=false; mobLook.id=-1;},{passive:false});
 
-// ── FIRE BUTTON ───────────────────────────────────────────────
+// ── SOLO FIRE BUTTON ──────────────────────────────────────────
 document.getElementById('btn-fire').addEventListener('touchstart', e=>{
   e.preventDefault();
-  if(!mobileMode) return;
-  if(state.running) doMobileShoot();
-  if(onActive)     onTryShoot();
+  if(!mobileMode || !state.running) return;
+  doMobileShoot();
 },{passive:false});
 
 function doMobileShoot(){
@@ -2258,23 +2220,129 @@ function doMobileShoot(){
   } else recordMiss();
 }
 
-// ── JUMP BUTTON ───────────────────────────────────────────────
-document.getElementById('btn-jump').addEventListener('touchstart', e=>{
+// ── SOLO PAUSE BUTTON ─────────────────────────────────────────
+document.getElementById('btn-pause-mob').addEventListener('touchstart', e=>{
+  e.preventDefault(); if(state.running) showPause();
+},{passive:false});
+document.getElementById('btn-pause-mob').addEventListener('click', ()=>{ if(state.running) showPause(); });
+
+// Joystick zone in solo is unused (no movement in training), just show look hint
+document.getElementById('joy-zone').addEventListener('touchstart', e=>e.preventDefault(),{passive:false});
+
+// ── DUEL (PVP) MOBILE CONTROLS ────────────────────────────────
+const duelJoyZone  = document.getElementById('duel-joy-zone');
+const duelJoyBase  = document.getElementById('duel-joy-base');
+const duelJoyKnob  = document.getElementById('duel-joy-knob');
+const duelLookZone = document.getElementById('duel-look-zone');
+
+// Duel joystick
+duelJoyZone.addEventListener('touchstart', e=>{
+  if(!mobileMode||!onActive) return;
   e.preventDefault();
-  if(!mobileMode) return;
-  if(onActive&&onIsGrounded){ onVelY=ON_JUMP_FORCE; onIsGrounded=false; }
+  const t=e.changedTouches[0];
+  duelJoy.active=true; duelJoy.id=t.identifier;
+  duelJoy.baseX=t.clientX; duelJoy.baseY=t.clientY;
+  duelJoyBase.style.cssText=`position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,61,113,.4);transform:translate(-50%,-50%);left:${t.clientX}px;top:${t.clientY}px;display:block;`;
+  duelJoyKnob.style.cssText=`position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(255,61,113,.7);box-shadow:0 0 18px rgba(255,61,113,.5);border:2px solid rgba(255,61,113,.9);transform:translate(-50%,-50%);left:${t.clientX}px;top:${t.clientY}px;display:block;`;
 },{passive:false});
 
-// ── PAUSE BUTTON ──────────────────────────────────────────────
-document.getElementById('btn-pause-mob').addEventListener('touchstart', e=>{
+duelJoyZone.addEventListener('touchmove', e=>{
+  if(!duelJoy.active) return;
   e.preventDefault();
-  if(state.running) showPause();
+  for(const t of e.changedTouches){
+    if(t.identifier!==duelJoy.id) continue;
+    const dx=t.clientX-duelJoy.baseX, dy=t.clientY-duelJoy.baseY;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const clamp=Math.min(dist,DJOY_MAX);
+    const ang=Math.atan2(dy,dx);
+    duelJoyKnob.style.left=(duelJoy.baseX+Math.cos(ang)*clamp)+'px';
+    duelJoyKnob.style.top =(duelJoy.baseY+Math.sin(ang)*clamp)+'px';
+    const ndx=dx/DJOY_MAX, ndy=dy/DJOY_MAX;
+    onKeys['w']=ndy<-.25; onKeys['s']=ndy>.25;
+    onKeys['a']=ndx<-.25; onKeys['d']=ndx>.25;
+  }
 },{passive:false});
-document.getElementById('btn-pause-mob').addEventListener('click', ()=>{
-  if(state.running) showPause();
+
+function duelJoyEnd(e){
+  for(const t of e.changedTouches){
+    if(t.identifier!==duelJoy.id) continue;
+    duelJoy.active=false; duelJoy.id=-1;
+    onKeys['w']=onKeys['s']=onKeys['a']=onKeys['d']=false;
+    duelJoyBase.style.display='none'; duelJoyKnob.style.display='none';
+  }
+  e.preventDefault();
+}
+duelJoyZone.addEventListener('touchend',    duelJoyEnd,{passive:false});
+duelJoyZone.addEventListener('touchcancel', duelJoyEnd,{passive:false});
+
+// Duel look zone
+duelLookZone.addEventListener('touchstart', e=>{
+  if(!mobileMode||!onActive) return;
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  duelLook.active=true; duelLook.id=t.identifier;
+  duelLook.lastX=t.clientX; duelLook.lastY=t.clientY;
+},{passive:false});
+
+duelLookZone.addEventListener('touchmove', e=>{
+  if(!duelLook.active) return;
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    if(t.identifier!==duelLook.id) continue;
+    const dx=t.clientX-duelLook.lastX, dy=t.clientY-duelLook.lastY;
+    duelLook.lastX=t.clientX; duelLook.lastY=t.clientY;
+    onMX+=dx*2; onMY+=dy*2;
+  }
+},{passive:false});
+
+duelLookZone.addEventListener('touchend',    e=>{for(const t of e.changedTouches) if(t.identifier===duelLook.id){duelLook.active=false;duelLook.id=-1;} e.preventDefault();},{passive:false});
+duelLookZone.addEventListener('touchcancel', e=>{duelLook.active=false; duelLook.id=-1;},{passive:false});
+
+// Duel fire button
+document.getElementById('duel-btn-fire').addEventListener('touchstart', e=>{
+  e.preventDefault();
+  if(mobileMode&&onActive) onTryShoot();
+},{passive:false});
+
+// Duel jump button
+document.getElementById('duel-btn-jump').addEventListener('touchstart', e=>{
+  e.preventDefault();
+  if(mobileMode&&onActive&&onIsGrounded){ onVelY=ON_JUMP_FORCE; onIsGrounded=false; }
+},{passive:false});
+
+// Duel pause button
+document.getElementById('duel-btn-pause-mob').addEventListener('touchstart', e=>{
+  e.preventDefault();
+  if(onActive){
+    // pause online: show lock screen to "pause"
+    onLocked=false;
+    document.getElementById('duel-mobile-controls').classList.remove('active');
+    document.getElementById('duel-crosshair').style.display='none';
+    document.getElementById('duel-lock-screen').style.display='flex';
+  }
+},{passive:false});
+document.getElementById('duel-btn-pause-mob').addEventListener('click', ()=>{
+  if(onActive){
+    onLocked=false;
+    document.getElementById('duel-mobile-controls').classList.remove('active');
+    document.getElementById('duel-crosshair').style.display='none';
+    document.getElementById('duel-lock-screen').style.display='flex';
+  }
 });
 
-// Auto-enable on mobile device
+// When duel-lock-btn clicked in mobile mode, resume
+document.getElementById('duel-lock-btn').addEventListener('click', ()=>{
+  if(mobileMode && onActive){
+    onLocked=true;
+    document.getElementById('duel-lock-screen').style.display='none';
+    document.getElementById('duel-crosshair').style.display='block';
+    document.getElementById('duel-mobile-controls').classList.add('active');
+  } else {
+    document.getElementById('duel-canvas').requestPointerLock();
+  }
+});
+
+// Auto-enable on mobile
 if(isMobileDevice) setMobileMode(true);
 </script>
 </body>
