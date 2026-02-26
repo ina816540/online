@@ -1301,6 +1301,7 @@ function showPause(){
   if(state.spawnIv){ clearInterval(state.spawnIv); state.spawnIv=null; }
   document.getElementById('pause-mode-name').textContent = MODES[state.modeId]?.name||'—';
   document.getElementById('pause-overlay').style.display='flex';
+  document.getElementById('mobile-controls').classList.remove('active');
   crosshairEl.style.display='none';
 }
 
@@ -1308,6 +1309,7 @@ function hidePause(){
   paused = false;
   document.getElementById('pause-overlay').style.display='none';
   crosshairEl.style.display='block';
+  if(mobileMode) document.getElementById('mobile-controls').classList.add('active');
   if(state.running && state.timerStarted){
     if(state.modeId==='survival') startSurvivalTimer(); else startTimer();
     if(state.modeId!=='tracking') startSpawner3D();
@@ -1363,7 +1365,16 @@ function startGame(modeId,diff){
   if(modeId==='survival'){ timerVal.textContent='0s'; document.getElementById('lives-hud').style.display='flex'; updateLives(); }
   else{ timerVal.textContent=DIFF[diff].time; document.getElementById('lives-hud').style.display='none'; }
   document.getElementById('lock-mode-name').textContent=m.name;
-  document.getElementById('lock-overlay').style.display='flex';
+  if(mobileMode){
+    // Mobile: skip pointer lock, start directly
+    document.getElementById('lock-overlay').style.display='none';
+    document.getElementById('mobile-controls').classList.add('active');
+    crosshairEl.style.display='block';
+    if(!state.timerStarted) beginTimerAndSpawn();
+  } else {
+    document.getElementById('mobile-controls').classList.remove('active');
+    document.getElementById('lock-overlay').style.display='flex';
+  }
   if(animFrameId) cancelAnimationFrame(animFrameId);
   let last=performance.now(), fpsFrames=0, fpsAccum=0;
   const fpsVal=document.getElementById('fps-val');
@@ -1375,7 +1386,10 @@ function startGame(modeId,diff){
       if(fpsVal){ fpsVal.textContent=fd; fpsVal.style.color=fd>=100?'var(--green)':fd>=60?'var(--accent3)':fd>=30?'#ffd700':'var(--accent2)'; }
     }
     last=now;
-    if(state.running){updateCamera();updateGun(dt);updateTargets(dt);if(modeId==='tracking')updateTracking(dt);}
+    if(state.running){
+      if(mobileMode) applyMobileMovement(); else updateCamera();
+      updateGun(dt);updateTargets(dt);if(modeId==='tracking')updateTracking(dt);
+    }
     renderer.render(scene,camera);
   }
   renderLoop(performance.now());
@@ -1545,6 +1559,7 @@ function endGame(){
   document.exitPointerLock();
   state.targets.forEach(t=>{ if(t.mesh) scene.remove(t.mesh); }); state.targets=[];
   document.getElementById('three-canvas').style.display='none';
+  document.getElementById('mobile-controls').classList.remove('active');
   hud.style.display='none'; bottomBar.style.display='none'; crosshairEl.style.display='none';
   document.getElementById('pause-overlay').style.display='none'; paused=false;
   const fpsV=document.getElementById('fps-val'); if(fpsV) fpsV.textContent='—';
@@ -2078,280 +2093,189 @@ function onAnimateAllChars(dt){ onOpps.forEach(opp=>{ if(opp.group&&opp.group.vi
 // MOBILE CONTROLS SYSTEM
 // ============================================================
 let mobileMode = false;
+const isMobileDevice = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
 
-// Auto-detect mobile
-const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1);
+// Joystick state
+const mobJoy = { active:false, id:-1, baseX:0, baseY:0, dx:0, dy:0 };
+// Look state
+const mobLook = { active:false, id:-1, lastX:0, lastY:0 };
+// Movement vector (applied each frame)
+let mobMoveX = 0, mobMoveZ = 0;
+const JOY_MAX = 50;
 
-// State
-const mobKeys = { w:false, s:false, a:false, d:false };
-let mobFireDown = false;
-let mobLookActive = false, mobLookId = -1;
-let mobLookLastX = 0, mobLookLastY = 0;
-let joyActive = false, joyId = -1;
-let joyBaseX = 0, joyBaseY = 0;
-const JOY_MAX = 48;
-
+// ── Toggle mobile mode ────────────────────────────────────────
 function setMobileMode(on) {
   mobileMode = on;
-  // Sync all toggle buttons
+  try { localStorage.setItem('ina_mobile', on?'1':'0'); } catch(e){}
   document.querySelectorAll('.mob-toggle-btn').forEach(b => {
     b.classList.toggle('on', on);
-    b.textContent = on ? '📱 MÓVIL: ON' : '📱 MODO MÓVIL';
+    b.textContent = on ? '📱 MÓVIL: ON ✓' : '📱 MODO MÓVIL';
   });
-  // Show/hide hint text
   const hint = document.getElementById('lock-hint');
-  if (hint) {
-    if (on) {
-      hint.innerHTML = 'Joystick izquierdo para mover<br>Arrastra derecha para apuntar<br>🔴 Disparar · ⬆ Saltar';
-    } else {
-      hint.innerHTML = 'Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar';
-    }
+  if(hint){
+    hint.innerHTML = on
+      ? 'Joystick izquierdo para mover<br>Arrastra lado derecho para apuntar<br>🔴 Disparar &nbsp;·&nbsp; ⬆ Saltar'
+      : 'Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar';
   }
-  // Save preference
-  try { localStorage.setItem('ina_mobile', on ? '1' : '0'); } catch(e) {}
 }
 
-// Load saved preference or auto-detect
-(function() {
+// Load preference
+(function(){
   try {
-    const saved = localStorage.getItem('ina_mobile');
-    if (saved !== null) setMobileMode(saved === '1');
-    else if (isMobile) setMobileMode(true);
-  } catch(e) {}
+    const s = localStorage.getItem('ina_mobile');
+    if(s !== null) setMobileMode(s==='1');
+    else if(isMobileDevice) setMobileMode(true);
+  } catch(e){}
 })();
 
-// Toggle buttons
-document.getElementById('mob-toggle-btn').addEventListener('click', () => setMobileMode(!mobileMode));
-document.getElementById('mob-toggle-menu-btn').addEventListener('click', () => setMobileMode(!mobileMode));
+document.getElementById('mob-toggle-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
+document.getElementById('mob-toggle-menu-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
+
+// ── applyMobileMovement (called in renderLoop instead of updateCamera) ──
+function applyMobileMovement() {
+  // Apply look delta
+  if((mouseDX||mouseDY) && yawObj){
+    const s = CFG.sens*.001;
+    yawObj.rotation.y  -= mouseDX*s;
+    pitchObj.rotation.x = Math.max(-Math.PI/2+.05, Math.min(Math.PI/2-.05, pitchObj.rotation.x - mouseDY*s));
+    mouseDX=0; mouseDY=0;
+  }
+  // Apply joystick movement
+  if((mobMoveX||mobMoveZ) && yawObj){
+    const yaw = yawObj.rotation.y;
+    const nx = yawObj.position.x + (mobMoveX*(-Math.sin(yaw)) + mobMoveZ*Math.cos(yaw));
+    const nz = yawObj.position.z + (mobMoveX*(-Math.cos(yaw)) + mobMoveZ*(-Math.sin(yaw)));
+    yawObj.position.x = Math.max(-13, Math.min(13, nx));
+    yawObj.position.z = Math.max(-22, Math.min(0,  nz));
+  }
+}
 
 // ── JOYSTICK ─────────────────────────────────────────────────
-function joyStart(e) {
-  if (!mobileMode || !state.running) return;
-  const touch = e.changedTouches[0];
-  joyId = touch.identifier;
-  joyBaseX = touch.clientX;
-  joyBaseY = touch.clientY;
-  joyActive = true;
-  const base = document.getElementById('joy-base');
-  const knob = document.getElementById('joy-knob');
-  base.style.left = joyBaseX + 'px';
-  base.style.top  = joyBaseY + 'px';
-  base.style.display = 'block';
-  knob.style.left = joyBaseX + 'px';
-  knob.style.top  = joyBaseY + 'px';
-  knob.style.display = 'block';
-  e.preventDefault();
-}
-
-function joyMove(e) {
-  if (!joyActive) return;
-  for (const touch of e.changedTouches) {
-    if (touch.identifier !== joyId) continue;
-    const dx = touch.clientX - joyBaseX;
-    const dy = touch.clientY - joyBaseY;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    const clamp = Math.min(dist, JOY_MAX);
-    const angle = Math.atan2(dy, dx);
-    const kx = joyBaseX + Math.cos(angle) * clamp;
-    const ky = joyBaseY + Math.sin(angle) * clamp;
-    const knob = document.getElementById('joy-knob');
-    knob.style.left = kx + 'px';
-    knob.style.top  = ky + 'px';
-    // Map to WASD
-    const ndx = dx / JOY_MAX, ndy = dy / JOY_MAX;
-    mobKeys.w = ndy < -0.3;
-    mobKeys.s = ndy >  0.3;
-    mobKeys.a = ndx < -0.3;
-    mobKeys.d = ndx >  0.3;
-    // Inject into online keys too
-    onKeys['w'] = mobKeys.w; onKeys['s'] = mobKeys.s;
-    onKeys['a'] = mobKeys.a; onKeys['d'] = mobKeys.d;
-  }
-  e.preventDefault();
-}
-
-function joyEnd(e) {
-  for (const touch of e.changedTouches) {
-    if (touch.identifier !== joyId) continue;
-    joyActive = false; joyId = -1;
-    mobKeys.w = mobKeys.s = mobKeys.a = mobKeys.d = false;
-    onKeys['w'] = onKeys['s'] = onKeys['a'] = onKeys['d'] = false;
-    document.getElementById('joy-base').style.display = 'none';
-    document.getElementById('joy-knob').style.display = 'none';
-  }
-  e.preventDefault();
-}
-
 const joyZone = document.getElementById('joy-zone');
-joyZone.addEventListener('touchstart',  joyStart,  {passive:false});
-joyZone.addEventListener('touchmove',   joyMove,   {passive:false});
-joyZone.addEventListener('touchend',    joyEnd,    {passive:false});
-joyZone.addEventListener('touchcancel', joyEnd,    {passive:false});
+const joyBase = document.getElementById('joy-base');
+const joyKnob = document.getElementById('joy-knob');
 
-// ── CAMERA LOOK (right side drag) ────────────────────────────
+joyZone.addEventListener('touchstart', e=>{
+  if(!mobileMode||!state.running) return;
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  mobJoy.active=true; mobJoy.id=t.identifier;
+  mobJoy.baseX=t.clientX; mobJoy.baseY=t.clientY;
+  joyBase.style.cssText=`left:${t.clientX}px;top:${t.clientY}px;display:block;`;
+  joyKnob.style.cssText=`left:${t.clientX}px;top:${t.clientY}px;display:block;`;
+},{passive:false});
+
+joyZone.addEventListener('touchmove', e=>{
+  if(!mobJoy.active) return;
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    if(t.identifier!==mobJoy.id) continue;
+    const dx=t.clientX-mobJoy.baseX, dy=t.clientY-mobJoy.baseY;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const clamp=Math.min(dist,JOY_MAX);
+    const ang=Math.atan2(dy,dx);
+    joyKnob.style.left=(mobJoy.baseX+Math.cos(ang)*clamp)+'px';
+    joyKnob.style.top =(mobJoy.baseY+Math.sin(ang)*clamp)+'px';
+    const spd=0.1;
+    const ndx=dx/JOY_MAX, ndy=dy/JOY_MAX;
+    mobMoveX = Math.abs(ndx)>.2 ? ndx*spd : 0;
+    mobMoveZ = Math.abs(ndy)>.2 ? ndy*spd : 0;
+    // also inject into online keys
+    onKeys['w']=ndy<-.25; onKeys['s']=ndy>.25;
+    onKeys['a']=ndx<-.25; onKeys['d']=ndx>.25;
+  }
+},{passive:false});
+
+function joyEnd(e){
+  for(const t of e.changedTouches){
+    if(t.identifier!==mobJoy.id) continue;
+    mobJoy.active=false; mobJoy.id=-1;
+    mobMoveX=0; mobMoveZ=0;
+    onKeys['w']=onKeys['s']=onKeys['a']=onKeys['d']=false;
+    joyBase.style.display='none'; joyKnob.style.display='none';
+  }
+  e.preventDefault();
+}
+joyZone.addEventListener('touchend',    joyEnd,{passive:false});
+joyZone.addEventListener('touchcancel', joyEnd,{passive:false});
+
+// ── LOOK ZONE ─────────────────────────────────────────────────
 const lookZone = document.getElementById('look-zone');
 
-lookZone.addEventListener('touchstart', e => {
-  if (!mobileMode || !state.running) return;
-  const touch = e.changedTouches[0];
-  mobLookId = touch.identifier;
-  mobLookLastX = touch.clientX;
-  mobLookLastY = touch.clientY;
-  mobLookActive = true;
+lookZone.addEventListener('touchstart', e=>{
+  if(!mobileMode) return;
   e.preventDefault();
-}, {passive:false});
+  const t=e.changedTouches[0];
+  mobLook.active=true; mobLook.id=t.identifier;
+  mobLook.lastX=t.clientX; mobLook.lastY=t.clientY;
+},{passive:false});
 
-lookZone.addEventListener('touchmove', e => {
-  if (!mobLookActive) return;
-  for (const touch of e.changedTouches) {
-    if (touch.identifier !== mobLookId) continue;
-    const dx = touch.clientX - mobLookLastX;
-    const dy = touch.clientY - mobLookLastY;
-    mobLookLastX = touch.clientX;
-    mobLookLastY = touch.clientY;
-    // Apply to camera (single player)
-    if (state.running && yawObj) {
-      const sens = CFG.sens * 0.003;
-      yawObj.rotation.y  -= dx * sens;
-      pitchObj.rotation.x = Math.max(-Math.PI/2+.05, Math.min(Math.PI/2-.05, pitchObj.rotation.x - dy * sens));
+lookZone.addEventListener('touchmove', e=>{
+  if(!mobLook.active) return;
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    if(t.identifier!==mobLook.id) continue;
+    const dx=t.clientX-mobLook.lastX, dy=t.clientY-mobLook.lastY;
+    mobLook.lastX=t.clientX; mobLook.lastY=t.clientY;
+    const sens=CFG.sens*0.004;
+    // Solo mode — apply directly
+    if(state.running && yawObj){
+      yawObj.rotation.y  -= dx*sens;
+      pitchObj.rotation.x = Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitchObj.rotation.x-dy*sens));
     }
-    // Apply to online camera
-    if (onActive && onYawObj) {
-      onMX += dx * 1.5;
-      onMY += dy * 1.5;
-    }
+    // Online mode
+    if(onActive){ onMX+=dx*2; onMY+=dy*2; }
   }
-  e.preventDefault();
-}, {passive:false});
+},{passive:false});
 
-lookZone.addEventListener('touchend', e => {
-  for (const touch of e.changedTouches) {
-    if (touch.identifier === mobLookId) { mobLookActive = false; mobLookId = -1; }
-  }
-  e.preventDefault();
-}, {passive:false});
-
-lookZone.addEventListener('touchcancel', e => {
-  mobLookActive = false; mobLookId = -1;
-}, {passive:false});
+lookZone.addEventListener('touchend',    e=>{ for(const t of e.changedTouches) if(t.identifier===mobLook.id){mobLook.active=false;mobLook.id=-1;} e.preventDefault();},{passive:false});
+lookZone.addEventListener('touchcancel', e=>{ mobLook.active=false; mobLook.id=-1;},{passive:false});
 
 // ── FIRE BUTTON ───────────────────────────────────────────────
-const btnFire = document.getElementById('btn-fire');
-btnFire.addEventListener('touchstart', e => {
+document.getElementById('btn-fire').addEventListener('touchstart', e=>{
   e.preventDefault();
-  if (!mobileMode) return;
-  if (state.running) mobShoot();
-  if (onActive)     onTryShoot();
-}, {passive:false});
+  if(!mobileMode) return;
+  if(state.running) doMobileShoot();
+  if(onActive)     onTryShoot();
+},{passive:false});
 
-function mobShoot() {
-  if (!state.running) return;
-  const m = state.modeId;
-  if (m === 'tracking') return;
+function doMobileShoot(){
+  if(!state.running) return;
+  const m=state.modeId;
+  if(m==='tracking') return;
   playGunshot(); triggerShoot();
-  const ch = document.getElementById('crosshair');
-  ch.classList.add('shoot'); setTimeout(() => ch.classList.remove('shoot'), 100);
-  if (m === 'gridshot') {
-    const at = state.targets.find(t => t.gridIdx === gridActive);
-    if (at) {
-      raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-      if (raycaster.intersectObject(at.mesh, false).length > 0) { gridHit(at); return; }
-    }
+  const ch=document.getElementById('crosshair'); ch.classList.add('shoot'); setTimeout(()=>ch.classList.remove('shoot'),100);
+  if(m==='gridshot'){
+    const at=state.targets.find(t=>t.gridIdx===gridActive);
+    if(at){ raycaster.setFromCamera(new THREE.Vector2(0,0),camera); if(raycaster.intersectObject(at.mesh,false).length>0){gridHit(at);return;} }
     recordMiss(); return;
   }
-  raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-  const hits = raycaster.intersectObjects(state.targets.map(t=>t.mesh).filter(Boolean), false);
-  if (hits.length > 0) {
-    const ht = state.targets.find(t => t.mesh===hits[0].object || t.mesh===hits[0].object.parent);
-    if (ht && ht.alive) { recordHit(ht); if (m==='flicking') setTimeout(spawnFor3D, 200); } else recordMiss();
+  raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
+  const hits=raycaster.intersectObjects(state.targets.map(t=>t.mesh).filter(Boolean),false);
+  if(hits.length>0){
+    const ht=state.targets.find(t=>t.mesh===hits[0].object||t.mesh===hits[0].object.parent);
+    if(ht&&ht.alive){recordHit(ht);if(m==='flicking')setTimeout(spawnFor3D,200);}else recordMiss();
   } else recordMiss();
 }
 
 // ── JUMP BUTTON ───────────────────────────────────────────────
-const btnJump = document.getElementById('btn-jump');
-btnJump.addEventListener('touchstart', e => {
+document.getElementById('btn-jump').addEventListener('touchstart', e=>{
   e.preventDefault();
-  if (!mobileMode) return;
-  // Single player: no gravity/jump in solo mode, but online yes
-  if (onActive && onIsGrounded) { onVelY = ON_JUMP_FORCE; onIsGrounded = false; }
-}, {passive:false});
+  if(!mobileMode) return;
+  if(onActive&&onIsGrounded){ onVelY=ON_JUMP_FORCE; onIsGrounded=false; }
+},{passive:false});
 
 // ── PAUSE BUTTON ──────────────────────────────────────────────
-document.getElementById('btn-pause-mob').addEventListener('touchstart', e => {
+document.getElementById('btn-pause-mob').addEventListener('touchstart', e=>{
   e.preventDefault();
-  if (state.running) showPause();
-}, {passive:false});
-document.getElementById('btn-pause-mob').addEventListener('click', () => {
-  if (state.running) showPause();
+  if(state.running) showPause();
+},{passive:false});
+document.getElementById('btn-pause-mob').addEventListener('click', ()=>{
+  if(state.running) showPause();
 });
 
-// ── SHOW/HIDE MOBILE CONTROLS DURING GAME ────────────────────
-function showMobileControls(show) {
-  const mc = document.getElementById('mobile-controls');
-  mc.classList.toggle('active', show && mobileMode);
-}
-
-// ── SOLO PLAYER: mobile movement tick ────────────────────────
-// Inject mob movement into solo camera movement each frame
-const _origUpdateCamera = updateCamera;
-function updateCamera() {
-  if (mobileMode && state.running) {
-    // Movement via mobKeys for solo mode (no 3D physics, just yaw)
-    if (mobKeys.w || mobKeys.s || mobKeys.a || mobKeys.d) {
-      const spd = 0.08;
-      const fw = (mobKeys.w?1:0)-(mobKeys.s?1:0);
-      const ri = (mobKeys.d?1:0)-(mobKeys.a?1:0);
-      const len = Math.sqrt(fw*fw+ri*ri)||1;
-      const yaw = yawObj.rotation.y;
-      yawObj.position.x += ((fw/len)*(-Math.sin(yaw))+(ri/len)*Math.cos(yaw))*spd;
-      yawObj.position.z += ((fw/len)*(-Math.cos(yaw))+(ri/len)*(-Math.sin(yaw)))*spd;
-      // Clamp inside room
-      yawObj.position.x = Math.max(-13, Math.min(13, yawObj.position.x));
-      yawObj.position.z = Math.max(-22, Math.min(0,  yawObj.position.z));
-    }
-    // Touch look already applied directly in touchmove handler
-    mouseDX = 0; mouseDY = 0;
-    return;
-  }
-  _origUpdateCamera();
-}
-
-// ── HOOK startGame to show/hide mobile controls ───────────────
-const _origStartGame = startGame;
-function startGame(modeId, diff) {
-  _origStartGame(modeId, diff);
-  if (mobileMode) {
-    // Skip pointer lock request, show controls directly
-    document.getElementById('lock-overlay').style.display = 'none';
-    showMobileControls(true);
-    crosshairEl.style.display = 'block';
-    if (!state.timerStarted) beginTimerAndSpawn();
-  }
-}
-
-// ── HOOK endGame to hide mobile controls ─────────────────────
-const _origEndGame = endGame;
-function endGame() {
-  showMobileControls(false);
-  _origEndGame();
-}
-
-// ── HOOK hidePause / showPause for mobile ─────────────────────
-const _origHidePause = hidePause;
-function hidePause() {
-  _origHidePause();
-  if (mobileMode) showMobileControls(true);
-}
-const _origShowPause = showPause;
-function showPause() {
-  _origShowPause();
-  if (mobileMode) showMobileControls(false);
-}
-
-// Auto-enable mobile mode if on mobile device and lock overlay appears
-if (isMobile) {
-  setMobileMode(true);
-}
+// Auto-enable on mobile device
+if(isMobileDevice) setMobileMode(true);
 </script>
 </body>
 </html>
