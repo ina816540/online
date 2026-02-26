@@ -327,6 +327,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 <!-- MENU -->
 <div class="screen hidden" id="menu-screen">
   <div class="logo"><h1>INA TRAINER</h1><p>ENTRENADOR FPS 3D</p></div>
+  <div id="menu-online-badge" style="display:flex;align-items:center;gap:7px;margin-bottom:6px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);padding:5px 14px;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)">
+    <span style="width:7px;height:7px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;display:inline-block;animation:ping-pulse 2s infinite"></span>
+    <span style="font-size:.58rem;letter-spacing:.2em;color:#00ff88"><span id="menu-online-count">—</span> JUGANDO AHORA</span>
+  </div>
   <div class="sec-lbl">— SELECCIONA MODO —</div>
   <div class="modes-grid" id="modes-grid"></div>
   <div class="bot-row">
@@ -430,6 +434,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div class="login-logo">
     <h1 style="color:#ff3d71;animation:glow 3s ease-in-out infinite">⚔ ONLINE</h1>
     <p style="letter-spacing:.4em;color:var(--dim)">SALAS MULTIJUGADOR · INA MAP</p>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+      <span style="width:7px;height:7px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;display:inline-block;animation:ping-pulse 2s infinite"></span>
+      <span style="font-size:.58rem;letter-spacing:.2em;color:#00ff88"><span id="lobby-online-count">—</span> JUGANDO AHORA</span>
+    </div>
   </div>
   <!-- Estado de conexión -->
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -1246,6 +1254,15 @@ const onOpps=new Map(), onPlayerNames=new Map();
 let onTeamScores=[0,0], onPScores={};
 let onCreateMode='1v1', onWaitPlayers=[];
 
+// ── CONTEO DE JUGADORES EN LÍNEA ────────────────────────────
+function onUpdateOnlineCount(count) {
+  const m = document.getElementById('menu-online-count');
+  const l = document.getElementById('lobby-online-count');
+  const txt = count === 1 ? '1 PERSONA' : count + ' PERSONAS';
+  if (m) m.textContent = count;
+  if (l) l.textContent = count;
+}
+
 // ── PING / LATENCIA ─────────────────────────────────────────
 let onPing = 0, onPingIv = null, onReconnectT = null;
 
@@ -1406,6 +1423,9 @@ function onMsg(msg) {
       onPing = Date.now() - msg.t;
       onUpdatePingDisplay();
       break;
+    case 'online_count':
+      onUpdateOnlineCount(msg.count);
+      break;
     case 'room_list':   onUpdateRoomList(msg.rooms); break;
     case 'room_joined': onRoomJoined(msg); break;
     case 'player_joined': onPlayerJoined(msg); break;
@@ -1443,10 +1463,13 @@ function onPlayerJoined(p) {
 function onUpdateStartBtn() {
   const btn=document.getElementById('duel-force-start'); if(!btn) return;
   const ready=onWaitPlayers.length>=2;
-  btn.style.background=ready?'#00ff88':'#555566'; btn.style.color=ready?'#000':'#aaa';
-  btn.style.boxShadow=ready?'0 0 18px rgba(0,255,136,.5)':'none';
+  btn.style.background=ready?'#ff3d71':'#555566';
+  btn.style.color=ready?'#fff':'#aaa';
+  btn.style.boxShadow=ready?'0 0 18px rgba(255,61,113,.5)':'none';
+  btn.style.opacity=ready?'1':'.5';
   btn.textContent=ready?'▶ INICIAR PARTIDA':'⏳ ESPERANDO JUGADORES...';
-  btn.style.cursor=ready?'pointer':'default';
+  btn.style.cursor=ready?'pointer':'not-allowed';
+  btn.disabled=!ready;
 }
 function onRenderWaitingPlayers(max) {
   const el=document.getElementById('duel-players-in-room'); el.innerHTML='';
