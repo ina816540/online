@@ -69,6 +69,10 @@ function pushRoomList() {
   broadcastAll({ type:'room_list', rooms: getRoomList() });
 }
 
+function pushOnlineCount() {
+  broadcastAll({ type:'online_count', count: clients.size });
+}
+
 // ── WEBSOCKET ────────────────────────────────────────────────
 wss.on('connection', ws => {
   clients.add(ws);
@@ -76,6 +80,8 @@ wss.on('connection', ws => {
 
   // Enviar lista al conectar
   send(ws, { type:'room_list', rooms: getRoomList() });
+  // Notificar conteo actualizado a todos
+  pushOnlineCount();
 
   ws.on('message', raw => {
     let msg; try { msg = JSON.parse(raw.toString()); } catch { return; }
@@ -158,11 +164,6 @@ wss.on('connection', ws => {
         room.players.forEach(p => send(p.ws, joinMsg));
 
         pushRoomList();
-
-        // Auto-start cuando esté llena
-        if (room.players.length >= room.max) {
-          setTimeout(() => { if (!room.closed && room.state === 'waiting') startMatch(room); }, 300);
-        }
         break;
       }
 
@@ -255,6 +256,7 @@ wss.on('connection', ws => {
   // ── DESCONEXIÓN ───────────────────────────────────────────
   ws.on('close', () => {
     clients.delete(ws);
+    pushOnlineCount();
     if (!room || room.closed) return;
     room.closed = true; room.state = 'finished';
     room.players.forEach(p => {
