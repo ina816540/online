@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>INA TRAINER</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
@@ -51,24 +50,68 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .3s;}
 .screen.hidden{opacity:0;pointer-events:none;}
 @keyframes glow{0%,100%{text-shadow:0 0 30px var(--accent),0 0 60px rgba(224,64,251,.3);}50%{text-shadow:0 0 50px var(--accent),0 0 100px rgba(224,64,251,.5);}}
-/* LOGIN */
+
+/* ═══════════════════════════════════════════
+   LOGIN — NUEVO DISEÑO
+═══════════════════════════════════════════ */
 #login-screen{gap:0;background:radial-gradient(ellipse at center,rgba(224,64,251,.06) 0%,transparent 70%);}
-.login-logo{text-align:center;margin-bottom:30px;}
-.login-logo h1{font-family:'Orbitron',monospace;font-size:clamp(2.5rem,6vw,5rem);font-weight:900;letter-spacing:.3em;color:var(--accent);animation:glow 3s ease-in-out infinite;}
-.login-logo p{font-size:.72rem;letter-spacing:.5em;color:var(--dim);margin-top:6px;}
-.login-box{background:var(--panel);border:1px solid var(--border);padding:32px 38px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));width:360px;display:flex;flex-direction:column;gap:16px;}
-.login-box h3{font-family:'Orbitron',monospace;font-size:.88rem;letter-spacing:.3em;color:var(--accent);text-align:center;margin-bottom:4px;}
-.login-input-wrap{display:flex;flex-direction:column;gap:6px;}
-.login-input-wrap label{font-size:.58rem;letter-spacing:.3em;color:var(--dim);}
-.login-input{background:#030608;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:1rem;padding:12px 14px;outline:none;width:100%;transition:border-color .2s;letter-spacing:.1em;}
-.login-input:focus{border-color:var(--accent);box-shadow:0 0 12px rgba(224,64,251,.2);}
-.avatar-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
-.avatar-opt{font-size:1.5rem;cursor:pointer;padding:5px 9px;border:2px solid transparent;border-radius:8px;transition:all .15s;background:#030608;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo h1{font-family:'Orbitron',monospace;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;letter-spacing:.3em;color:var(--accent);animation:glow 3s ease-in-out infinite;}
+.login-logo p{font-size:.68rem;letter-spacing:.5em;color:var(--dim);margin-top:6px;}
+
+.auth-box{background:var(--panel);border:1px solid var(--border);padding:0;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));width:380px;overflow:hidden;}
+
+/* Tabs */
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);}
+.auth-tab{flex:1;background:none;border:none;color:var(--dim);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.25em;padding:14px 10px;cursor:pointer;transition:all .2s;position:relative;}
+.auth-tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s;}
+.auth-tab.active{color:var(--accent);background:rgba(224,64,251,.05);}
+.auth-tab.active::after{transform:scaleX(1);}
+.auth-tab:hover:not(.active){color:var(--text);}
+
+.auth-panel{padding:28px 32px;display:flex;flex-direction:column;gap:14px;}
+
+/* Avatar */
+.avatar-row{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;}
+.avatar-opt{font-size:1.4rem;cursor:pointer;padding:4px 8px;border:2px solid transparent;border-radius:8px;transition:all .15s;background:#030608;}
 .avatar-opt:hover{border-color:var(--accent);transform:scale(1.1);}
 .avatar-opt.selected{border-color:var(--accent);background:rgba(224,64,251,.15);transform:scale(1.15);}
-.login-btn{background:var(--accent);border:none;color:#000;font-family:'Orbitron',monospace;font-size:.85rem;font-weight:900;letter-spacing:.2em;padding:14px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;width:100%;}
-.login-btn:hover{box-shadow:0 0 30px rgba(224,64,251,.6);}
-.login-err{font-size:.63rem;color:var(--accent2);text-align:center;letter-spacing:.1em;min-height:16px;}
+
+/* Input fields */
+.field-wrap{display:flex;flex-direction:column;gap:5px;}
+.field-wrap label{font-size:.56rem;letter-spacing:.3em;color:var(--dim);}
+.field-input-row{display:flex;align-items:center;gap:0;position:relative;}
+.field-icon{position:absolute;left:12px;color:var(--dim);font-size:.9rem;pointer-events:none;z-index:1;}
+.auth-input{background:#030608;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.95rem;padding:11px 12px 11px 36px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s;letter-spacing:.08em;}
+.auth-input:focus{border-color:var(--accent);box-shadow:0 0 14px rgba(224,64,251,.18);}
+.auth-input.no-icon{padding-left:12px;}
+
+/* Password strength */
+.pw-strength{height:2px;background:var(--border);margin-top:4px;border-radius:1px;overflow:hidden;}
+.pw-strength-fill{height:100%;border-radius:1px;transition:width .3s,background .3s;width:0%;}
+
+/* Submit button */
+.auth-submit{background:var(--accent);border:none;color:#000;font-family:'Orbitron',monospace;font-size:.82rem;font-weight:900;letter-spacing:.2em;padding:13px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;width:100%;position:relative;overflow:hidden;}
+.auth-submit:hover{box-shadow:0 0 30px rgba(224,64,251,.6);}
+.auth-submit:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+.auth-submit .btn-loader{display:none;position:absolute;inset:0;background:inherit;align-items:center;justify-content:center;}
+.auth-submit.loading .btn-loader{display:flex;}
+.auth-submit.loading .btn-text{opacity:0;}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{width:18px;height:18px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;}
+
+/* Messages */
+.auth-msg{font-size:.62rem;text-align:center;letter-spacing:.1em;min-height:16px;padding:2px 0;}
+.auth-msg.error{color:var(--accent2);}
+.auth-msg.success{color:var(--green);}
+
+/* Divider */
+.auth-divider{display:flex;align-items:center;gap:10px;margin:2px 0;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.auth-divider span{font-size:.52rem;letter-spacing:.2em;color:var(--dim);}
+
 /* LEADERBOARD */
 #lb-screen{gap:0;justify-content:flex-start;padding-top:28px;overflow-y:auto;}
 .lb-header{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;letter-spacing:.3em;color:var(--accent);margin-bottom:5px;text-align:center;}
@@ -205,6 +248,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 /* PING */
 @keyframes ping-pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
 .ping-bad{animation:ping-pulse .8s infinite;}
+/* login anim */
+@keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.auth-panel{animation:slideIn .25s ease-out;}
 </style>
 </head>
 <body>
@@ -246,32 +292,92 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div style="font-size:.54rem;letter-spacing:.25em;color:var(--dim);margin-top:6px;">Presiona <strong style="color:var(--accent)">ESC</strong> o haz clic en Reanudar para continuar</div>
 </div>
 
-<!-- LOGIN -->
+<!-- ═══════════════════════════════════════════
+     LOGIN — NUEVO
+═══════════════════════════════════════════ -->
 <div class="screen" id="login-screen">
-  <div class="login-logo"><h1>INA TRAINER</h1><p>ENTRENADOR FPS 3D · COMPETITIVO</p></div>
-  <div class="login-box" style="align-items:center">
-    <h3>✦ INICIAR SESIÓN</h3>
-    <p style="font-size:.6rem;color:var(--dim);text-align:center;letter-spacing:.1em">Inicia con tu cuenta de Google para guardar tus récords globales</p>
-    <div id="google-btn-wrap" style="margin:8px 0"></div>
-    <div style="font-size:.55rem;color:var(--dim);letter-spacing:.1em">— luego elige tu avatar —</div>
-    <div class="avatar-row" id="avatar-row" style="opacity:.4;pointer-events:none">
-      <span class="avatar-opt selected" data-av="🎯">🎯</span>
-      <span class="avatar-opt" data-av="🔫">🔫</span>
-      <span class="avatar-opt" data-av="⚡">⚡</span>
-      <span class="avatar-opt" data-av="🐺">🐺</span>
-      <span class="avatar-opt" data-av="🦊">🦊</span>
-      <span class="avatar-opt" data-av="💀">💀</span>
-      <span class="avatar-opt" data-av="🐉">🐉</span>
-      <span class="avatar-opt" data-av="🤖">🤖</span>
-      <span class="avatar-opt" data-av="👾">👾</span>
-      <span class="avatar-opt" data-av="🎮">🎮</span>
+  <div class="login-logo">
+    <h1>INA TRAINER</h1>
+    <p>ENTRENADOR FPS 3D · COMPETITIVO</p>
+  </div>
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">⚡ INICIAR SESIÓN</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">✦ REGISTRARSE</button>
     </div>
-    <div class="login-input-wrap" id="username-wrap" style="opacity:.4;pointer-events:none;width:100%">
-      <label>NOMBRE EN EL JUEGO <span style="color:var(--dim);font-size:.5rem">(puedes cambiarlo para mayor privacidad)</span></label>
-      <input class="login-input" id="custom-username" maxlength="20" placeholder="Tu nombre en el juego..." autocomplete="off">
+
+    <!-- LOGIN PANEL -->
+    <div class="auth-panel" id="panel-login">
+      <div class="field-wrap">
+        <label>USUARIO</label>
+        <div class="field-input-row">
+          <span class="field-icon">◈</span>
+          <input class="auth-input" id="login-username" type="text" placeholder="Tu nombre de usuario" maxlength="20" autocomplete="username" autocorrect="off" autocapitalize="off">
+        </div>
+      </div>
+      <div class="field-wrap">
+        <label>CONTRASEÑA</label>
+        <div class="field-input-row">
+          <span class="field-icon">🔒</span>
+          <input class="auth-input" id="login-password" type="password" placeholder="Tu contraseña" maxlength="40" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="auth-msg" id="login-msg"></div>
+      <button class="auth-submit" id="login-submit" onclick="doLogin()">
+        <span class="btn-text">▶ ENTRAR</span>
+        <div class="btn-loader"><div class="spinner"></div></div>
+      </button>
+      <div class="auth-divider"><span>¿Aún no tienes cuenta?</span></div>
+      <button style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:9px;cursor:pointer;transition:all .2s;width:100%" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'" onclick="switchTab('register')">CREAR CUENTA GRATIS →</button>
     </div>
-    <button class="login-btn" id="login-btn" style="display:none;background:var(--accent)">▶ ENTRAR AL JUEGO</button>
-    <div class="login-err" id="login-err"></div>
+
+    <!-- REGISTER PANEL -->
+    <div class="auth-panel" id="panel-register" style="display:none">
+      <!-- Avatar -->
+      <div class="field-wrap">
+        <label>ELIGE TU AVATAR</label>
+        <div class="avatar-row" id="avatar-row">
+          <span class="avatar-opt selected" data-av="🎯">🎯</span>
+          <span class="avatar-opt" data-av="🔫">🔫</span>
+          <span class="avatar-opt" data-av="⚡">⚡</span>
+          <span class="avatar-opt" data-av="🐺">🐺</span>
+          <span class="avatar-opt" data-av="🦊">🦊</span>
+          <span class="avatar-opt" data-av="💀">💀</span>
+          <span class="avatar-opt" data-av="🐉">🐉</span>
+          <span class="avatar-opt" data-av="🤖">🤖</span>
+          <span class="avatar-opt" data-av="👾">👾</span>
+          <span class="avatar-opt" data-av="🎮">🎮</span>
+        </div>
+      </div>
+      <div class="field-wrap">
+        <label>NOMBRE DE USUARIO <span style="color:var(--dim);font-size:.5rem">(mín. 3 caracteres)</span></label>
+        <div class="field-input-row">
+          <span class="field-icon">◈</span>
+          <input class="auth-input" id="reg-username" type="text" placeholder="Elige un nombre único" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="off" oninput="checkUsernameAvail()">
+        </div>
+        <div style="font-size:.54rem;letter-spacing:.1em;min-height:14px;margin-top:2px" id="username-avail"></div>
+      </div>
+      <div class="field-wrap">
+        <label>CONTRASEÑA <span style="color:var(--dim);font-size:.5rem">(mín. 6 caracteres)</span></label>
+        <div class="field-input-row">
+          <span class="field-icon">🔒</span>
+          <input class="auth-input" id="reg-password" type="password" placeholder="Elige una contraseña" maxlength="40" autocomplete="new-password" oninput="updatePwStrength()">
+        </div>
+        <div class="pw-strength"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
+      </div>
+      <div class="field-wrap">
+        <label>CONFIRMAR CONTRASEÑA</label>
+        <div class="field-input-row">
+          <span class="field-icon">🔒</span>
+          <input class="auth-input" id="reg-confirm" type="password" placeholder="Repite la contraseña" maxlength="40" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="auth-msg" id="register-msg"></div>
+      <button class="auth-submit" id="register-submit" onclick="doRegister()">
+        <span class="btn-text">✦ CREAR CUENTA</span>
+        <div class="btn-loader"><div class="spinner"></div></div>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -345,7 +451,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     <div class="user-badge"><span id="menu-user-av">🎯</span><span id="menu-user-name">—</span></div>
     <button class="extra-btn" id="open-lb-btn">🏆 RÉCORDS</button>
     <button class="extra-btn" id="open-stats-btn">📊 ESTADÍSTICAS</button>
-    <button class="extra-btn" id="logout-btn">⏏ CAMBIAR USUARIO</button>
+    <button class="extra-btn" id="logout-btn">⏏ CERRAR SESIÓN</button>
   </div>
   <div class="menu-extra-row" style="margin-top:8px">
     <button id="open-1v1-btn" style="background:linear-gradient(135deg,#ff3d71,#e040fb);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(224,64,251,.3);">⚔ 1v1 ONLINE</button>
@@ -426,10 +532,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════
-     1v1 ONLINE SCREENS
-════════════════════════════════════════════ -->
-<!-- ONLINE LOBBY -->
+<!-- ONLINE SCREENS -->
 <div class="screen hidden" id="duel-lobby-screen" style="gap:0;background:radial-gradient(ellipse at center,rgba(255,61,113,.07) 0%,transparent 70%)">
   <div class="login-logo">
     <h1 style="color:#ff3d71;animation:glow 3s ease-in-out infinite">⚔ ONLINE</h1>
@@ -439,76 +542,72 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <span style="font-size:.58rem;letter-spacing:.2em;color:#00ff88"><span id="lobby-online-count">—</span> JUGANDO AHORA</span>
     </div>
   </div>
-  <!-- Estado de conexión -->
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
     <span id="lobby-conn-dot" style="width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;transition:background .3s"></span>
     <span id="lobby-conn-label" style="font-size:.55rem;letter-spacing:.2em;color:var(--dim)">CONECTANDO...</span>
   </div>
   <div style="max-width:680px;width:100%;padding:0 20px">
     <div style="display:flex;gap:8px;margin-bottom:14px;justify-content:center;flex-wrap:wrap">
-      <button class="login-btn" id="duel-open-create" style="background:#ff3d71;width:auto;padding:10px 24px;font-size:.78rem">+ CREAR SALA</button>
+      <button class="login-btn" id="duel-open-create" style="background:#ff3d71;border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:10px 24px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">+ CREAR SALA</button>
       <button class="extra-btn" id="duel-refresh-rooms">&#8635; ACTUALIZAR</button>
       <button class="extra-btn" id="duel-lobby-back">&#8592; VOLVER</button>
     </div>
     <div id="duel-room-list" style="display:flex;flex-direction:column;gap:7px;max-height:50vh;overflow-y:auto;padding-right:4px"></div>
-    <div class="login-err" id="duel-lobby-err" style="margin-top:10px;text-align:center"></div>
+    <div class="auth-msg error" id="duel-lobby-err" style="margin-top:10px;text-align:center"></div>
   </div>
 </div>
 
-<!-- CREATE ROOM -->
 <div class="screen hidden" id="duel-create-screen" style="gap:0">
-  <div class="login-box" style="border-color:rgba(255,61,113,.3);width:410px">
-    <h3 style="color:#ff3d71">&#10022; CREAR SALA</h3>
-    <div class="login-input-wrap">
-      <label>NOMBRE DE LA SALA</label>
-      <input class="login-input" id="duel-room-name" placeholder="Ej: La sala de ina..." maxlength="30" autocomplete="off">
-    </div>
-    <div class="login-input-wrap">
-      <label>MODO DE JUEGO</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="duel-mode-pills">
-        <button class="diff-btn act" data-mode="1v1">1v1</button>
-        <button class="diff-btn" data-mode="2v2">2v2</button>
-        <button class="diff-btn" data-mode="3v3">3v3</button>
-        <button class="diff-btn" data-mode="4v4">4v4</button>
-        <button class="diff-btn" data-mode="ffa">FFA</button>
+  <div class="auth-box" style="border-color:rgba(255,61,113,.3);width:410px">
+    <div style="padding:20px 28px 0;font-family:'Orbitron',monospace;font-size:.88rem;letter-spacing:.25em;color:#ff3d71;text-align:center">&#10022; CREAR SALA</div>
+    <div class="auth-panel" style="gap:12px">
+      <div class="field-wrap">
+        <label>NOMBRE DE LA SALA</label>
+        <input class="auth-input no-icon" id="duel-room-name" placeholder="Ej: La sala de ina..." maxlength="30" autocomplete="off">
       </div>
+      <div class="field-wrap">
+        <label>MODO DE JUEGO</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="duel-mode-pills">
+          <button class="diff-btn act" data-mode="1v1">1v1</button>
+          <button class="diff-btn" data-mode="2v2">2v2</button>
+          <button class="diff-btn" data-mode="3v3">3v3</button>
+          <button class="diff-btn" data-mode="4v4">4v4</button>
+          <button class="diff-btn" data-mode="ffa">FFA</button>
+        </div>
+      </div>
+      <div class="field-wrap">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <label class="toggle" style="flex-shrink:0"><input type="checkbox" id="duel-is-private"><div class="ttrack"></div><div class="tthumb"></div></label>
+          SALA PRIVADA (con contraseña)
+        </label>
+      </div>
+      <div class="field-wrap" id="duel-password-wrap" style="display:none">
+        <label>CONTRASEÑA</label>
+        <input class="auth-input no-icon" id="duel-room-password" type="password" placeholder="Contraseña..." maxlength="20">
+      </div>
+      <div class="auth-msg error" id="duel-create-err"></div>
+      <button class="auth-submit" id="duel-do-create" style="background:#ff3d71"><span class="btn-text">&#9889; CREAR Y ENTRAR</span><div class="btn-loader"><div class="spinner"></div></div></button>
+      <button style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:9px;cursor:pointer;transition:all .2s;width:100%" id="duel-create-back-btn">&#8592; VOLVER</button>
     </div>
-    <div class="login-input-wrap">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <label class="toggle" style="flex-shrink:0"><input type="checkbox" id="duel-is-private"><div class="ttrack"></div><div class="tthumb"></div></label>
-        SALA PRIVADA (con contraseña)
-      </label>
-    </div>
-    <div class="login-input-wrap" id="duel-password-wrap" style="display:none">
-      <label>CONTRASEÑA</label>
-      <input class="login-input" id="duel-room-password" type="password" placeholder="Contraseña..." maxlength="20">
-    </div>
-    <div class="login-err" id="duel-create-err"></div>
-    <button class="login-btn" id="duel-do-create" style="background:#ff3d71">&#9889; CREAR Y ENTRAR</button>
-    <button class="login-btn" id="duel-create-back-btn" style="background:transparent;border:1px solid var(--border);color:var(--dim);margin-top:-6px">&#8592; VOLVER</button>
   </div>
 </div>
 
-<!-- WAITING ROOM -->
 <div class="screen hidden" id="duel-waiting-screen" style="gap:10px">
   <div style="font-family:'Orbitron',monospace;font-size:1.4rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">&#9203; SALA DE ESPERA</div>
   <div id="duel-room-info" style="font-size:.6rem;letter-spacing:.2em;color:var(--dim)"></div>
   <div id="duel-players-in-room" style="display:flex;flex-direction:column;gap:5px;min-width:320px;max-width:500px;width:90%"></div>
   <div style="font-size:.55rem;letter-spacing:.2em;color:var(--dim);margin-top:2px">COMPARTE EL LINK:</div>
   <div id="duel-share-url" style="font-size:.6rem;color:var(--accent3);background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);padding:10px 18px;max-width:520px;word-break:break-all;text-align:center">cargando...</div>
-
-  <!-- CHAT DE SALA -->
   <div style="width:100%;max-width:500px">
     <div style="font-size:.5rem;letter-spacing:.25em;color:var(--dim);margin-bottom:5px">💬 CHAT DE SALA</div>
     <div id="duel-chat-msgs" style="background:rgba(5,8,15,.85);border:1px solid var(--border);height:100px;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:3px;margin-bottom:6px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px))"></div>
     <div style="display:flex;gap:6px">
-      <input id="duel-chat-input" class="login-input" style="flex:1;padding:8px 11px;font-size:.65rem" placeholder="Escribe algo..." maxlength="80" autocomplete="off">
+      <input id="duel-chat-input" class="auth-input no-icon" style="flex:1;padding:8px 11px;font-size:.65rem" placeholder="Escribe algo..." maxlength="80" autocomplete="off">
       <button onclick="onSendChat()" style="background:rgba(255,61,113,.15);border:1px solid rgba(255,61,113,.4);color:#ff3d71;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;padding:8px 13px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);transition:all .15s;letter-spacing:.1em" onmouseover="this.style.background='rgba(255,61,113,.3)'" onmouseout="this.style.background='rgba(255,61,113,.15)'">ENVIAR</button>
     </div>
   </div>
-
   <div style="display:flex;gap:8px;margin-top:4px">
-    <button class="login-btn" id="duel-force-start" style="background:#ff3d71;width:auto;padding:10px 20px;display:none">&#9654; INICIAR PARTIDA</button>
+    <button class="auth-submit" id="duel-force-start" style="background:#ff3d71;width:auto;padding:10px 20px;display:none;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">&#9654; INICIAR PARTIDA</button>
     <button class="btn btn-s" id="duel-waiting-back">&#10005; SALIR</button>
   </div>
 </div>
@@ -518,8 +617,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div id="duel-go-vs" style="font-size:.72rem;letter-spacing:.2em;color:var(--dim)"></div>
   <div id="duel-go-score" style="font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:700;color:var(--accent)"></div>
   <div style="display:flex;gap:10px;margin-top:8px">
-    <button class="login-btn" id="duel-rematch-btn" style="width:200px;background:#ff3d71">↺ REVANCHA</button>
-    <button class="login-btn" id="duel-menu-btn" style="width:200px;background:transparent;border:1px solid var(--border);color:var(--text)">☰ MENÚ</button>
+    <button class="auth-submit" id="duel-rematch-btn" style="width:200px;background:#ff3d71">↺ REVANCHA</button>
+    <button style="width:200px;background:transparent;border:1px solid var(--border);color:var(--text);font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.2em;padding:13px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)" id="duel-menu-btn">☰ MENÚ</button>
   </div>
 </div>
 
@@ -539,41 +638,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 </div>
 
 <div id="duel-hud" style="position:fixed;inset:0;pointer-events:none;z-index:40;display:none">
-  <!-- Score bar -->
   <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;background:rgba(5,8,15,.88);border:1px solid rgba(255,61,113,.2);padding:10px 22px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))">
-    <div style="text-align:center">
-      <div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-my-name-hud">YO</div>
-      <div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#ff4444;text-shadow:0 0 12px #ff4444;line-height:1" id="duel-my-kills">0</div>
-    </div>
+    <div style="text-align:center"><div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-my-name-hud">YO</div><div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#ff4444;text-shadow:0 0 12px #ff4444;line-height:1" id="duel-my-kills">0</div></div>
     <div style="text-align:center;color:var(--dim);font-size:.7rem">⚔<br><span style="font-size:.4rem;letter-spacing:.2em">FIRST TO <span id="duel-firstto">6</span></span></div>
-    <div style="text-align:center">
-      <div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-opp-name-hud">RIVAL</div>
-      <div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#4488ff;text-shadow:0 0 12px #4488ff;line-height:1" id="duel-opp-kills">0</div>
-    </div>
+    <div style="text-align:center"><div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-opp-name-hud">RIVAL</div><div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#4488ff;text-shadow:0 0 12px #4488ff;line-height:1" id="duel-opp-kills">0</div></div>
   </div>
-  <!-- Team -->
-  <div style="position:absolute;bottom:14px;left:16px;font-size:.55rem;letter-spacing:.15em;color:var(--dim)">
-    EQUIPO: <span id="duel-team-label" style="font-weight:700">—</span>
-  </div>
-  <!-- FPS + PING + Calidad de conexión (esquina superior derecha) -->
+  <div style="position:absolute;bottom:14px;left:16px;font-size:.55rem;letter-spacing:.15em;color:var(--dim)">EQUIPO: <span id="duel-team-label" style="font-weight:700">—</span></div>
   <div style="position:absolute;top:14px;right:16px;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
     <div style="font-family:'Orbitron',monospace;font-size:.75rem;color:var(--green)" id="duel-fps-hud">— FPS</div>
-    <div style="font-family:'Orbitron',monospace;font-size:.75rem" id="duel-ping-hud" style="color:var(--dim)">— MS</div>
+    <div style="font-family:'Orbitron',monospace;font-size:.75rem" id="duel-ping-hud">— MS</div>
     <div id="duel-conn-quality" style="font-size:.48rem;letter-spacing:.15em;padding:2px 7px;border-radius:3px;background:rgba(58,74,106,.3);color:var(--dim)">● —</div>
   </div>
-  <!-- Kill feed -->
   <div id="duel-kill-feed" style="position:absolute;top:82px;right:14px;display:flex;flex-direction:column;gap:4px"></div>
-  <!-- Controls hint -->
   <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">WASD MOVER · MOUSE APUNTAR · CLIC DISPARAR · ESPACIO SALTAR</div>
 </div>
 
-<!-- 1v1 LOCK OVERLAY -->
 <div id="duel-lock-screen" style="position:fixed;inset:0;z-index:80;background:rgba(5,8,15,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="font-family:'Orbitron',monospace;font-size:1.5rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">⚔ 1v1 · INA MAP</div>
-  <div style="font-size:.68rem;letter-spacing:.13em;color:var(--dim);text-align:center;line-height:2">
-    VS <strong id="duel-opp-name-lock" style="color:#ff3d71">Rival</strong><br>
-    <strong style="color:var(--accent)">WASD</strong> mover · <strong style="color:var(--accent)">MOUSE</strong> apuntar · <strong style="color:var(--accent)">CLIC</strong> disparar · <strong style="color:var(--accent)">ESPACIO</strong> saltar · <strong style="color:var(--accent)">ESC</strong> pausar
-  </div>
+  <div style="font-size:.68rem;letter-spacing:.13em;color:var(--dim);text-align:center;line-height:2">VS <strong id="duel-opp-name-lock" style="color:#ff3d71">Rival</strong><br><strong style="color:var(--accent)">WASD</strong> mover · <strong style="color:var(--accent)">MOUSE</strong> apuntar · <strong style="color:var(--accent)">CLIC</strong> disparar · <strong style="color:var(--accent)">ESPACIO</strong> saltar · <strong style="color:var(--accent)">ESC</strong> pausar</div>
   <button class="lock-btn" id="duel-lock-btn" style="background:#ff3d71">🖱 CLIC PARA JUGAR</button>
   <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim)" id="duel-lock-team">—</div>
 </div>
@@ -581,119 +663,311 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ============================================================
-// USER SESSION
+// SUPABASE
 // ============================================================
-let currentUser = null;
-
 const SUPABASE_URL = 'https://rcybdbmdxtmshljxkdid.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjeWJkYm1keHRtc2hsanhrZGlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Nzk1MDgsImV4cCI6MjA4NzU1NTUwOH0.kAe0HhfIwFbB49VP6jd8n7yUqH5Nhem-0OQuEsW-Nc8';
 const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ============================================================
+// AUTH — USUARIO + CONTRASEÑA PROPIO
+// ============================================================
+let currentUser = null;   // { id, name, avatar }
+let selectedAvatar = '🎯';
+let usernameCheckTimer = null;
+
+// Hash SHA-256 con salt
+async function hashPassword(pw) {
+  const enc = new TextEncoder();
+  const data = enc.encode('inatrainer_2025_' + pw);
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Cargar sesión guardada ───────────────────────────────────
 function loadSession() {
-  try { const saved = localStorage.getItem('ina_user'); if (saved) currentUser = JSON.parse(saved); } catch(e) {}
+  try { const s = localStorage.getItem('ina_session'); if (s) currentUser = JSON.parse(s); } catch(e) {}
 }
 function saveSession() {
-  try { localStorage.setItem('ina_user', JSON.stringify(currentUser)); } catch(e) {}
+  try { localStorage.setItem('ina_session', JSON.stringify(currentUser)); } catch(e) {}
 }
+function clearSession() {
+  currentUser = null;
+  try { localStorage.removeItem('ina_session'); } catch(e) {}
+}
+
 loadSession();
 
-let googleUser = null, selectedAvatar = '🎯';
-
-function initGoogleSignIn() {
-  if(typeof google === 'undefined') { setTimeout(initGoogleSignIn, 200); return; }
-  google.accounts.id.initialize({
-    client_id: '504552503495-v6giesuen1q5umtt5m7ed0qnukht8ii0.apps.googleusercontent.com',
-    callback: onGoogleSignIn, auto_select: false
-  });
-  google.accounts.id.renderButton(document.getElementById('google-btn-wrap'), { theme:'filled_black', size:'large', text:'signin_with_google', locale:'es' });
+// ── Tab switcher ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('panel-login').style.display    = tab === 'login'    ? 'flex' : 'none';
+  document.getElementById('panel-register').style.display = tab === 'register' ? 'flex' : 'none';
+  // clear messages
+  document.getElementById('login-msg').textContent = '';
+  document.getElementById('register-msg').textContent = '';
 }
 
-function onGoogleSignIn(response) {
-  try {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    googleUser = { id: payload.sub, name: payload.name, email: payload.email };
-    const ar = document.getElementById('avatar-row'); ar.style.opacity='1'; ar.style.pointerEvents='auto';
-    const uw = document.getElementById('username-wrap'); uw.style.opacity='1'; uw.style.pointerEvents='auto';
-    document.getElementById('custom-username').value = googleUser.name.substring(0,20);
-    document.getElementById('login-btn').style.display='block';
-    document.getElementById('login-err').style.color='var(--green)';
-    document.getElementById('login-err').textContent='✓ Conectado como '+googleUser.name;
-  } catch(e) {
-    document.getElementById('login-err').style.color='var(--accent2)';
-    document.getElementById('login-err').textContent='⚠ Error al iniciar sesión';
-  }
-}
-
+// ── Avatar picker ────────────────────────────────────────────
 document.querySelectorAll('.avatar-opt').forEach(o => o.addEventListener('click', () => {
   document.querySelectorAll('.avatar-opt').forEach(x => x.classList.remove('selected'));
-  o.classList.add('selected'); selectedAvatar = o.dataset.av;
+  o.classList.add('selected');
+  selectedAvatar = o.dataset.av;
 }));
-document.getElementById('login-btn').addEventListener('click', doLogin);
 
-function doLogin() {
-  if(!googleUser) { document.getElementById('login-err').textContent='⚠ Inicia sesión con Google primero'; return; }
-  const rawName = document.getElementById('custom-username').value.trim();
-  const displayName = rawName.length >= 2 ? rawName : googleUser.name;
-  if(rawName.length > 0 && rawName.length < 2) { document.getElementById('login-err').textContent='⚠ El nombre debe tener al menos 2 caracteres'; return; }
-  currentUser = { name: displayName.substring(0,20), avatar: selectedAvatar, googleId: googleUser.id };
-  saveSession(); showMenu();
+// ── Password strength ────────────────────────────────────────
+function updatePwStrength() {
+  const pw = document.getElementById('reg-password').value;
+  const fill = document.getElementById('pw-strength-fill');
+  let score = 0;
+  if (pw.length >= 6)  score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw) || /[0-9]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  const colors = ['#ff3d71','#ff9500','#ffd700','#00ff88'];
+  const widths  = ['25%','50%','75%','100%'];
+  fill.style.width      = pw.length ? widths[score-1] || '10%' : '0%';
+  fill.style.background = pw.length ? colors[score-1] || '#ff3d71' : 'transparent';
 }
+
+// ── Username availability check ──────────────────────────────
+function checkUsernameAvail() {
+  const el  = document.getElementById('username-avail');
+  const val = document.getElementById('reg-username').value.trim();
+  el.textContent = '';
+  if (val.length < 3) return;
+  clearTimeout(usernameCheckTimer);
+  el.style.color = 'var(--dim)';
+  el.textContent = '⟳ Verificando...';
+  usernameCheckTimer = setTimeout(async () => {
+    try {
+      const { data } = await sbClient.from('game_users').select('id').eq('username', val.toLowerCase()).limit(1);
+      if (data && data.length > 0) {
+        el.style.color = 'var(--accent2)';
+        el.textContent = '✗ Nombre no disponible';
+      } else {
+        el.style.color = 'var(--green)';
+        el.textContent = '✓ Nombre disponible';
+      }
+    } catch(e) { el.textContent = ''; }
+  }, 500);
+}
+
+// ── SET button loading state ─────────────────────────────────
+function setBtnLoading(id, loading) {
+  const btn = document.getElementById(id);
+  btn.classList.toggle('loading', loading);
+  btn.disabled = loading;
+}
+
+// ── REGISTER ─────────────────────────────────────────────────
+async function doRegister() {
+  const msgEl    = document.getElementById('register-msg');
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+
+  msgEl.className = 'auth-msg';
+  msgEl.textContent = '';
+
+  // Validaciones
+  if (username.length < 3) { showAuthMsg('register', 'El nombre debe tener al menos 3 caracteres', true); return; }
+  if (!/^[a-zA-Z0-9_\-\.]+$/.test(username)) { showAuthMsg('register', 'Solo letras, números, _ - .', true); return; }
+  if (password.length < 6) { showAuthMsg('register', 'La contraseña debe tener al menos 6 caracteres', true); return; }
+  if (password !== confirm) { showAuthMsg('register', 'Las contraseñas no coinciden', true); return; }
+
+  setBtnLoading('register-submit', true);
+  try {
+    // Verificar si el usuario ya existe
+    const { data: existing } = await sbClient.from('game_users').select('id').eq('username', username.toLowerCase()).limit(1);
+    if (existing && existing.length > 0) {
+      showAuthMsg('register', '⚠ Ese nombre de usuario ya está en uso', true);
+      setBtnLoading('register-submit', false);
+      return;
+    }
+    const hash = await hashPassword(password);
+    const { data, error } = await sbClient.from('game_users').insert({
+      username:      username.toLowerCase(),
+      display_name:  username,
+      password_hash: hash,
+      avatar:        selectedAvatar,
+      created_at:    new Date().toISOString()
+    }).select().single();
+
+    if (error) throw error;
+
+    currentUser = { id: data.id, name: data.display_name, avatar: data.avatar };
+    saveSession();
+    showAuthMsg('register', '✓ ¡Cuenta creada! Entrando...', false);
+    setTimeout(showMenu, 800);
+  } catch(e) {
+    console.error(e);
+    showAuthMsg('register', '⚠ Error al crear cuenta. Inténtalo de nuevo.', true);
+  }
+  setBtnLoading('register-submit', false);
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────
+async function doLogin() {
+  const msgEl    = document.getElementById('login-msg');
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  msgEl.textContent = '';
+  if (!username || !password) { showAuthMsg('login', '⚠ Rellena todos los campos', true); return; }
+
+  setBtnLoading('login-submit', true);
+  try {
+    const hash = await hashPassword(password);
+    const { data, error } = await sbClient.from('game_users')
+      .select('id, display_name, avatar, password_hash')
+      .eq('username', username.toLowerCase())
+      .single();
+
+    if (error || !data) {
+      showAuthMsg('login', '⚠ Usuario no encontrado', true);
+      setBtnLoading('login-submit', false);
+      return;
+    }
+    if (data.password_hash !== hash) {
+      showAuthMsg('login', '⚠ Contraseña incorrecta', true);
+      setBtnLoading('login-submit', false);
+      return;
+    }
+
+    currentUser = { id: data.id, name: data.display_name, avatar: data.avatar };
+    saveSession();
+    showAuthMsg('login', '✓ ¡Bienvenido ' + data.display_name + '!', false);
+    setTimeout(showMenu, 600);
+  } catch(e) {
+    console.error(e);
+    showAuthMsg('login', '⚠ Error de conexión. Inténtalo de nuevo.', true);
+  }
+  setBtnLoading('login-submit', false);
+}
+
+function showAuthMsg(panel, text, isError) {
+  const el = document.getElementById(panel + '-msg');
+  el.className = 'auth-msg ' + (isError ? 'error' : 'success');
+  el.textContent = text;
+}
+
+// Enter key submit
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const loginPanel = document.getElementById('panel-login');
+  const regPanel   = document.getElementById('panel-register');
+  if (loginPanel && loginPanel.style.display !== 'none' &&
+     (document.activeElement === document.getElementById('login-username') ||
+      document.activeElement === document.getElementById('login-password'))) {
+    doLogin();
+  }
+  if (regPanel && regPanel.style.display !== 'none' &&
+      document.activeElement === document.getElementById('reg-confirm')) {
+    doRegister();
+  }
+});
 
 function showMenu() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('menu-screen').classList.remove('hidden');
-  document.getElementById('menu-user-av').textContent = currentUser.avatar;
+  document.getElementById('menu-user-av').textContent   = currentUser.avatar;
   document.getElementById('menu-user-name').textContent = currentUser.name.toUpperCase();
 }
 
 document.getElementById('logout-btn').addEventListener('click', () => {
-  currentUser = null; googleUser = null;
-  try { localStorage.removeItem('ina_user'); } catch(e) {}
+  clearSession();
   document.getElementById('menu-screen').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
-  document.getElementById('login-err').textContent='';
-  google.accounts.id.disableAutoSelect();
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-msg').textContent = '';
 });
 
-if (currentUser) showMenu(); else initGoogleSignIn();
+if (currentUser) showMenu();
 
 // ============================================================
-// STORAGE
+// STORAGE — Stats en Supabase
 // ============================================================
-const STORAGE_KEY_LB = 'ina_leaderboard', STORAGE_KEY_STATS = 'ina_stats';
-
-function getLB() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY_LB)) || []; } catch(e) { return []; } }
-function saveLB(entries) { try { localStorage.setItem(STORAGE_KEY_LB, JSON.stringify(entries)); } catch(e) {} }
-function getMyStats() {
+async function getMyStats() {
   if (!currentUser) return null;
-  try { const all = JSON.parse(localStorage.getItem(STORAGE_KEY_STATS)) || {}; return all[currentUser.name] || { games:0, totalHits:0, totalShots:0, bestScore:0, bestCombo:0, modeRecords:{} }; } catch(e) { return { games:0, totalHits:0, totalShots:0, bestScore:0, bestCombo:0, modeRecords:{} }; }
-}
-function saveMyStats(stats) {
-  if (!currentUser) return;
-  try { const all = JSON.parse(localStorage.getItem(STORAGE_KEY_STATS)) || {}; all[currentUser.name] = stats; localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(all)); } catch(e) {}
+  try {
+    const { data } = await sbClient.from('player_stats')
+      .select('*').eq('user_id', currentUser.id).single();
+    return data || { games:0, total_hits:0, total_shots:0, best_score:0, best_combo:0, mode_records:{} };
+  } catch(e) {
+    return { games:0, total_hits:0, total_shots:0, best_score:0, best_combo:0, mode_records:{} };
+  }
 }
 
-function submitScore(scoreData) {
-  const entries = getLB(); entries.push(scoreData); entries.sort((a,b) => b.score-a.score); saveLB(entries.slice(0, 200));
-  const stats = getMyStats(); stats.games++; stats.totalHits += scoreData.hits||0; stats.totalShots += scoreData.shots||0;
-  if (scoreData.score > stats.bestScore) stats.bestScore = scoreData.score;
-  if ((scoreData.combo||0) > stats.bestCombo) stats.bestCombo = scoreData.combo||0;
-  const mr = stats.modeRecords[scoreData.mode];
-  if (!mr || scoreData.score > mr.score) stats.modeRecords[scoreData.mode] = { score: scoreData.score, acc: scoreData.acc };
-  saveMyStats(stats);
-  if(currentUser && scoreData.score > 0) {
-    sbClient.from('scores').insert({ user_id: currentUser.googleId||currentUser.name, name: currentUser.name, avatar: currentUser.avatar, score: scoreData.score, accuracy: scoreData.acc||0, hits: scoreData.hits||0, shots: scoreData.shots||0, combo: scoreData.combo||0, mode: scoreData.mode, difficulty: scoreData.diff||'medium' }).then(({error}) => { if(error) console.warn('Supabase:', error.message); });
-  }
+async function saveMyStats(stats) {
+  if (!currentUser) return;
+  try {
+    await sbClient.from('player_stats').upsert({
+      user_id:      currentUser.id,
+      games:        stats.games,
+      total_hits:   stats.total_hits,
+      total_shots:  stats.total_shots,
+      best_score:   stats.best_score,
+      best_combo:   stats.best_combo,
+      mode_records: stats.mode_records,
+      updated_at:   new Date().toISOString()
+    }, { onConflict: 'user_id' });
+  } catch(e) { console.warn('saveMyStats:', e); }
+}
+
+async function submitScore(scoreData) {
+  if (!currentUser || scoreData.score <= 0) return;
+  try {
+    // Guardar score en tabla scores
+    await sbClient.from('scores').insert({
+      user_id:    currentUser.id,
+      name:       currentUser.name,
+      avatar:     currentUser.avatar,
+      score:      scoreData.score,
+      accuracy:   scoreData.acc || 0,
+      hits:       scoreData.hits || 0,
+      shots:      scoreData.shots || 0,
+      combo:      scoreData.combo || 0,
+      mode:       scoreData.mode,
+      difficulty: scoreData.diff || 'medium'
+    });
+
+    // Actualizar stats del jugador
+    const stats = await getMyStats();
+    stats.games++;
+    stats.total_hits  += scoreData.hits  || 0;
+    stats.total_shots += scoreData.shots || 0;
+    if (scoreData.score > stats.best_score) stats.best_score = scoreData.score;
+    if ((scoreData.combo||0) > stats.best_combo) stats.best_combo = scoreData.combo || 0;
+    if (!stats.mode_records) stats.mode_records = {};
+    const mr = stats.mode_records[scoreData.mode];
+    if (!mr || scoreData.score > mr.score) {
+      stats.mode_records[scoreData.mode] = { score: scoreData.score, acc: scoreData.acc };
+    }
+    await saveMyStats(stats);
+  } catch(e) { console.warn('submitScore:', e); }
 }
 
 // ============================================================
 // LEADERBOARD UI
 // ============================================================
 let lbMode = 'all';
-document.getElementById('open-lb-btn').addEventListener('click', () => { document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('lb-screen').classList.remove('hidden'); loadLB(); });
-document.getElementById('lb-back-btn').addEventListener('click', () => { document.getElementById('lb-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); });
+document.getElementById('open-lb-btn').addEventListener('click', () => {
+  document.getElementById('menu-screen').classList.add('hidden');
+  document.getElementById('lb-screen').classList.remove('hidden');
+  loadLB();
+});
+document.getElementById('lb-back-btn').addEventListener('click', () => {
+  document.getElementById('lb-screen').classList.add('hidden');
+  document.getElementById('menu-screen').classList.remove('hidden');
+});
 document.getElementById('lb-refresh-btn').addEventListener('click', loadLB);
-document.getElementById('lb-tabs').querySelectorAll('.lb-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.lb-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); lbMode = t.dataset.mode; loadLB(); }));
+document.getElementById('lb-tabs').querySelectorAll('.lb-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.lb-tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active'); lbMode = t.dataset.mode; loadLB();
+}));
 
 async function loadLB() {
   const body = document.getElementById('lb-body');
@@ -704,24 +978,24 @@ async function loadLB() {
     const { data, error } = await q;
     if (error) throw error;
     const best = {};
-    (data||[]).forEach(e => { const key = (e.user_id||e.name)+'_'+e.mode; if (!best[key] || e.score > best[key].score) best[key] = e; });
+    (data||[]).forEach(e => {
+      const key = (e.user_id||e.name)+'_'+e.mode;
+      if (!best[key] || e.score > best[key].score) best[key] = e;
+    });
     let top = Object.values(best).sort((a,b) => b.score-a.score).slice(0,50);
     if (top.length === 0) { body.innerHTML = '<tr><td colspan="6" class="lb-empty">🏆 Sin récords aún. ¡Sé el primero!</td></tr>'; return; }
-    renderLBRows(body, top); return;
-  } catch(e) { console.warn('Supabase LB:', e); }
-  let entries = getLB();
-  if (lbMode !== 'all') entries = entries.filter(e => e.mode === lbMode);
-  const best = {};
-  entries.forEach(e => { const key = e.name+'_'+e.mode; if (!best[key] || e.score > best[key].score) best[key] = e; });
-  let top = Object.values(best).sort((a,b) => b.score-a.score).slice(0,50);
-  if (top.length === 0) { body.innerHTML = '<tr><td colspan="6" class="lb-empty">🏆 Sin récords aún. ¡Sé el primero!</td></tr>'; return; }
-  renderLBRows(body, top);
+    renderLBRows(body, top);
+  } catch(e) {
+    body.innerHTML = '<tr><td colspan="6" class="lb-empty">⚠ Error al cargar. Verifica tu conexión.</td></tr>';
+    console.warn('LB error:', e);
+  }
 }
+
 function renderLBRows(body, top) {
   body.innerHTML = '';
   top.forEach((e,i) => {
     const tr = document.createElement('tr');
-    const isMe = currentUser && (e.name === currentUser.name || e.user_id === currentUser.googleId);
+    const isMe = currentUser && (e.user_id === currentUser.id || e.name === currentUser.name);
     if (isMe) tr.classList.add('lb-me');
     const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'';
     const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
@@ -736,24 +1010,36 @@ function renderLBRows(body, top) {
 // ============================================================
 // STATS UI
 // ============================================================
-document.getElementById('open-stats-btn').addEventListener('click', () => { document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('stats-screen').classList.remove('hidden'); loadStats(); });
-document.getElementById('stats-back-btn').addEventListener('click', () => { document.getElementById('stats-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); });
+document.getElementById('open-stats-btn').addEventListener('click', () => {
+  document.getElementById('menu-screen').classList.add('hidden');
+  document.getElementById('stats-screen').classList.remove('hidden');
+  loadStats();
+});
+document.getElementById('stats-back-btn').addEventListener('click', () => {
+  document.getElementById('stats-screen').classList.add('hidden');
+  document.getElementById('menu-screen').classList.remove('hidden');
+});
 
-function loadStats() {
+async function loadStats() {
   if (!currentUser) return;
-  const s = getMyStats();
-  document.getElementById('profile-av').textContent = currentUser.avatar;
+  document.getElementById('profile-av').textContent   = currentUser.avatar;
   document.getElementById('profile-name').textContent = currentUser.name.toUpperCase();
-  document.getElementById('st-games').textContent = s.games;
-  document.getElementById('st-best').textContent = (s.bestScore||0).toLocaleString();
-  const avgAcc = s.totalShots > 0 ? Math.round(s.totalHits/s.totalShots*100) : 0;
-  document.getElementById('st-acc').textContent = avgAcc+'%';
-  document.getElementById('st-hits').textContent = (s.totalHits||0).toLocaleString();
-  document.getElementById('st-shots').textContent = (s.totalShots||0).toLocaleString();
-  document.getElementById('st-combo').textContent = s.bestCombo||0;
+  // Show loading state
+  ['st-games','st-best','st-acc','st-hits','st-shots','st-combo'].forEach(id => {
+    document.getElementById(id).textContent = '…';
+  });
+  const s = await getMyStats();
+  document.getElementById('st-games').textContent  = s.games || 0;
+  document.getElementById('st-best').textContent   = (s.best_score||0).toLocaleString();
+  const avgAcc = (s.total_shots||0) > 0 ? Math.round((s.total_hits||0)/(s.total_shots||0)*100) : 0;
+  document.getElementById('st-acc').textContent    = avgAcc+'%';
+  document.getElementById('st-hits').textContent   = (s.total_hits||0).toLocaleString();
+  document.getElementById('st-shots').textContent  = (s.total_shots||0).toLocaleString();
+  document.getElementById('st-combo').textContent  = s.best_combo || 0;
   const mrRows = document.getElementById('mr-rows'); mrRows.innerHTML = '';
+  const recs = s.mode_records || {};
   Object.keys(MODES).forEach(id => {
-    const rec = s.modeRecords[id];
+    const rec = recs[id];
     const row = document.createElement('div'); row.className = 'mr-row';
     row.innerHTML = `<span class="mr-mode">${MODES[id]?.name||id}</span><span class="mr-score">${rec?(rec.score||0).toLocaleString():'—'}</span><span class="mr-acc">${rec?rec.acc+'%':'—'}</span>`;
     mrRows.appendChild(row);
@@ -807,7 +1093,7 @@ function buildMenu(){
   animPrevs();
 }
 buildMenu();
-document.querySelectorAll('.diff-btn').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('act')); b.classList.add('act'); selDiff=b.dataset.d; }));
+document.querySelectorAll('.diff-btn[data-d]').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('.diff-btn[data-d]').forEach(x=>x.classList.remove('act')); b.classList.add('act'); selDiff=b.dataset.d; }));
 document.getElementById('start-btn').addEventListener('click',()=>startGame(selMode,selDiff));
 
 // ============================================================
@@ -1230,7 +1516,7 @@ function endGame(){
   document.getElementById('r-mode').textContent=MODES[state.modeId]?.name||'—';
   const g=getGrade(acc),ge=document.getElementById('grade-el');
   ge.textContent=g.label; ge.style.color=g.color; ge.style.textShadow=`0 0 30px ${g.color}`;
-  if(currentUser&&state.score>0) submitScore({ name:currentUser.name, avatar:currentUser.avatar, score:state.score, acc, hits:state.hits, shots:state.shots, combo:state.bestCombo, mode:state.modeId, diff:state.diff, ts:Date.now() });
+  if(currentUser&&state.score>0) submitScore({ score:state.score, acc, hits:state.hits, shots:state.shots, combo:state.bestCombo, mode:state.modeId, diff:state.diff, ts:Date.now() });
   resultsScreen.classList.remove('hidden');
 }
 
@@ -1254,16 +1540,13 @@ const onOpps=new Map(), onPlayerNames=new Map();
 let onTeamScores=[0,0], onPScores={};
 let onCreateMode='1v1', onWaitPlayers=[];
 
-// ── CONTEO DE JUGADORES EN LÍNEA ────────────────────────────
 function onUpdateOnlineCount(count) {
   const m = document.getElementById('menu-online-count');
   const l = document.getElementById('lobby-online-count');
-  const txt = count === 1 ? '1 PERSONA' : count + ' PERSONAS';
   if (m) m.textContent = count;
   if (l) l.textContent = count;
 }
 
-// ── PING / LATENCIA ─────────────────────────────────────────
 let onPing = 0, onPingIv = null, onReconnectT = null;
 
 function onUpdatePingDisplay() {
@@ -1272,18 +1555,10 @@ function onUpdatePingDisplay() {
   if (!pingEl) return;
   pingEl.textContent = onPing + ' MS';
   let color, label;
-  if (onPing === 0) {
-    color = 'var(--dim)'; label = '● —';
-  } else if (onPing < 60) {
-    color = '#00ff88'; label = '● BUENA';
-    if (qualEl) { qualEl.className=''; qualEl.style.background='rgba(0,255,136,.08)'; }
-  } else if (onPing < 120) {
-    color = '#ffd700'; label = '● MEDIA';
-    if (qualEl) { qualEl.className=''; qualEl.style.background='rgba(255,215,0,.08)'; }
-  } else {
-    color = '#ff3d71'; label = '● ALTA';
-    if (qualEl) { qualEl.className='ping-bad'; qualEl.style.background='rgba(255,61,113,.08)'; }
-  }
+  if (onPing === 0) { color = 'var(--dim)'; label = '● —'; }
+  else if (onPing < 60) { color = '#00ff88'; label = '● BUENA'; if(qualEl){qualEl.className='';qualEl.style.background='rgba(0,255,136,.08)';} }
+  else if (onPing < 120) { color = '#ffd700'; label = '● MEDIA'; if(qualEl){qualEl.className='';qualEl.style.background='rgba(255,215,0,.08)';} }
+  else { color = '#ff3d71'; label = '● ALTA'; if(qualEl){qualEl.className='ping-bad';qualEl.style.background='rgba(255,61,113,.08)';} }
   pingEl.style.color = color;
   if (qualEl) { qualEl.textContent = label; qualEl.style.color = color; }
 }
@@ -1292,19 +1567,10 @@ function onUpdateLobbyStatus(connected) {
   const dot = document.getElementById('lobby-conn-dot');
   const lbl = document.getElementById('lobby-conn-label');
   if (!dot || !lbl) return;
-  if (connected) {
-    dot.style.background = '#00ff88';
-    lbl.textContent = 'CONECTADO';
-    lbl.style.color = '#00ff88';
-  } else {
-    dot.style.background = '#ff3d71';
-    lbl.textContent = 'DESCONECTADO · Reconectando...';
-    lbl.style.color = '#ff3d71';
-    dot.style.animation = 'ping-pulse .8s infinite';
-  }
+  if (connected) { dot.style.background='#00ff88'; lbl.textContent='CONECTADO'; lbl.style.color='#00ff88'; dot.style.animation=''; }
+  else { dot.style.background='#ff3d71'; lbl.textContent='DESCONECTADO · Reconectando...'; lbl.style.color='#ff3d71'; dot.style.animation='ping-pulse .8s infinite'; }
 }
 
-// Three.js online
 let onScene=null, onCamera=null, onRenderer=null, onRaycaster=null;
 let onYawObj=null, onPitchObj=null, onGun=null, onGunAnim=0;
 let onAnimId=null, onStateIv=null, onCanShoot=true;
@@ -1315,7 +1581,6 @@ const ON_H=1.65, ON_SPD=7.5, ON_SENS=.002, ON_CD=180;
 const ON_GRAVITY=22, ON_JUMP_FORCE=8.0;
 let onVelY=0, onPosY=0, onIsGrounded=true;
 
-// ── NAVEGACIÓN ──────────────────────────────────────────────
 document.getElementById('open-1v1-btn').addEventListener('click',()=>{
   menuScreen.classList.add('hidden'); onShowScreen('duel-lobby-screen');
   onMyName = currentUser?.name||'Jugador'; onConnect();
@@ -1353,7 +1618,6 @@ function onShowScreen(id){
   if(id) document.getElementById(id).classList.remove('hidden');
 }
 
-// ── CHAT ─────────────────────────────────────────────────────
 function onSendChat() {
   const input = document.getElementById('duel-chat-input');
   if (!input) return;
@@ -1386,7 +1650,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── WEBSOCKET ─────────────────────────────────────────────────
 function onConnect() {
   if (onWS && onWS.readyState <= 1) return;
   onUpdateLobbyStatus(false);
@@ -1394,23 +1657,15 @@ function onConnect() {
   onWS.onopen = () => {
     onUpdateLobbyStatus(true);
     onSend({ type: 'get_rooms' });
-    // ── PING: medir latencia cada 2 segundos ──
     clearInterval(onPingIv);
-    onPingIv = setInterval(() => {
-      if (onWS && onWS.readyState === 1) onSend({ type: 'ping', t: Date.now() });
-    }, 2000);
+    onPingIv = setInterval(() => { if (onWS && onWS.readyState === 1) onSend({ type: 'ping', t: Date.now() }); }, 2000);
   };
   onWS.onmessage = e => { try { onMsg(JSON.parse(e.data)); } catch(err) { console.error('onMsg:', err); } };
   onWS.onclose = e => {
     clearInterval(onPingIv); onPingIv = null;
     onUpdateLobbyStatus(false);
-    if (onActive) {
-      onSetErr('Conexión perdida');
-    } else {
-      onLobbyErr('Desconectado · reconectando en 3s...');
-      clearTimeout(onReconnectT);
-      onReconnectT = setTimeout(() => { if (!onActive) onConnect(); }, 3000);
-    }
+    if (onActive) { onSetErr('Conexión perdida'); }
+    else { onLobbyErr('Desconectado · reconectando en 3s...'); clearTimeout(onReconnectT); onReconnectT = setTimeout(() => { if (!onActive) onConnect(); }, 3000); }
   };
   onWS.onerror = () => { onUpdateLobbyStatus(false); onLobbyErr('Error de conexión con el servidor'); };
 }
@@ -1419,29 +1674,23 @@ function onSend(msg) { if(onWS&&onWS.readyState===1) onWS.send(JSON.stringify(ms
 
 function onMsg(msg) {
   switch(msg.type) {
-    case 'pong':
-      onPing = Date.now() - msg.t;
-      onUpdatePingDisplay();
-      break;
-    case 'online_count':
-      onUpdateOnlineCount(msg.count);
-      break;
-    case 'room_list':   onUpdateRoomList(msg.rooms); break;
-    case 'room_joined': onRoomJoined(msg); break;
+    case 'pong': onPing = Date.now() - msg.t; onUpdatePingDisplay(); break;
+    case 'online_count': onUpdateOnlineCount(msg.count); break;
+    case 'room_list':    onUpdateRoomList(msg.rooms); break;
+    case 'room_joined':  onRoomJoined(msg); break;
     case 'player_joined': onPlayerJoined(msg); break;
-    case 'chat_msg':    onHandleChatMsg(msg); break;
-    case 'start':       setTimeout(()=>onStartGame(msg), 150); break;
-    case 'opp_state':   onUpdateOpp(msg.slot,msg.pos,msg.yaw,msg.pitch||0,msg.posY||0); break;
-    case 'opp_shoot': { const o=onOpps.get(msg.slot); if(o&&o.group.userData.anim) o.group.userData.anim.shootT=1; break; }
-    case 'kill':        onTeamScores=msg.teamScores; onPScores=msg.pScores; onHandleKill(msg); break;
-    case 'respawn':     onHandleRespawn(msg.spawn); break;
+    case 'chat_msg':     onHandleChatMsg(msg); break;
+    case 'start':        setTimeout(()=>onStartGame(msg), 150); break;
+    case 'opp_state':    onUpdateOpp(msg.slot,msg.pos,msg.yaw,msg.pitch||0,msg.posY||0); break;
+    case 'opp_shoot':  { const o=onOpps.get(msg.slot); if(o&&o.group.userData.anim) o.group.userData.anim.shootT=1; break; }
+    case 'kill':         onTeamScores=msg.teamScores; onPScores=msg.pScores; onHandleKill(msg); break;
+    case 'respawn':      onHandleRespawn(msg.spawn); break;
     case 'player_respawn': onHandlePlayerRespawn(msg.slot,msg.spawn); break;
-    case 'join_err':    onLobbyErr(msg.msg); break;
+    case 'join_err':     onLobbyErr(msg.msg); break;
     case 'opp_disconnect': onSetErr((msg.name||'Un jugador')+' se desconectó'); break;
   }
 }
 
-// ── SALA DE ESPERA ───────────────────────────────────────────
 function onRoomJoined(msg) {
   onMySlot=msg.slot; onMyTeam=msg.team; onMySpawn=msg.spawn;
   onRoomMode=msg.mode; onFirstTo=msg.firstTo;
@@ -1450,7 +1699,6 @@ function onRoomJoined(msg) {
   document.getElementById('duel-room-info').textContent = msg.name+' · '+msg.mode.toUpperCase()+' · Primero en '+msg.firstTo+' kills gana';
   document.getElementById('duel-share-url').textContent = location.href;
   document.getElementById('duel-force-start').style.display = msg.slot===0?'block':'none';
-  // Cargar historial de chat
   const chatEl = document.getElementById('duel-chat-msgs');
   if (chatEl && msg.chatHistory) { chatEl.innerHTML=''; msg.chatHistory.forEach(m=>onHandleChatMsg(m)); }
   onRenderWaitingPlayers(msg.max); onUpdateStartBtn(); onShowScreen('duel-waiting-screen');
@@ -1486,7 +1734,6 @@ function onRenderWaitingPlayers(max) {
   }
 }
 
-// ── ROOM LIST ────────────────────────────────────────────────
 function onUpdateRoomList(rooms) {
   const el=document.getElementById('duel-room-list');
   if(!rooms||!rooms.length){ el.innerHTML='<div style="text-align:center;color:var(--dim);font-size:.68rem;letter-spacing:.15em;padding:28px">No hay salas disponibles. ¡Crea la primera!</div>'; return; }
@@ -1505,7 +1752,6 @@ function onJoinClick(roomId,isPrivate){
 function onLobbyErr(msg){ const el=document.getElementById('duel-lobby-err'); if(el){el.textContent='⚠ '+msg;setTimeout(()=>el.textContent='',5000);} }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── THREE.JS (ONLINE) ────────────────────────────────────────
 function onInitThree(){
   const cv=document.getElementById('duel-canvas');
   onRenderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
@@ -1707,9 +1953,7 @@ function onStartGame(msg){
   document.getElementById('duel-my-kills').style.color=myCol;
   document.getElementById('duel-my-kills').style.textShadow='0 0 12px '+myCol;
   const ft=document.getElementById('duel-firstto'); if(ft) ft.textContent=msg.firstTo;
-  // reset ping display en HUD
-  onPing=0; onUpdatePingDisplay();
-  onRefreshHUD();
+  onPing=0; onUpdatePingDisplay(); onRefreshHUD();
   const oppNames=msg.players.filter(p=>p.slot!==onMySlot).map(p=>p.name).join(', ');
   document.getElementById('duel-opp-name-lock').textContent=oppNames||'Rival';
   document.getElementById('duel-lock-team').textContent='Equipo: '+TEAM_LBL[onMyTeam];
@@ -1772,7 +2016,6 @@ function onCleanup(){
   if(onAnimId){cancelAnimationFrame(onAnimId);onAnimId=null;}
 }
 
-// ── POINTER LOCK (ONLINE) ────────────────────────────────────
 document.addEventListener('pointerlockchange',()=>{
   if(!onActive) return;
   onLocked=document.pointerLockElement===document.getElementById('duel-canvas');
