@@ -232,15 +232,15 @@ wss.on('connection', ws => {
 
         // Notificar kill a todos (con spawns incluidos para que el cliente los use)
         const killMsg = {
-          type:       'kill',
-          killerSlot: me.slot,
-          victimSlot: victim.slot,
-          killerTeam: me.team,
-          teamScores: [...room.teamScores],
-          pScores:    {...room.pScores},
+          type:        'kill',
+          killerSlot:  me.slot,
+          victimSlot:  victim.slot,
+          killerTeam:  me.team,
+          teamScores:  [...room.teamScores],
+          pScores:     {...room.pScores},
           matchOver,
-          mySpawn:     killerSpawn,   // spawn del killer  (usado por el killer)
-          killerSpawn: killerSpawn    // spawn del killer  (usado por la víctima para referencia)
+          killerSpawn: killerSpawn,  // spawn del killer (equipo del killer)
+          victimSpawn: victimSpawn   // spawn de la víctima (equipo de la víctima)
         };
         room.players.forEach(p => send(p.ws, killMsg));
 
