@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -1428,7 +1428,7 @@ let onAnimId=null, onStateIv=null, onCanShoot=true;
 const onWalls=[], onObs=[];
 const onKeys={};
 let onMX=0, onMY=0, onThreeReady=false;
-const ON_H=1.65, ON_SPD=7.5, ON_SENS=.002, ON_CD=180;
+const ON_H=1.65, ON_SPD=7.5, ON_SENS=.002, ON_CD=1500;
 const ON_GRAVITY=22, ON_JUMP_FORCE=8.0;
 let onVelY=0, onPosY=0, onIsGrounded=true;
 
@@ -2055,9 +2055,40 @@ function onStartGame(msg){
 function onHandleKill(msg){
   onRefreshHUD();
   const killerName=onPlayerNames.get(msg.killerSlot)||'?', victimName=onPlayerNames.get(msg.victimSlot)||'?';
-  if(msg.victimSlot===onMySlot){ onAlive=false; document.getElementById('duel-death-vignette').style.display='block'; document.getElementById('duel-respawn-msg').style.display='block'; onAddFeed(killerName+' ➤ '+onMyName,'#ff4444'); }
-  else if(msg.killerSlot===onMySlot){ document.getElementById('duel-kill-notif').style.opacity='1'; setTimeout(()=>document.getElementById('duel-kill-notif').style.opacity='0',1600); onAddFeed(onMyName+' ➤ '+victimName,'#44ff88'); const vO=onOpps.get(msg.victimSlot); if(vO&&vO.group.userData.anim){vO.group.userData.anim.dead=true;vO.group.userData.anim.deathT=0;} }
-  else{ onAddFeed(killerName+' ➤ '+victimName,'#aaaaaa'); const vO2=onOpps.get(msg.victimSlot); if(vO2&&vO2.group.userData.anim){vO2.group.userData.anim.dead=true;vO2.group.userData.anim.deathT=0;} }
+  if(msg.victimSlot===onMySlot){
+    // Yo fui eliminado → respawnear después de 1.5s
+    onAlive=false;
+    document.getElementById('duel-death-vignette').style.display='block';
+    document.getElementById('duel-respawn-msg').style.display='block';
+    onAddFeed(killerName+' ➤ '+onMyName,'#ff4444');
+    if(!msg.matchOver) setTimeout(()=>{ if(onActive){ onHandleRespawn(msg.killerSpawn||onMySpawn); } },1500);
+  } else if(msg.killerSlot===onMySlot){
+    // Yo eliminé al rival → yo TAMBIÉN respawnero (ambos vuelven)
+    document.getElementById('duel-kill-notif').style.opacity='1';
+    setTimeout(()=>document.getElementById('duel-kill-notif').style.opacity='0',1600);
+    onAddFeed(onMyName+' ➤ '+victimName,'#44ff88');
+    const vO=onOpps.get(msg.victimSlot); if(vO&&vO.group.userData.anim){vO.group.userData.anim.dead=true;vO.group.userData.anim.deathT=0;}
+    // Killer también respawnea
+    if(!msg.matchOver){
+      onAlive=false;
+      const rMsg=document.getElementById('duel-respawn-msg');
+      rMsg.textContent='⚡ REPOSICIONANDO...'; rMsg.style.display='block';
+      rMsg.style.color='#00ff88'; rMsg.style.textShadow='0 0 14px #00ff88';
+      document.getElementById('duel-death-vignette').style.opacity='0.12';
+      document.getElementById('duel-death-vignette').style.display='block';
+      setTimeout(()=>{
+        if(onActive){
+          onHandleRespawn(msg.mySpawn||onMySpawn);
+          rMsg.textContent='💀 REAPARECIENDO...'; rMsg.style.color='#ff3d71'; rMsg.style.textShadow='0 0 14px #ff3d71';
+          document.getElementById('duel-death-vignette').style.opacity='1';
+        }
+      },1500);
+    }
+  } else {
+    // Otro jugador eliminó a otro → animar muerte del rival
+    onAddFeed(killerName+' ➤ '+victimName,'#aaaaaa');
+    const vO2=onOpps.get(msg.victimSlot); if(vO2&&vO2.group.userData.anim){vO2.group.userData.anim.dead=true;vO2.group.userData.anim.deathT=0;}
+  }
   if(msg.matchOver){ const won=msg.killerTeam===onMyTeam||msg.killerSlot===onMySlot; setTimeout(()=>onShowGameOver(won),1800); }
 }
 function onHandleRespawn(spawn){ onSpawnPlayer(spawn||onMySpawn); document.getElementById('duel-death-vignette').style.display='none'; document.getElementById('duel-respawn-msg').style.display='none'; }
