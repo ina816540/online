@@ -11,7 +11,6 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;overflow:hidden;user-select:none;}
 #three-canvas{position:fixed;inset:0;display:none;cursor:none;}
-/* CROSSHAIR */
 #crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:50;display:none;}
 .ch-line{position:absolute;background:#fff;border-radius:1px;transition:all .06s ease-out;}
 .ch-top{width:2px;height:12px;left:50%;top:calc(50% - 20px);transform:translateX(-50%);}
@@ -23,7 +22,6 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 #crosshair.shoot .ch-bottom{top:calc(50% + 14px);}
 #crosshair.shoot .ch-left{left:calc(50% - 26px);}
 #crosshair.shoot .ch-right{left:calc(50% + 14px);}
-/* HUD */
 #hud{position:fixed;top:0;left:0;right:0;z-index:40;display:none;justify-content:space-between;align-items:center;padding:12px 28px;background:linear-gradient(180deg,rgba(5,8,15,.95) 0%,transparent 100%);border-bottom:1px solid rgba(224,64,251,.1);}
 .hud-block{display:flex;flex-direction:column;align-items:center;gap:2px;}
 .hud-lbl{font-size:.55rem;letter-spacing:.3em;color:var(--dim);}
@@ -46,12 +44,9 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .life.lost{opacity:.12;}
 #combo-disp{position:fixed;top:68px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;letter-spacing:.3em;color:#ffd700;text-shadow:0 0 15px #ffd700;z-index:45;pointer-events:none;opacity:0;transition:opacity .3s;}
 #combo-disp.show{opacity:1;}
-/* SCREENS */
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .3s;}
 .screen.hidden{opacity:0;pointer-events:none;}
 @keyframes glow{0%,100%{text-shadow:0 0 30px var(--accent),0 0 60px rgba(224,64,251,.3);}50%{text-shadow:0 0 50px var(--accent),0 0 100px rgba(224,64,251,.5);}}
-
-/* LOGIN */
 #login-screen{gap:0;background:radial-gradient(ellipse at center,rgba(224,64,251,.06) 0%,transparent 70%);}
 .login-logo{text-align:center;margin-bottom:28px;}
 .login-logo h1{font-family:'Orbitron',monospace;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;letter-spacing:.3em;color:var(--accent);animation:glow 3s ease-in-out infinite;}
@@ -91,8 +86,6 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .auth-divider{display:flex;align-items:center;gap:10px;margin:2px 0;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .auth-divider span{font-size:.52rem;letter-spacing:.2em;color:var(--dim);}
-
-/* LEADERBOARD */
 #lb-screen{gap:0;justify-content:flex-start;padding-top:28px;overflow-y:auto;}
 .lb-header{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;letter-spacing:.3em;color:var(--accent);margin-bottom:5px;text-align:center;}
 .lb-sub{font-size:.6rem;letter-spacing:.3em;color:var(--dim);text-align:center;margin-bottom:18px;}
@@ -115,8 +108,6 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .lb-me td{background:rgba(224,64,251,.06)!important;}
 .lb-loading,.lb-empty{text-align:center;color:var(--dim);font-size:.7rem;letter-spacing:.2em;padding:30px;}
 .lb-footer{display:flex;gap:10px;justify-content:center;margin-top:18px;margin-bottom:28px;}
-
-/* STATS */
 #stats-screen{gap:0;justify-content:flex-start;padding-top:26px;overflow-y:auto;}
 .stats-hdr{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;letter-spacing:.3em;color:var(--accent);margin-bottom:16px;text-align:center;}
 .stats-wrap{max-width:660px;width:100%;padding:0 20px;}
@@ -136,8 +127,6 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .mr-score{font-family:'Orbitron',monospace;font-size:.78rem;color:var(--accent);font-weight:700;}
 .mr-acc{font-size:.62rem;color:var(--green);}
 .stats-footer{display:flex;gap:10px;justify-content:center;margin-top:16px;margin-bottom:28px;}
-
-/* MENU */
 #menu-screen{gap:0;background:radial-gradient(ellipse at center,rgba(224,64,251,.04) 0%,transparent 70%);}
 .logo{text-align:center;margin-bottom:20px;}
 .logo h1{font-family:'Orbitron',monospace;font-size:clamp(2rem,5vw,4rem);font-weight:900;letter-spacing:.3em;color:var(--accent);animation:glow 3s ease-in-out infinite;}
@@ -169,8 +158,6 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .extra-btn:hover{border-color:var(--accent3);color:var(--accent3);}
 .user-badge{display:flex;align-items:center;gap:7px;background:var(--panel);border:1px solid rgba(224,64,251,.3);padding:7px 13px;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);}
 .user-badge span{font-size:.63rem;color:var(--text);letter-spacing:.1em;}
-
-/* SETTINGS */
 #settings-screen{gap:0;justify-content:flex-start;padding-top:26px;overflow-y:auto;}
 .cfg-hdr{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;letter-spacing:.3em;color:var(--accent);margin-bottom:16px;text-align:center;}
 .cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;max-width:700px;width:100%;padding:0 20px;}
@@ -195,8 +182,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .color-opt:hover{transform:scale(1.2);}
 .color-opt.active{border-color:#fff;transform:scale(1.15);}
 .cfg-footer{margin-top:14px;display:flex;gap:11px;margin-bottom:26px;}
-
-/* RESULTS */
 #results-screen{gap:20px;}
 #results-screen h2{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;letter-spacing:.3em;color:var(--accent);text-shadow:0 0 20px var(--accent);}
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:480px;width:100%;padding:0 20px;}
@@ -210,8 +195,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .btn-p:hover{box-shadow:0 0 25px var(--accent);}
 .btn-s{background:transparent;color:var(--text);border:1px solid var(--border);}
 .btn-s:hover{border-color:var(--accent);color:var(--accent);}
-
-/* POINTER LOCK */
 #lock-overlay{position:fixed;inset:0;z-index:80;background:rgba(5,8,15,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
 #lock-overlay h2{font-family:'Orbitron',monospace;font-size:1.3rem;letter-spacing:.2em;color:var(--accent);text-shadow:0 0 20px var(--accent);}
 #lock-overlay p{font-size:.7rem;letter-spacing:.15em;color:var(--dim);text-align:center;line-height:1.8;}
@@ -219,31 +202,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .lock-btn:hover{box-shadow:0 0 30px var(--accent);}
 #pause-menu-btn:hover{border-color:var(--accent3)!important;color:var(--accent3)!important;}
 #pause-quit-btn:hover{border-color:var(--accent2)!important;background:rgba(255,61,113,.08)!important;}
-
-/* ONLINE ROOMS */
 .room-card{background:var(--panel);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px));transition:border-color .15s;}
 .room-card:hover{border-color:rgba(255,61,113,.4);}
 .room-nm{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--text);}
 .room-join{background:#ff3d71;border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.15em;padding:7px 14px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);transition:box-shadow .15s;}
 .room-join:hover{box-shadow:0 0 12px rgba(255,61,113,.5);}
 .player-slot{background:rgba(255,255,255,.03);border:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;gap:8px;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px));}
-
-/* CHAT */
 #duel-chat-msgs::-webkit-scrollbar{width:4px;}
 #duel-chat-msgs::-webkit-scrollbar-track{background:transparent;}
 #duel-chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-/* PING */
 @keyframes ping-pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
 .ping-bad{animation:ping-pulse .8s infinite;}
-
-/* login anim */
 @keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .auth-panel{animation:slideIn .25s ease-out;}
-
-/* ═══════════════════════════════════════
-   MOBILE CONTROLS — SOLO
-═══════════════════════════════════════ */
 #mobile-controls{position:fixed;inset:0;z-index:55;pointer-events:none;display:none;}
 #mobile-controls.active{display:block;}
 #joy-zone{position:absolute;left:0;bottom:0;width:50%;height:55%;pointer-events:all;}
@@ -255,23 +226,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 #btn-jump{position:absolute;right:120px;bottom:90px;width:60px;height:60px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid rgba(0,229,255,.5);color:#00e5ff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;transition:all .1s;-webkit-tap-highlight-color:transparent;user-select:none;}
 #btn-jump:active{background:rgba(0,229,255,.4);transform:scale(.9);}
 #btn-pause-mob{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(5,8,15,.75);border:1px solid rgba(224,64,251,.3);color:var(--accent);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.2em;padding:8px 16px;pointer-events:all;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);-webkit-tap-highlight-color:transparent;}
-
-/* Mobile toggle button */
 .mob-toggle-btn{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.4);color:var(--accent3);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:10px 22px;cursor:pointer;clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .mob-toggle-btn:hover,.mob-toggle-btn:active{background:rgba(0,229,255,.25);box-shadow:0 0 18px rgba(0,229,255,.3);}
 .mob-toggle-btn.on{background:rgba(0,229,255,.25);border-color:var(--accent3);box-shadow:0 0 14px rgba(0,229,255,.35);}
-
-/* ═══════════════════════════════════════
-   DUEL MOBILE CONTROLS
-   FIX: display:none en CSS (no inline) para que .active pueda sobreescribirlo
-═══════════════════════════════════════ */
-#duel-mobile-controls{
-  position:fixed;inset:0;z-index:56;pointer-events:none;
-  display:none;  /* ← AQUÍ en CSS, no como inline style */
-}
-#duel-mobile-controls.active{
-  display:block !important;  /* ← !important garantiza que sobreescribe todo */
-}
+#duel-mobile-controls{position:fixed;inset:0;z-index:56;pointer-events:none;display:none;}
+#duel-mobile-controls.active{display:block !important;}
 </style>
 </head>
 <body>
@@ -294,19 +253,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div class="acc-wrap"><div class="acc-lbl">ACCURACY · <span id="acc-pct">0</span>%</div><div class="acc-bg"><div class="acc-fill" id="acc-fill"></div></div></div>
   <button class="quit-btn" id="quit-btn">[ SALIR ]</button>
 </div>
-
-<!-- SOLO MOBILE CONTROLS -->
 <div id="mobile-controls">
-  <div id="joy-zone">
-    <div id="joy-base"></div>
-    <div id="joy-knob"></div>
-  </div>
+  <div id="joy-zone"><div id="joy-base"></div><div id="joy-knob"></div></div>
   <div id="look-zone"></div>
   <div id="btn-fire">🔴</div>
   <div id="btn-jump">⬆</div>
   <button id="btn-pause-mob">⏸ PAUSA</button>
 </div>
-
 <div id="lock-overlay" style="display:none">
   <h2>🎯 INA TRAINER</h2>
   <p id="lock-hint">Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar</p>
@@ -314,8 +267,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <button class="mob-toggle-btn" id="mob-toggle-btn" style="margin-top:4px">📱 MODO MÓVIL</button>
   <div style="font-size:.56rem;letter-spacing:.2em;color:var(--dim);margin-top:6px">MODO: <span id="lock-mode-name" style="color:var(--accent)">—</span></div>
 </div>
-
-<!-- PAUSE OVERLAY -->
 <div id="pause-overlay" style="display:none;position:fixed;inset:0;z-index:90;background:rgba(5,8,15,.88);backdrop-filter:blur(6px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
   <div style="font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;letter-spacing:.4em;color:var(--accent);text-shadow:0 0 30px var(--accent);">⏸ PAUSA</div>
   <div style="font-size:.65rem;letter-spacing:.3em;color:var(--dim);">MODO: <span id="pause-mode-name" style="color:var(--accent)">—</span></div>
@@ -329,108 +280,38 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 
 <!-- LOGIN -->
 <div class="screen" id="login-screen">
-  <div class="login-logo">
-    <h1>INA TRAINER</h1>
-    <p>ENTRENADOR FPS 3D · COMPETITIVO</p>
-  </div>
+  <div class="login-logo"><h1>INA TRAINER</h1><p>ENTRENADOR FPS 3D · COMPETITIVO</p></div>
   <div class="auth-box">
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">⚡ INICIAR SESIÓN</button>
       <button class="auth-tab" id="tab-register" onclick="switchTab('register')">✦ REGISTRARSE</button>
     </div>
     <div class="auth-panel" id="panel-login">
-      <div class="field-wrap">
-        <label>USUARIO</label>
-        <div class="field-input-row">
-          <span class="field-icon">◈</span>
-          <input class="auth-input" id="login-username" type="text" placeholder="Tu nombre de usuario" maxlength="20" autocomplete="username" autocorrect="off" autocapitalize="off">
-        </div>
-      </div>
-      <div class="field-wrap">
-        <label>CONTRASEÑA</label>
-        <div class="field-input-row">
-          <span class="field-icon">🔒</span>
-          <input class="auth-input" id="login-password" type="password" placeholder="Tu contraseña" maxlength="40" autocomplete="current-password">
-        </div>
-      </div>
+      <div class="field-wrap"><label>USUARIO</label><div class="field-input-row"><span class="field-icon">◈</span><input class="auth-input" id="login-username" type="text" placeholder="Tu nombre de usuario" maxlength="20" autocomplete="username" autocorrect="off" autocapitalize="off"></div></div>
+      <div class="field-wrap"><label>CONTRASEÑA</label><div class="field-input-row"><span class="field-icon">🔒</span><input class="auth-input" id="login-password" type="password" placeholder="Tu contraseña" maxlength="40" autocomplete="current-password"></div></div>
       <div class="auth-msg" id="login-msg"></div>
-      <button class="auth-submit" id="login-submit" onclick="doLogin()">
-        <span class="btn-text">▶ ENTRAR</span>
-        <div class="btn-loader"><div class="spinner"></div></div>
-      </button>
+      <button class="auth-submit" id="login-submit" onclick="doLogin()"><span class="btn-text">▶ ENTRAR</span><div class="btn-loader"><div class="spinner"></div></div></button>
       <div class="auth-divider"><span>¿Aún no tienes cuenta?</span></div>
       <button style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:9px;cursor:pointer;transition:all .2s;width:100%" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'" onclick="switchTab('register')">CREAR CUENTA GRATIS →</button>
     </div>
     <div class="auth-panel" id="panel-register" style="display:none">
-      <div class="field-wrap">
-        <label>ELIGE TU AVATAR</label>
-        <div class="avatar-row" id="avatar-row">
-          <span class="avatar-opt selected" data-av="🎯">🎯</span>
-          <span class="avatar-opt" data-av="🔫">🔫</span>
-          <span class="avatar-opt" data-av="⚡">⚡</span>
-          <span class="avatar-opt" data-av="🐺">🐺</span>
-          <span class="avatar-opt" data-av="🦊">🦊</span>
-          <span class="avatar-opt" data-av="💀">💀</span>
-          <span class="avatar-opt" data-av="🐉">🐉</span>
-          <span class="avatar-opt" data-av="🤖">🤖</span>
-          <span class="avatar-opt" data-av="👾">👾</span>
-          <span class="avatar-opt" data-av="🎮">🎮</span>
-        </div>
-      </div>
-      <div class="field-wrap">
-        <label>NOMBRE DE USUARIO <span style="color:var(--dim);font-size:.5rem">(mín. 3 caracteres)</span></label>
-        <div class="field-input-row">
-          <span class="field-icon">◈</span>
-          <input class="auth-input" id="reg-username" type="text" placeholder="Elige un nombre único" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="off" oninput="checkUsernameAvail()">
-        </div>
-        <div style="font-size:.54rem;letter-spacing:.1em;min-height:14px;margin-top:2px" id="username-avail"></div>
-      </div>
-      <div class="field-wrap">
-        <label>CONTRASEÑA <span style="color:var(--dim);font-size:.5rem">(mín. 6 caracteres)</span></label>
-        <div class="field-input-row">
-          <span class="field-icon">🔒</span>
-          <input class="auth-input" id="reg-password" type="password" placeholder="Elige una contraseña" maxlength="40" autocomplete="new-password" oninput="updatePwStrength()">
-        </div>
-        <div class="pw-strength"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
-      </div>
-      <div class="field-wrap">
-        <label>CONFIRMAR CONTRASEÑA</label>
-        <div class="field-input-row">
-          <span class="field-icon">🔒</span>
-          <input class="auth-input" id="reg-confirm" type="password" placeholder="Repite la contraseña" maxlength="40" autocomplete="new-password">
-        </div>
-      </div>
+      <div class="field-wrap"><label>ELIGE TU AVATAR</label><div class="avatar-row" id="avatar-row"><span class="avatar-opt selected" data-av="🎯">🎯</span><span class="avatar-opt" data-av="🔫">🔫</span><span class="avatar-opt" data-av="⚡">⚡</span><span class="avatar-opt" data-av="🐺">🐺</span><span class="avatar-opt" data-av="🦊">🦊</span><span class="avatar-opt" data-av="💀">💀</span><span class="avatar-opt" data-av="🐉">🐉</span><span class="avatar-opt" data-av="🤖">🤖</span><span class="avatar-opt" data-av="👾">👾</span><span class="avatar-opt" data-av="🎮">🎮</span></div></div>
+      <div class="field-wrap"><label>NOMBRE DE USUARIO <span style="color:var(--dim);font-size:.5rem">(mín. 3 caracteres)</span></label><div class="field-input-row"><span class="field-icon">◈</span><input class="auth-input" id="reg-username" type="text" placeholder="Elige un nombre único" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="off" oninput="checkUsernameAvail()"></div><div style="font-size:.54rem;letter-spacing:.1em;min-height:14px;margin-top:2px" id="username-avail"></div></div>
+      <div class="field-wrap"><label>CONTRASEÑA <span style="color:var(--dim);font-size:.5rem">(mín. 6 caracteres)</span></label><div class="field-input-row"><span class="field-icon">🔒</span><input class="auth-input" id="reg-password" type="password" placeholder="Elige una contraseña" maxlength="40" autocomplete="new-password" oninput="updatePwStrength()"></div><div class="pw-strength"><div class="pw-strength-fill" id="pw-strength-fill"></div></div></div>
+      <div class="field-wrap"><label>CONFIRMAR CONTRASEÑA</label><div class="field-input-row"><span class="field-icon">🔒</span><input class="auth-input" id="reg-confirm" type="password" placeholder="Repite la contraseña" maxlength="40" autocomplete="new-password"></div></div>
       <div class="auth-msg" id="register-msg"></div>
-      <button class="auth-submit" id="register-submit" onclick="doRegister()">
-        <span class="btn-text">✦ CREAR CUENTA</span>
-        <div class="btn-loader"><div class="spinner"></div></div>
-      </button>
+      <button class="auth-submit" id="register-submit" onclick="doRegister()"><span class="btn-text">✦ CREAR CUENTA</span><div class="btn-loader"><div class="spinner"></div></div></button>
     </div>
   </div>
 </div>
 
 <!-- LEADERBOARD -->
 <div class="screen hidden" id="lb-screen">
-  <div class="lb-header">🏆 TABLA DE RÉCORDS</div>
-  <div class="lb-sub">MEJORES JUGADORES GLOBALES</div>
+  <div class="lb-header">🏆 TABLA DE RÉCORDS</div><div class="lb-sub">MEJORES JUGADORES GLOBALES</div>
   <div class="lb-wrap">
-    <div class="lb-tabs" id="lb-tabs">
-      <button class="lb-tab active" data-mode="all">TODOS</button>
-      <button class="lb-tab" data-mode="clicking">CLICKING</button>
-      <button class="lb-tab" data-mode="flicking">FLICKING</button>
-      <button class="lb-tab" data-mode="micro">MICRO</button>
-      <button class="lb-tab" data-mode="gridshot">GRIDSHOT</button>
-      <button class="lb-tab" data-mode="strafe">STRAFE</button>
-      <button class="lb-tab" data-mode="wide">WIDE</button>
-    </div>
-    <table class="lb-table">
-      <thead><tr><th>#</th><th>JUGADOR</th><th>PUNTUACIÓN</th><th>PRECISIÓN</th><th>MODO</th><th>DIFICULTAD</th></tr></thead>
-      <tbody id="lb-body"><tr><td colspan="6" class="lb-loading">⟳ CARGANDO...</td></tr></tbody>
-    </table>
-    <div class="lb-footer">
-      <button class="btn btn-s" id="lb-refresh-btn">↺ ACTUALIZAR</button>
-      <button class="btn btn-p" id="lb-back-btn">← VOLVER</button>
-    </div>
+    <div class="lb-tabs" id="lb-tabs"><button class="lb-tab active" data-mode="all">TODOS</button><button class="lb-tab" data-mode="clicking">CLICKING</button><button class="lb-tab" data-mode="flicking">FLICKING</button><button class="lb-tab" data-mode="micro">MICRO</button><button class="lb-tab" data-mode="gridshot">GRIDSHOT</button><button class="lb-tab" data-mode="strafe">STRAFE</button><button class="lb-tab" data-mode="wide">WIDE</button></div>
+    <table class="lb-table"><thead><tr><th>#</th><th>JUGADOR</th><th>PUNTUACIÓN</th><th>PRECISIÓN</th><th>MODO</th><th>DIFICULTAD</th></tr></thead><tbody id="lb-body"><tr><td colspan="6" class="lb-loading">⟳ CARGANDO...</td></tr></tbody></table>
+    <div class="lb-footer"><button class="btn btn-s" id="lb-refresh-btn">↺ ACTUALIZAR</button><button class="btn btn-p" id="lb-back-btn">← VOLVER</button></div>
   </div>
 </div>
 
@@ -438,10 +319,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 <div class="screen hidden" id="stats-screen">
   <div class="stats-hdr">📊 MIS ESTADÍSTICAS</div>
   <div class="stats-wrap">
-    <div class="profile-card">
-      <div class="profile-avatar" id="profile-av">🎯</div>
-      <div class="profile-info"><h2 id="profile-name">—</h2><p>JUGADOR INA TRAINER</p></div>
-    </div>
+    <div class="profile-card"><div class="profile-avatar" id="profile-av">🎯</div><div class="profile-info"><h2 id="profile-name">—</h2><p>JUGADOR INA TRAINER</p></div></div>
     <div class="stats-cards">
       <div class="st-card"><div class="st-val" id="st-games">0</div><div class="st-lbl">PARTIDAS</div></div>
       <div class="st-card"><div class="st-val" id="st-best">0</div><div class="st-lbl">MEJOR PUNTUACIÓN</div></div>
@@ -450,10 +328,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <div class="st-card"><div class="st-val" id="st-shots">0</div><div class="st-lbl">TOTAL DISPAROS</div></div>
       <div class="st-card"><div class="st-val" id="st-combo">0</div><div class="st-lbl">MEJOR COMBO</div></div>
     </div>
-    <div class="mode-records">
-      <div class="mr-title">✦ RÉCORDS POR MODO</div>
-      <div id="mr-rows"></div>
-    </div>
+    <div class="mode-records"><div class="mr-title">✦ RÉCORDS POR MODO</div><div id="mr-rows"></div></div>
     <div class="stats-footer"><button class="btn btn-p" id="stats-back-btn">← VOLVER</button></div>
   </div>
 </div>
@@ -493,16 +368,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div class="cfg-grid">
     <div class="cfg-group">
       <div class="cg-title">✦ MIRA</div>
-      <div class="cfg-row"><span class="c-lbl">Color</span>
-        <div class="color-opts" id="ch-colors">
-          <div class="color-opt active" data-c="#ffffff" style="background:#fff"></div>
-          <div class="color-opt" data-c="#00e5ff" style="background:#00e5ff"></div>
-          <div class="color-opt" data-c="#00ff88" style="background:#00ff88"></div>
-          <div class="color-opt" data-c="#ff3d71" style="background:#ff3d71"></div>
-          <div class="color-opt" data-c="#ffd700" style="background:#ffd700"></div>
-          <div class="color-opt" data-c="#e040fb" style="background:#e040fb"></div>
-        </div>
-      </div>
+      <div class="cfg-row"><span class="c-lbl">Color</span><div class="color-opts" id="ch-colors"><div class="color-opt active" data-c="#ffffff" style="background:#fff"></div><div class="color-opt" data-c="#00e5ff" style="background:#00e5ff"></div><div class="color-opt" data-c="#00ff88" style="background:#00ff88"></div><div class="color-opt" data-c="#ff3d71" style="background:#ff3d71"></div><div class="color-opt" data-c="#ffd700" style="background:#ffd700"></div><div class="color-opt" data-c="#e040fb" style="background:#e040fb"></div></div></div>
       <div class="cfg-row"><div><span class="c-lbl">Tamaño</span></div><div class="sl-wrap"><input type="range" id="ch-size" min="6" max="24" value="12"><span class="sv" id="ch-size-v">12</span></div></div>
       <div class="cfg-row"><div><span class="c-lbl">Grosor</span></div><div class="sl-wrap"><input type="range" id="ch-thick" min="1" max="5" value="2"><span class="sv" id="ch-thick-v">2</span></div></div>
       <div class="cfg-row"><div><span class="c-lbl">Separación</span></div><div class="sl-wrap"><input type="range" id="ch-gap" min="2" max="16" value="8"><span class="sv" id="ch-gap-v">8</span></div></div>
@@ -510,7 +376,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     </div>
     <div class="cfg-group">
       <div class="cg-title">🎮 CÁMARA / JUEGO</div>
-      <div class="cfg-row"><div><span class="c-lbl">Sensibilidad</span></div><div class="sl-wrap"><input type="range" id="sens-sl" min="1" max="100" value="30"><span class="sv" id="sens-v">3.0</span></div></div>
+      <div class="cfg-row"><div><span class="c-lbl">Sensibilidad</span><span class="c-sub">Aplica a modo práctica Y PVP</span></div><div class="sl-wrap"><input type="range" id="sens-sl" min="1" max="100" value="30"><span class="sv" id="sens-v">3.0</span></div></div>
       <div class="cfg-row"><div><span class="c-lbl">Tamaño objetivos</span></div><div class="sl-wrap"><input type="range" id="tgt-size" min="50" max="200" value="100" step="10"><span class="sv" id="tgt-size-v">1.0x</span></div></div>
       <div class="cfg-row"><div><span class="c-lbl">Velocidad</span></div><div class="sl-wrap"><input type="range" id="tgt-spd" min="50" max="300" value="100" step="10"><span class="sv" id="tgt-spd-v">1.0x</span></div></div>
       <div class="cfg-row"><div><span class="c-lbl">Máx. objetivos</span></div><div class="sl-wrap"><input type="range" id="tgt-max" min="1" max="8" value="4"><span class="sv" id="tgt-max-v">4</span></div></div>
@@ -520,14 +386,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <div class="cfg-row"><span class="c-lbl">Efectos de impacto</span><label class="toggle"><input type="checkbox" id="fx-tog" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
       <div class="cfg-row"><span class="c-lbl">Puntos flotantes</span><label class="toggle"><input type="checkbox" id="pts-tog" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
       <div class="cfg-row"><span class="c-lbl">Mostrar combo</span><label class="toggle"><input type="checkbox" id="combo-tog" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
-      <div class="cfg-row"><span class="c-lbl">Color entorno</span>
-        <div class="color-opts" id="room-colors">
-          <div class="color-opt active" data-c="#1a0a2e" style="background:#1a0a2e"></div>
-          <div class="color-opt" data-c="#0a1a2e" style="background:#0a1a2e"></div>
-          <div class="color-opt" data-c="#0a2e0a" style="background:#0a2e0a"></div>
-          <div class="color-opt" data-c="#1a1a1a" style="background:#1a1a1a"></div>
-        </div>
-      </div>
+      <div class="cfg-row"><span class="c-lbl">Color entorno</span><div class="color-opts" id="room-colors"><div class="color-opt active" data-c="#1a0a2e" style="background:#1a0a2e"></div><div class="color-opt" data-c="#0a1a2e" style="background:#0a1a2e"></div><div class="color-opt" data-c="#0a2e0a" style="background:#0a2e0a"></div><div class="color-opt" data-c="#1a1a1a" style="background:#1a1a1a"></div></div></div>
     </div>
     <div class="cfg-group">
       <div class="cg-title">♪ AUDIO</div>
@@ -537,10 +396,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
       <div class="cfg-row"><span class="c-lbl">Volumen</span><div class="sl-wrap"><input type="range" id="vol-sl" min="0" max="100" value="70"><span class="sv" id="vol-v">70%</span></div></div>
     </div>
   </div>
-  <div class="cfg-footer">
-    <button class="btn btn-s" id="cfg-reset">RESTABLECER</button>
-    <button class="btn btn-p" id="cfg-save">GUARDAR Y VOLVER</button>
-  </div>
+  <div class="cfg-footer"><button class="btn btn-s" id="cfg-reset">RESTABLECER</button><button class="btn btn-p" id="cfg-save">GUARDAR Y VOLVER</button></div>
 </div>
 
 <!-- RESULTS -->
@@ -555,10 +411,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     <div class="stat-card"><div class="s-val" id="r-combo">0</div><div class="s-lbl">MEJOR COMBO</div></div>
     <div class="stat-card"><div class="s-val" id="r-mode">—</div><div class="s-lbl">MODO</div></div>
   </div>
-  <div class="btn-row">
-    <button class="btn btn-p" id="play-again-btn">JUGAR DE NUEVO</button>
-    <button class="btn btn-s" id="menu-btn">MENÚ</button>
-  </div>
+  <div class="btn-row"><button class="btn btn-p" id="play-again-btn">JUGAR DE NUEVO</button><button class="btn btn-s" id="menu-btn">MENÚ</button></div>
 </div>
 
 <!-- ONLINE SCREENS -->
@@ -590,30 +443,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div class="auth-box" style="border-color:rgba(255,61,113,.3);width:410px">
     <div style="padding:20px 28px 0;font-family:'Orbitron',monospace;font-size:.88rem;letter-spacing:.25em;color:#ff3d71;text-align:center">&#10022; CREAR SALA</div>
     <div class="auth-panel" style="gap:12px">
-      <div class="field-wrap">
-        <label>NOMBRE DE LA SALA</label>
-        <input class="auth-input no-icon" id="duel-room-name" placeholder="Ej: La sala de ina..." maxlength="30" autocomplete="off">
-      </div>
-      <div class="field-wrap">
-        <label>MODO DE JUEGO</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="duel-mode-pills">
-          <button class="diff-btn act" data-mode="1v1">1v1</button>
-          <button class="diff-btn" data-mode="2v2">2v2</button>
-          <button class="diff-btn" data-mode="3v3">3v3</button>
-          <button class="diff-btn" data-mode="4v4">4v4</button>
-          <button class="diff-btn" data-mode="ffa">FFA</button>
-        </div>
-      </div>
-      <div class="field-wrap">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-          <label class="toggle" style="flex-shrink:0"><input type="checkbox" id="duel-is-private"><div class="ttrack"></div><div class="tthumb"></div></label>
-          SALA PRIVADA (con contraseña)
-        </label>
-      </div>
-      <div class="field-wrap" id="duel-password-wrap" style="display:none">
-        <label>CONTRASEÑA</label>
-        <input class="auth-input no-icon" id="duel-room-password" type="password" placeholder="Contraseña..." maxlength="20">
-      </div>
+      <div class="field-wrap"><label>NOMBRE DE LA SALA</label><input class="auth-input no-icon" id="duel-room-name" placeholder="Ej: La sala de ina..." maxlength="30" autocomplete="off"></div>
+      <div class="field-wrap"><label>MODO DE JUEGO</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="duel-mode-pills"><button class="diff-btn act" data-mode="1v1">1v1</button><button class="diff-btn" data-mode="2v2">2v2</button><button class="diff-btn" data-mode="3v3">3v3</button><button class="diff-btn" data-mode="4v4">4v4</button><button class="diff-btn" data-mode="ffa">FFA</button></div></div>
+      <div class="field-wrap"><label style="display:flex;align-items:center;gap:10px;cursor:pointer"><label class="toggle" style="flex-shrink:0"><input type="checkbox" id="duel-is-private"><div class="ttrack"></div><div class="tthumb"></div></label>SALA PRIVADA (con contraseña)</label></div>
+      <div class="field-wrap" id="duel-password-wrap" style="display:none"><label>CONTRASEÑA</label><input class="auth-input no-icon" id="duel-room-password" type="password" placeholder="Contraseña..." maxlength="20"></div>
       <div class="auth-msg error" id="duel-create-err"></div>
       <button class="auth-submit" id="duel-do-create" style="background:#ff3d71"><span class="btn-text">&#9889; CREAR Y ENTRAR</span><div class="btn-loader"><div class="spinner"></div></div></button>
       <button style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:9px;cursor:pointer;transition:all .2s;width:100%" id="duel-create-back-btn">&#8592; VOLVER</button>
@@ -665,7 +498,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div style="font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:900;color:var(--green);text-shadow:0 0 20px var(--green)">¡ELIMINADO!</div>
   <div style="font-size:.62rem;letter-spacing:.3em;color:var(--dim)">+1 KILL</div>
 </div>
-
 <div id="duel-hud" style="position:fixed;inset:0;pointer-events:none;z-index:40;display:none">
   <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;background:rgba(5,8,15,.88);border:1px solid rgba(255,61,113,.2);padding:10px 22px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))">
     <div style="text-align:center"><div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-my-name-hud">YO</div><div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#ff4444;text-shadow:0 0 12px #ff4444;line-height:1" id="duel-my-kills">0</div></div>
@@ -682,24 +514,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">WASD MOVER · MOUSE APUNTAR · CLIC DISPARAR · ESPACIO SALTAR</div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     DUEL MOBILE CONTROLS (PVP only)
-     FIX: Sin display:none inline — el CSS lo maneja
-══════════════════════════════════════════ -->
 <div id="duel-mobile-controls">
-  <!-- Joystick zone left -->
   <div id="duel-joy-zone" style="position:absolute;left:0;bottom:0;width:50%;height:55%;pointer-events:all;"></div>
   <div id="duel-joy-base" style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,61,113,.4);transform:translate(-50%,-50%);display:none;"></div>
   <div id="duel-joy-knob" style="position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(255,61,113,.7);box-shadow:0 0 18px rgba(255,61,113,.5);border:2px solid rgba(255,61,113,.9);transform:translate(-50%,-50%);display:none;"></div>
-  <!-- Look zone right -->
   <div id="duel-look-zone" style="position:absolute;right:0;bottom:0;width:50%;height:100%;pointer-events:all;"></div>
-  <!-- Fire button -->
   <div id="duel-btn-fire" style="position:absolute;right:24px;bottom:90px;width:80px;height:80px;border-radius:50%;background:rgba(255,61,113,.25);border:3px solid rgba(255,61,113,.7);color:#ff3d71;font-size:1.8rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">🔴</div>
-  <!-- Jump button -->
   <div id="duel-btn-jump" style="position:absolute;right:120px;bottom:90px;width:60px;height:60px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid rgba(0,229,255,.5);color:#00e5ff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">⬆</div>
-  <!-- Pause button -->
   <button id="duel-btn-pause-mob" style="position:absolute;top:80px;left:50%;transform:translateX(-50%);background:rgba(5,8,15,.75);border:1px solid rgba(255,61,113,.3);color:#ff3d71;font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.2em;padding:8px 16px;pointer-events:all;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);-webkit-tap-highlight-color:transparent;">⏸ PAUSA</button>
-  <!-- Mobile toggle for duel -->
   <button class="mob-toggle-btn" id="mob-toggle-duel-btn" style="position:absolute;top:14px;right:14px;padding:6px 12px;font-size:.52rem;pointer-events:all;">📱</button>
 </div>
 
@@ -866,11 +688,14 @@ document.addEventListener('keydown', e => {
       document.activeElement === document.getElementById('reg-confirm')) { doRegister(); }
 });
 
+// ── showMenu: carga config del perfil al entrar ──────────────
 function showMenu() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('menu-screen').classList.remove('hidden');
   document.getElementById('menu-user-av').textContent   = currentUser.avatar;
   document.getElementById('menu-user-name').textContent = currentUser.name.toUpperCase();
+  // Cargar configuración guardada del jugador desde Supabase
+  loadMyConfig();
 }
 
 document.getElementById('logout-btn').addEventListener('click', () => {
@@ -915,6 +740,73 @@ async function submitScore(scoreData) {
     if (!mr || scoreData.score > mr.score) stats.mode_records[scoreData.mode] = { score: scoreData.score, acc: scoreData.acc };
     await saveMyStats(stats);
   } catch(e) { console.warn('submitScore:', e); }
+}
+
+// ============================================================
+// CONFIG PERSISTENTE — Guardar y cargar en Supabase
+// ============================================================
+async function saveMyConfig() {
+  if (!currentUser) return;
+  try {
+    const cfgData = {
+      ch:   { ...CFG.ch },
+      sens: CFG.sens,
+      tgt:  { ...CFG.tgt },
+      vis:  { ...CFG.vis },
+      snd:  { ...CFG.snd },
+      room: { ...CFG.room }
+    };
+    await sbClient.from('player_stats').upsert(
+      { user_id: currentUser.id, user_config: cfgData, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+    console.log('✓ Config guardada en perfil');
+  } catch(e) { console.warn('saveMyConfig:', e); }
+}
+
+async function loadMyConfig() {
+  if (!currentUser) return;
+  try {
+    const { data } = await sbClient.from('player_stats').select('user_config').eq('user_id', currentUser.id).single();
+    if (data && data.user_config) {
+      const c = data.user_config;
+      if (c.ch)         Object.assign(CFG.ch,  c.ch);
+      if (c.sens != null) CFG.sens = c.sens;
+      if (c.tgt)        Object.assign(CFG.tgt, c.tgt);
+      if (c.vis)        Object.assign(CFG.vis, c.vis);
+      if (c.snd)        Object.assign(CFG.snd, c.snd);
+      if (c.room)       Object.assign(CFG.room, c.room);
+      // Aplicar al DOM de configuración
+      applyCfgToDOM();
+      applyCH();
+      console.log('✓ Config cargada del perfil');
+    }
+  } catch(e) { console.warn('loadMyConfig:', e); }
+}
+
+// Aplica los valores de CFG a todos los controles del panel de config
+function applyCfgToDOM() {
+  // Mira
+  const sz=document.getElementById('ch-size');   if(sz){sz.value=CFG.ch.size;  document.getElementById('ch-size-v').textContent=CFG.ch.size;}
+  const th=document.getElementById('ch-thick');  if(th){th.value=CFG.ch.thick; document.getElementById('ch-thick-v').textContent=CFG.ch.thick;}
+  const gp=document.getElementById('ch-gap');    if(gp){gp.value=CFG.ch.gap;   document.getElementById('ch-gap-v').textContent=CFG.ch.gap;}
+  const dt=document.getElementById('ch-dot');    if(dt) dt.checked=CFG.ch.dot;
+  document.querySelectorAll('#ch-colors .color-opt').forEach(o=>o.classList.toggle('active',o.dataset.c===CFG.ch.color));
+  // Cámara/juego
+  const sn=document.getElementById('sens-sl');   if(sn){sn.value=Math.round(CFG.sens*10); document.getElementById('sens-v').textContent=CFG.sens.toFixed(1);}
+  const ts=document.getElementById('tgt-size');  if(ts){ts.value=Math.round(CFG.tgt.sizeMult*100);  document.getElementById('tgt-size-v').textContent=CFG.tgt.sizeMult.toFixed(1)+'x';}
+  const tp=document.getElementById('tgt-spd');   if(tp){tp.value=Math.round(CFG.tgt.speedMult*100); document.getElementById('tgt-spd-v').textContent=CFG.tgt.speedMult.toFixed(1)+'x';}
+  const tm=document.getElementById('tgt-max');   if(tm){tm.value=CFG.tgt.max; document.getElementById('tgt-max-v').textContent=CFG.tgt.max;}
+  // Visual
+  const fx=document.getElementById('fx-tog');    if(fx) fx.checked=CFG.vis.fx;
+  const pt=document.getElementById('pts-tog');   if(pt) pt.checked=CFG.vis.pts;
+  const cb=document.getElementById('combo-tog'); if(cb) cb.checked=CFG.vis.combo;
+  document.querySelectorAll('#room-colors .color-opt').forEach(o=>o.classList.toggle('active',o.dataset.c===CFG.room.color));
+  // Audio
+  const sh=document.getElementById('snd-shot');  if(sh) sh.checked=CFG.snd.shot;
+  const hi=document.getElementById('snd-hit');   if(hi) hi.checked=CFG.snd.hit;
+  const ms=document.getElementById('snd-miss');  if(ms) ms.checked=CFG.snd.miss;
+  const vl=document.getElementById('vol-sl');    if(vl){vl.value=Math.round(CFG.snd.vol*100); document.getElementById('vol-v').textContent=Math.round(CFG.snd.vol*100)+'%';}
 }
 
 // ============================================================
@@ -987,7 +879,7 @@ async function loadStats() {
 }
 
 // ============================================================
-// MODES
+// MODES — ✅ CAMBIO: todos los modos duran 60 segundos
 // ============================================================
 const MODES = {
   clicking:  { id:'clicking',  tag:'CLICKING',    name:'Clicking',      desc:'Múltiples objetivos. Elimínalos antes de que desaparezcan.', color:'#00e5ff' },
@@ -999,10 +891,12 @@ const MODES = {
   gridshot:  { id:'gridshot',  tag:'GRIDSHOT',    name:'Grid Shot',     desc:'Cuadrícula de objetivos. Elimina en orden lo más rápido posible.', color:'#e040fb' },
   wide:      { id:'wide',      tag:'WIDE ANGLE',  name:'Wide Angle',    desc:'Objetivos en los extremos. Entrena movimientos amplios.', color:'#ff6b35' },
 };
+
+// ✅ CAMBIO: Todos los modos ahora duran 60 segundos
 const DIFF = {
   easy:   { time:60, maxT:4, rate:1200, minR:.28, maxR:.42, speed:1.8, life:[3.5,6] },
-  medium: { time:45, maxT:5, rate:850,  minR:.18, maxR:.30, speed:3.0, life:[2,3.5] },
-  hard:   { time:30, maxT:6, rate:550,  minR:.10, maxR:.20, speed:5.0, life:[1,2] },
+  medium: { time:60, maxT:5, rate:850,  minR:.18, maxR:.30, speed:3.0, life:[2,3.5] },
+  hard:   { time:60, maxT:6, rate:550,  minR:.10, maxR:.20, speed:5.0, life:[1,2] },
 };
 
 // ============================================================
@@ -1057,8 +951,14 @@ function initCFG(){
   [['ch-size','ch-size-v',v=>{CFG.ch.size=v;applyCH();},v=>v],['ch-thick','ch-thick-v',v=>{CFG.ch.thick=v;applyCH();},v=>v],['ch-gap','ch-gap-v',v=>{CFG.ch.gap=v;applyCH();},v=>v],['sens-sl','sens-v',v=>CFG.sens=v/10,v=>(v/10).toFixed(1)],['tgt-size','tgt-size-v',v=>CFG.tgt.sizeMult=v/100,v=>(v/100).toFixed(1)+'x'],['tgt-spd','tgt-spd-v',v=>CFG.tgt.speedMult=v/100,v=>(v/100).toFixed(1)+'x'],['tgt-max','tgt-max-v',v=>CFG.tgt.max=v,v=>v],['vol-sl','vol-v',v=>CFG.snd.vol=v/100,v=>v+'%']].forEach(([id,vid,fn,fmt])=>document.getElementById(id).addEventListener('input',function(){fn(+this.value);document.getElementById(vid).textContent=fmt(this.value);}));
   [['ch-dot',CFG.ch,'dot',applyCH],['fx-tog',CFG.vis,'fx'],['pts-tog',CFG.vis,'pts'],['combo-tog',CFG.vis,'combo'],['snd-shot',CFG.snd,'shot'],['snd-hit',CFG.snd,'hit'],['snd-miss',CFG.snd,'miss']].forEach(([id,obj,key,cb])=>document.getElementById(id).addEventListener('change',function(){obj[key]=this.checked;if(cb)cb();}));
   document.getElementById('open-cfg-btn').addEventListener('click',()=>{ document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('settings-screen').classList.remove('hidden'); });
-  document.getElementById('cfg-save').addEventListener('click',()=>{ document.getElementById('settings-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); applyCH(); });
-  document.getElementById('cfg-reset').addEventListener('click',()=>{ CFG.ch={color:'#ffffff',size:12,thick:2,gap:8,dot:true};CFG.sens=3.0;CFG.tgt={sizeMult:1,speedMult:1,max:4};CFG.vis={fx:true,pts:true,combo:true};CFG.snd={shot:true,hit:true,miss:false,vol:.7};applyCH(); });
+  // ✅ CAMBIO: guarda config en Supabase al hacer clic en "GUARDAR Y VOLVER"
+  document.getElementById('cfg-save').addEventListener('click',()=>{
+    document.getElementById('settings-screen').classList.add('hidden');
+    document.getElementById('menu-screen').classList.remove('hidden');
+    applyCH();
+    saveMyConfig();
+  });
+  document.getElementById('cfg-reset').addEventListener('click',()=>{ CFG.ch={color:'#ffffff',size:12,thick:2,gap:8,dot:true};CFG.sens=3.0;CFG.tgt={sizeMult:1,speedMult:1,max:4};CFG.vis={fx:true,pts:true,combo:true};CFG.snd={shot:true,hit:true,miss:false,vol:.7};applyCH();applyCfgToDOM(); });
 }
 initCFG(); applyCH();
 
@@ -1851,9 +1751,12 @@ function onMove(dt){
   if(!onCollides(onPos.x,nz)) onPos.z=nz;
   onYawObj.position.set(onPos.x,ON_H+onPosY,onPos.z);
 }
+
+// ✅ CAMBIO: PVP usa CFG.sens dinámicamente (igual que el modo práctica)
 function onApplyCam(){
   if(!onMX&&!onMY) return;
-  onYaw-=onMX*ON_SENS; onPitch-=onMY*ON_SENS;
+  const dynSens = CFG.sens * 0.00065;
+  onYaw-=onMX*dynSens; onPitch-=onMY*dynSens;
   onPitch=Math.max(-Math.PI/2+.04,Math.min(Math.PI/2-.04,onPitch));
   onYawObj.rotation.y=onYaw; onPitchObj.rotation.x=onPitch; onMX=onMY=0;
 }
@@ -1889,9 +1792,6 @@ function onTryShoot(){
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-// onStartGame — FIXED: mobile controls now properly shown
-// ══════════════════════════════════════════════════════════════
 function onStartGame(msg){
   if(!onThreeReady) onInitThree();
   onRoomMode=msg.mode; onFirstTo=msg.firstTo; onTeamScores=[0,0]; onPScores={}; onActive=true; onWaitPlayers=[];
@@ -1913,12 +1813,9 @@ function onStartGame(msg){
   document.getElementById('duel-canvas').style.display='block';
   document.getElementById('duel-hud').style.display='block';
 
-  // ── MOBILE FIX: usar classList para mostrar controles ──────
   if(mobileMode){
     document.getElementById('duel-lock-screen').style.display='none';
     document.getElementById('duel-crosshair').style.display='block';
-    // FIX: classList.add('active') ahora funciona porque el CSS
-    // maneja display:none (no el inline style)
     document.getElementById('duel-mobile-controls').classList.add('active');
     onLocked=true;
     onKeys['w']=onKeys['s']=onKeys['a']=onKeys['d']=false;
@@ -1978,7 +1875,6 @@ function onCleanup(){
   document.getElementById('duel-canvas').style.display='none'; document.getElementById('duel-hud').style.display='none';
   document.getElementById('duel-crosshair').style.display='none'; document.getElementById('duel-lock-screen').style.display='none';
   document.getElementById('duel-death-vignette').style.display='none'; document.getElementById('duel-respawn-msg').style.display='none';
-  // FIX: usar classList para ocultar
   document.getElementById('duel-mobile-controls').classList.remove('active');
   onOpps.forEach(o=>{if(onScene)onScene.remove(o.group);}); onOpps.clear();
   if(onAnimId){cancelAnimationFrame(onAnimId);onAnimId=null;}
@@ -2045,14 +1941,11 @@ function setMobileMode(on) {
 
 document.getElementById('mob-toggle-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
 document.getElementById('mob-toggle-menu-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
-// Botón de toggle dentro del duel-mobile-controls
 document.getElementById('mob-toggle-duel-btn').addEventListener('click', ()=>setMobileMode(!mobileMode));
-// Botón de toggle en la pantalla de lock del duel
 document.getElementById('mob-toggle-duel-btn-lock').addEventListener('click', ()=>setMobileMode(!mobileMode));
 
-// ── SOLO MODE — Look zone ─────────────────────────────────────
+// SOLO look zone
 const soloLookZone = document.getElementById('look-zone');
-
 soloLookZone.addEventListener('touchstart', e=>{
   if(!mobileMode || !state.running) return;
   e.preventDefault();
@@ -2060,7 +1953,6 @@ soloLookZone.addEventListener('touchstart', e=>{
   mobLook.active=true; mobLook.id=t.identifier;
   mobLook.lastX=t.clientX; mobLook.lastY=t.clientY;
 },{passive:false});
-
 soloLookZone.addEventListener('touchmove', e=>{
   if(!mobLook.active) return;
   e.preventDefault();
@@ -2075,7 +1967,6 @@ soloLookZone.addEventListener('touchmove', e=>{
     }
   }
 },{passive:false});
-
 soloLookZone.addEventListener('touchend',    e=>{for(const t of e.changedTouches) if(t.identifier===mobLook.id){mobLook.active=false;mobLook.id=-1;} e.preventDefault();},{passive:false});
 soloLookZone.addEventListener('touchcancel', e=>{mobLook.active=false; mobLook.id=-1;},{passive:false});
 
@@ -2110,7 +2001,7 @@ document.getElementById('btn-pause-mob').addEventListener('touchstart', e=>{
 document.getElementById('btn-pause-mob').addEventListener('click', ()=>{ if(state.running) showPause(); });
 document.getElementById('joy-zone').addEventListener('touchstart', e=>e.preventDefault(),{passive:false});
 
-// ── DUEL (PVP) MOBILE CONTROLS ────────────────────────────────
+// DUEL joystick
 const duelJoyZone  = document.getElementById('duel-joy-zone');
 const duelJoyBase  = document.getElementById('duel-joy-base');
 const duelJoyKnob  = document.getElementById('duel-joy-knob');
@@ -2170,7 +2061,8 @@ duelLookZone.addEventListener('touchmove', e=>{
     if(t.identifier!==duelLook.id) continue;
     const dx=t.clientX-duelLook.lastX, dy=t.clientY-duelLook.lastY;
     duelLook.lastX=t.clientX; duelLook.lastY=t.clientY;
-    onMX+=dx*2; onMY+=dy*2;
+    const mobileSensMult = CFG.sens * 0.18;
+    onMX+=dx*mobileSensMult; onMY+=dy*mobileSensMult;
   }
 },{passive:false});
 
