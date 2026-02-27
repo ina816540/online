@@ -42,6 +42,8 @@ const rooms   = new Map();
 const clients = new Set();
 let   nextId  = 1;
 
+const RESPAWN_DELAY = 1500; // 1.5 segundos — ambos jugadores respawnean
+
 // ── HELPERS ──────────────────────────────────────────────────
 function getSpawn(room, player) {
   if (room.mode === 'ffa') return FFA_SP[player.slot % 8];
@@ -78,9 +80,7 @@ wss.on('connection', ws => {
   clients.add(ws);
   let room = null, me = null;
 
-  // Enviar lista al conectar
   send(ws, { type:'room_list', rooms: getRoomList() });
-  // Notificar conteo actualizado a todos
   pushOnlineCount();
 
   ws.on('message', raw => {
@@ -88,7 +88,7 @@ wss.on('connection', ws => {
 
     switch (msg.type) {
 
-      // ── PING / PONG (medición de latencia) ────────────────
+      // ── PING / PONG ───────────────────────────────────────
       case 'ping':
         send(ws, { type:'pong', t: msg.t });
         break;
@@ -144,7 +144,6 @@ wss.on('connection', ws => {
         room.pScores[me.name] = 0;
         const spawn = getSpawn(room, me);
 
-        // Enviar al que entra: info completa de la sala
         send(ws, {
           type:'room_joined', roomId:room.id, slot, team, spawn,
           mode:room.mode, max:room.max, name:room.name, firstTo:room.firstTo,
@@ -152,12 +151,10 @@ wss.on('connection', ws => {
           chatHistory: room.chatHistory || []
         });
 
-        // Notificar a los demás
         room.players.forEach(p => {
           if (p !== me) send(p.ws, { type:'player_joined', slot, team, name:me.name, spawn });
         });
 
-        // Mensaje de sistema en chat
         const joinMsg = { type:'chat_msg', sender:'SISTEMA', text: me.name + ' se unió a la sala', system:true, t: Date.now() };
         room.chatHistory.push(joinMsg);
         if (room.chatHistory.length > 50) room.chatHistory.shift();
@@ -193,11 +190,11 @@ wss.on('connection', ws => {
         room.players.forEach(p => {
           if (p !== me) send(p.ws, {
             type:'opp_state',
-            slot: me.slot,
-            pos:  msg.pos,
-            yaw:  msg.yaw,
-            pitch: msg.pitch || 0,   // ← ahora se retransmite el pitch
-            posY:  msg.posY  || 0    // ← y la altura (salto)
+            slot:  me.slot,
+            pos:   msg.pos,
+            yaw:   msg.yaw,
+            pitch: msg.pitch || 0,
+            posY:  msg.posY  || 0
           });
         });
         break;
@@ -215,21 +212,35 @@ wss.on('connection', ws => {
         if (!victim || !victim.alive) return;
         if (room.mode !== 'ffa' && me.team === victim.team) return; // sin FF
 
+        // Ambos mueren temporalmente
         victim.alive = false;
+        me.alive     = false;
 
+        // Actualizar puntaje
         if (room.mode === 'ffa') {
           room.pScores[me.name] = (room.pScores[me.name] || 0) + 1;
         } else {
           room.teamScores[me.team]++;
         }
 
-        const myScore = room.mode === 'ffa' ? room.pScores[me.name] : room.teamScores[me.team];
+        const myScore  = room.mode === 'ffa' ? room.pScores[me.name] : room.teamScores[me.team];
         const matchOver = myScore >= room.firstTo;
 
+        // Calcular spawns de ambos
+        const victimSpawn = getSpawn(room, victim);
+        const killerSpawn = getSpawn(room, me);
+
+        // Notificar kill a todos (con spawns incluidos para que el cliente los use)
         const killMsg = {
-          type:'kill', killerSlot:me.slot, victimSlot:victim.slot,
-          killerTeam:me.team, teamScores:[...room.teamScores],
-          pScores:{...room.pScores}, matchOver
+          type:       'kill',
+          killerSlot: me.slot,
+          victimSlot: victim.slot,
+          killerTeam: me.team,
+          teamScores: [...room.teamScores],
+          pScores:    {...room.pScores},
+          matchOver,
+          mySpawn:     killerSpawn,   // spawn del killer  (usado por el killer)
+          killerSpawn: killerSpawn    // spawn del killer  (usado por la víctima para referencia)
         };
         room.players.forEach(p => send(p.ws, killMsg));
 
@@ -238,15 +249,25 @@ wss.on('connection', ws => {
           setTimeout(() => rooms.delete(room.id), 15000);
           pushRoomList();
         } else {
+          // ── RESPAWN DE AMBOS después de 1.5s ─────────────
           setTimeout(() => {
             if (room.closed) return;
+
+            // Respawnear víctima
             victim.alive = true;
-            const vs = getSpawn(room, victim);
-            send(victim.ws, { type:'respawn', spawn:vs });
+            send(victim.ws, { type:'respawn', spawn: victimSpawn });
             room.players.forEach(p => {
-              if (p !== victim) send(p.ws, { type:'player_respawn', slot:victim.slot, spawn:vs });
+              if (p !== victim) send(p.ws, { type:'player_respawn', slot: victim.slot, spawn: victimSpawn });
             });
-          }, 3000);
+
+            // Respawnear killer también
+            me.alive = true;
+            send(me.ws, { type:'respawn', spawn: killerSpawn });
+            room.players.forEach(p => {
+              if (p !== me) send(p.ws, { type:'player_respawn', slot: me.slot, spawn: killerSpawn });
+            });
+
+          }, RESPAWN_DELAY);
         }
         break;
       }
