@@ -1634,34 +1634,247 @@ function onAnimGun(dt){
 }
 
 function onBuildMap(){
-  const gc=document.createElement('canvas'); gc.width=gc.height=512;
+  // ── SUELO: tierra con caminos, césped y logo INA ─────────────
+  const gc=document.createElement('canvas'); gc.width=gc.height=1024;
   const gx=gc.getContext('2d');
-  gx.fillStyle='#9a7245'; gx.fillRect(0,0,512,512);
-  gx.fillStyle='#4a7c3f'; [0,382].forEach(y=>gx.fillRect(0,y,512,130)); [0,382].forEach(x=>gx.fillRect(x,0,130,512));
-  gx.save(); gx.globalAlpha=.12; gx.font='bold 140px Arial Black'; gx.textAlign='center'; gx.textBaseline='middle'; gx.fillStyle='#fff'; gx.fillText('INA',256,256); gx.restore();
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(gc)}));
+  // Base tierra
+  gx.fillStyle='#8B6914'; gx.fillRect(0,0,1024,1024);
+  // Parches de hierba
+  gx.fillStyle='#4a7c3f';
+  [[0,0,220,220],[804,0,220,220],[0,804,220,220],[804,804,220,220],
+   [200,350,120,80],[650,600,110,90],[300,700,90,70],[700,280,80,90]].forEach(([x,y,w,h])=>gx.fillRect(x,y,w,h));
+  // Caminos de tierra más claros
+  gx.fillStyle='#a07830';
+  gx.fillRect(400,0,224,1024); gx.fillRect(0,400,1024,224);
+  // Logo INA en el centro
+  gx.save(); gx.globalAlpha=.18; gx.font='bold 160px Arial Black';
+  gx.textAlign='center'; gx.textBaseline='middle'; gx.fillStyle='#fff';
+  gx.fillText('INA',512,512); gx.restore();
+  // Borde ovalado (asfalto)
+  gx.strokeStyle='#555555'; gx.lineWidth=40;
+  gx.beginPath(); gx.ellipse(512,512,490,490,0,0,Math.PI*2); gx.stroke();
+
+  const groundTex = new THREE.CanvasTexture(gc);
+  groundTex.wrapS=groundTex.wrapT=THREE.RepeatWrapping; groundTex.repeat.set(1,1);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(44,44),new THREE.MeshLambertMaterial({map:groundTex}));
   ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; onScene.add(ground);
-  const wm=new THREE.MeshLambertMaterial({color:0x8a9aaa}),wm2=new THREE.MeshLambertMaterial({color:0xa0b0bb});
-  [[-3,-9,0],[4,-7,.25],[-8,-2,1.57],[7,-1,1.57],[-7,3,1.57],[4,2,.25],[-2,8,0],[6,7,1.57]].forEach(([x,z,ry])=>{
-    const W=2.6,H=1.6,D=.5,w=new THREE.Mesh(new THREE.BoxGeometry(W,H,D),wm);
-    w.position.set(x,H/2,z); w.rotation.y=ry; w.castShadow=true; onScene.add(w); onWalls.push(w);
-    const cap=new THREE.Mesh(new THREE.BoxGeometry(W+.08,.1,D+.08),wm2); cap.position.set(x,H+.05,z); cap.rotation.y=ry; onScene.add(cap);
-    const hw=ry>.5?D/2:W/2,hd=ry>.5?W/2:D/2; onObs.push({x,z,hw:hw+.45,hd:hd+.45});
+
+  // ── CIELO / FOG ───────────────────────────────────────────────
+  onScene.background=new THREE.Color(0x87ceeb);
+  onScene.fog=new THREE.Fog(0x87ceeb,30,75);
+
+  // ── MATERIALES ────────────────────────────────────────────────
+  const concMat = new THREE.MeshLambertMaterial({color:0xaab0b8}); // concreto gris
+  const concDark= new THREE.MeshLambertMaterial({color:0x8a9098});
+  const sandMat = new THREE.MeshLambertMaterial({color:0xc8a86a}); // sacos arena
+  const barrelR = new THREE.MeshLambertMaterial({color:0xcc2200});
+  const barrelB = new THREE.MeshLambertMaterial({color:0x1144cc});
+  const barrelG = new THREE.MeshLambertMaterial({color:0x226622});
+  const woodMat = new THREE.MeshLambertMaterial({color:0x8B6020});
+  const coneMat = new THREE.MeshLambertMaterial({color:0xff6600});
+
+  function addConcreteWall(x,z,w,h,d,ry=0){
+    const wall=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),concMat);
+    wall.position.set(x,h/2,z); wall.rotation.y=ry;
+    wall.castShadow=true; wall.receiveShadow=true; onScene.add(wall); onWalls.push(wall);
+    // Cap
+    const cap=new THREE.Mesh(new THREE.BoxGeometry(w+.1,.15,d+.1),concDark);
+    cap.position.set(x,h+.075,z); cap.rotation.y=ry; onScene.add(cap);
+    // Colisión
+    const hw=ry!==0?(d/2+.45):(w/2+.45), hd=ry!==0?(w/2+.45):(d/2+.45);
+    onObs.push({x,z,hw,hd});
+  }
+
+  function addSandbagWall(x,z,len,ry=0){
+    const H=0.7,D=0.55;
+    const wall=new THREE.Mesh(new THREE.BoxGeometry(len,H,D),sandMat);
+    wall.position.set(x,H/2,z); wall.rotation.y=ry;
+    wall.castShadow=true; onScene.add(wall);
+    const hw=ry!==0?(D/2+.35):(len/2+.35), hd=ry!==0?(len/2+.35):(D/2+.35);
+    onObs.push({x,z,hw,hd});
+    // Detalle sacos individuales
+    const nb=Math.floor(len/0.9);
+    for(let i=0;i<nb;i++){
+      const bx=(i-(nb-1)/2)*0.9, bag=new THREE.Mesh(new THREE.BoxGeometry(.75,.38,.5),sandMat);
+      const cos_r=Math.cos(ry),sin_r=Math.sin(ry);
+      bag.position.set(x+cos_r*bx,H/2+.22,z+sin_r*bx); bag.rotation.y=ry; onScene.add(bag);
+    }
+  }
+
+  function addBarrel(x,z,mat){
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.7,10),mat);
+    b.position.set(x,.35,z); b.castShadow=true; onScene.add(b);
+    onObs.push({x,z,hw:.55,hd:.55});
+  }
+
+  function addCrate(x,z,s=1){
+    const c=new THREE.Mesh(new THREE.BoxGeometry(.8*s,.8*s,.8*s),woodMat);
+    c.position.set(x,.4*s,z); c.castShadow=true; onScene.add(c);
+    const lines=new THREE.EdgesGeometry(c.geometry);
+    const lm=new THREE.LineSegments(lines,new THREE.LineBasicMaterial({color:0x5a3a00}));
+    lm.position.copy(c.position); onScene.add(lm);
+    onObs.push({x,z,hw:.6*s,hd:.6*s});
+  }
+
+  function addCone(x,z){
+    const g=new THREE.ConeGeometry(.18,.55,8);
+    const c=new THREE.Mesh(g,coneMat); c.position.set(x,.275,z); onScene.add(c);
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // PAREDES DE CONCRETO CENTRALES (basadas en la imagen)
+  // ════════════════════════════════════════════════════════════
+
+  // Estructura superior-central: forma T/L
+  addConcreteWall(-1, -7,  5.5, 1.8, .5);      // horizontal izq-centro arriba
+  addConcreteWall( 5, -7,  4.0, 1.8, .5);      // horizontal der arriba
+  addConcreteWall(-1, -4.5,.5, 1.8, 4.5, 0);   // vertical izq centro
+
+  // Estructura izquierda-centro: L
+  addConcreteWall(-7, -1,  4.5, 1.8, .5);      // horizontal izq
+  addConcreteWall(-7,  2,  .5,  1.8, 4.0, 0);  // vertical izq baja
+
+  // Estructura derecha-centro: L
+  addConcreteWall( 7,  0,  4.5, 1.8, .5);      // horizontal der
+  addConcreteWall( 7, -3,  .5,  1.8, 3.5, 0);  // vertical der alta
+
+  // Estructura inferior-central: U abierta
+  addConcreteWall( 0,  7,  5.5, 1.8, .5);      // horizontal inferior
+  addConcreteWall(-2.5, 5, .5,  1.8, 3.5, 0);  // vertical izq inferior
+  addConcreteWall( 2.5, 5, .5,  1.8, 3.5, 0);  // vertical der inferior
+
+  // Pared central horizontal corta
+  addConcreteWall( 2, -1,  3.5, 1.8, .5);      // centro mapa
+  addConcreteWall(-3,  2,  3.5, 1.8, .5);      // centro mapa 2
+
+  // ════════════════════════════════════════════════════════════
+  // SACOS DE ARENA PERIMETRALES
+  // ════════════════════════════════════════════════════════════
+  // Esquina superior-izquierda
+  addSandbagWall(-14,-13, 4.5);
+  addSandbagWall(-16,-11, 3.5, Math.PI/2);
+  addSandbagWall(-12,-15, 3.0);
+  // Esquina superior-derecha
+  addSandbagWall( 14,-13, 4.5);
+  addSandbagWall( 16,-11, 3.5, Math.PI/2);
+  addSandbagWall( 12,-15, 3.0);
+  // Esquina inferior-izquierda (zona camuflaje)
+  addSandbagWall(-14, 14, 4.0);
+  addSandbagWall(-16, 12, 3.0, Math.PI/2);
+  addSandbagWall(-12, 16, 3.5);
+  // Esquina inferior-derecha
+  addSandbagWall( 14, 14, 4.0);
+  addSandbagWall( 16, 12, 3.0, Math.PI/2);
+  addSandbagWall( 12, 16, 3.5);
+  // Laterales medio
+  addSandbagWall(-17,  0, 5.0, Math.PI/2);
+  addSandbagWall( 17,  0, 5.0, Math.PI/2);
+  addSandbagWall(  0,-18, 5.0);
+  addSandbagWall(  0, 18, 5.0);
+
+  // ════════════════════════════════════════════════════════════
+  // BARRILES
+  // ════════════════════════════════════════════════════════════
+  // Zona roja (arriba-izq)
+  addBarrel(-16,-14,barrelR); addBarrel(-15,-13,barrelR); addBarrel(-14,-14,barrelG);
+  // Zona azul (abajo-der)
+  addBarrel( 16, 14,barrelB); addBarrel( 15, 13,barrelB); addBarrel( 14, 14,barrelG);
+  // Dispersos
+  addBarrel( 10,-10,barrelG); addBarrel(-10, 10,barrelR);
+  addBarrel(  4,  4,barrelB); addBarrel( -4, -4,barrelG);
+  addBarrel( 12,  2,barrelR); addBarrel(-12, -2,barrelB);
+  addBarrel(  8,-15,barrelG); addBarrel( -8, 15,barrelR);
+
+  // ════════════════════════════════════════════════════════════
+  // CAJAS/CRATES
+  // ════════════════════════════════════════════════════════════
+  addCrate(-13,-13); addCrate(-12,-11); addCrate(-11,-13,1.2);
+  addCrate( 13, 13); addCrate( 12, 11); addCrate( 11, 13,1.2);
+  addCrate( 14, -8); addCrate( 13, -7);
+  addCrate(-14,  8); addCrate(-13,  7);
+  addCrate(  8,  8); addCrate( -8, -8);
+  addCrate( 16,  4); addCrate( 15,  5);
+
+  // ════════════════════════════════════════════════════════════
+  // CONOS NARANJA (zona central)
+  // ════════════════════════════════════════════════════════════
+  addCone(-2,-3); addCone(2,-3); addCone(0, 0);
+  addCone(-4, 0); addCone(4,  2); addCone(-1, 4);
+
+  // ════════════════════════════════════════════════════════════
+  // TECHO CAMUFLAJE (esquina inf-izq)
+  // ════════════════════════════════════════════════════════════
+  const camGeo=new THREE.PlaneGeometry(5,4);
+  const camMat=new THREE.MeshLambertMaterial({color:0x3d5a2a,side:THREE.DoubleSide,transparent:true,opacity:.85});
+  const cam=new THREE.Mesh(camGeo,camMat); cam.rotation.x=-Math.PI/2;
+  cam.position.set(-14,1.8,14); onScene.add(cam);
+  // Postes del techo camuflaje
+  [[-.13,14,2.1],[.13,14,2.1],[-14,-.13,2.1],[-14,.13,2.1]].forEach(([dx,dz,h])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,h,6),new THREE.MeshLambertMaterial({color:0x4a3010}));
+    p.position.set(-14+dx,h/2,14+dz); onScene.add(p);
   });
-  onAddBuilding(-15,-15,0xdd3311,'red'); onAddBuilding(15,15,0x2255dd,'blue');
-  const bm=new THREE.MeshLambertMaterial({color:0x4a5a3a});
-  [{x:0,z:-20,w:42,d:.6},{x:0,z:20,w:42,d:.6},{x:-20,z:0,w:.6,d:42},{x:20,z:0,w:.6,d:42}].forEach(({x,z,w,d})=>{
-    const b=new THREE.Mesh(new THREE.BoxGeometry(w,.5,d),bm); b.position.set(x,.25,z); onScene.add(b); onObs.push({x,z,hw:w/2+.45,hd:d/2+.45});
+
+  // ════════════════════════════════════════════════════════════
+  // BASES ROJA Y AZUL
+  // ════════════════════════════════════════════════════════════
+  onAddBuilding(-16,-16, 0xdd3311, 'red');
+  onAddBuilding( 16, 16, 0x1155cc, 'blue');
+
+  // ════════════════════════════════════════════════════════════
+  // BORDE DEL MAPA (invisible, colisión)
+  // ════════════════════════════════════════════════════════════
+  [{x:0,z:-21,w:44,d:.6},{x:0,z:21,w:44,d:.6},{x:-21,z:0,w:.6,d:44},{x:21,z:0,w:.6,d:44}].forEach(({x,z,w,d})=>{
+    onObs.push({x,z,hw:w/2,hd:d/2});
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // ÁRBOLES DECORATIVOS (esquinas)
+  // ════════════════════════════════════════════════════════════
+  [[-19,-19],[ 19,-19],[-19, 19]].forEach(([tx,tz])=>{
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.22,1.5,8),new THREE.MeshLambertMaterial({color:0x4a2e08}));
+    trunk.position.set(tx,.75,tz); onScene.add(trunk);
+    const leaves=new THREE.Mesh(new THREE.SphereGeometry(1.2,8,6),new THREE.MeshLambertMaterial({color:0x2d6e1a}));
+    leaves.position.set(tx,2.5,tz); onScene.add(leaves);
   });
 }
 
 function onAddBuilding(cx,cz,color,team){
-  const mat=new THREE.MeshLambertMaterial({color}),dmat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.35)}),roofmat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.65)});
-  const body=new THREE.Mesh(new THREE.BoxGeometry(5,2.6,4),mat); body.position.set(cx,1.3,cz); body.castShadow=true; onScene.add(body); onWalls.push(body); onObs.push({x:cx,z:cz,hw:2.5+.45,hd:2.0+.45});
-  const roof=new THREE.Mesh(new THREE.BoxGeometry(5.4,.2,4.4),roofmat); roof.position.set(cx,2.7,cz); onScene.add(roof);
-  const fz=team==='red'?cz+2.05:cz-2.05;
-  [-1.4,1.4].forEach(ox=>{ const win=new THREE.Mesh(new THREE.BoxGeometry(.7,.55,.1),dmat); win.position.set(cx+ox,1.7,fz); onScene.add(win); });
-  const door=new THREE.Mesh(new THREE.BoxGeometry(1,1.4,.1),dmat); door.position.set(cx,.7,fz); onScene.add(door);
+  const mat=new THREE.MeshLambertMaterial({color});
+  const dmat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.3)});
+  const roofmat=new THREE.MeshLambertMaterial({color:new THREE.Color(color).multiplyScalar(.7)});
+  // Cuerpo
+  const body=new THREE.Mesh(new THREE.BoxGeometry(5,2.8,4.5),mat);
+  body.position.set(cx,1.4,cz); body.castShadow=true; body.receiveShadow=true;
+  onScene.add(body); onWalls.push(body); onObs.push({x:cx,z:cz,hw:3.0,hd:2.7});
+  // Techo plano con reborde
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(5.4,.2,4.9),roofmat);
+  roof.position.set(cx,2.9,cz); onScene.add(roof);
+  // Escalones de entrada
+  const stepMat=new THREE.MeshLambertMaterial({color:0x999999});
+  [0,1,2].forEach(i=>{
+    const fz=team==='red'?cz+2.25+i*.3:cz-2.25-i*.3;
+    const step=new THREE.Mesh(new THREE.BoxGeometry(1.8,.15+i*.1,0.35),stepMat);
+    step.position.set(cx,.075+i*.1,fz); onScene.add(step);
+  });
+  // Ventanas
+  const fz=team==='red'?cz+2.26:cz-2.26;
+  [-1.5,1.5].forEach(ox=>{
+    const win=new THREE.Mesh(new THREE.BoxGeometry(.75,.65,.08),dmat);
+    win.position.set(cx+ox,1.8,fz); onScene.add(win);
+    // Marco ventana
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(.85,.75,.06),new THREE.MeshLambertMaterial({color:0xdddddd}));
+    frame.position.set(cx+ox,1.8,fz); onScene.add(frame);
+  });
+  // Puerta
+  const door=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.6,.08),dmat);
+  door.position.set(cx,.8,fz); onScene.add(door);
+  // Sacos de arena alrededor de la base
+  const sandMat2=new THREE.MeshLambertMaterial({color:0xc8a86a});
+  [[-2.2,0,3.5],[2.2,0,3.5],[0,-2,3.5],[0,2,3.5]].forEach(([ox,oz,len])=>{
+    const ry=Math.abs(oz)>.5?Math.PI/2:0;
+    const sb=new THREE.Mesh(new THREE.BoxGeometry(ry?0.5:len,0.6,ry?len:0.5),sandMat2);
+    sb.position.set(cx+ox,0.3,cz+oz*(team==='red'?-1:1)); onScene.add(sb);
+  });
 }
 
 function onBuildLights(){
