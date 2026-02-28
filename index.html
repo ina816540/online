@@ -2419,15 +2419,307 @@ function onHandleOppGrenade(msg){
 let zmActive=false, zmWave=0, zmBots=[], zmScore=0, zmHP=100, zmAnimId=null;
 const ZM_SPAWNS=[{x:-18,z:-18},{x:18,z:-18},{x:-18,z:18},{x:18,z:18},{x:0,z:-19},{x:0,z:19}];
 
+// ── MAPA NOCTURNO ZOMBIE ─────────────────────────────────────
+function zmBuildMap(){
+  // Limpiar obstáculos previos (no jugadores ni armas)
+  onWalls.length=0; onObs.length=0;
+  // Cielo nocturno + niebla oscura
+  onScene.background=new THREE.Color(0x0a0d14);
+  onScene.fog=new THREE.FogExp2(0x0a0d14,0.045);
+  // Limpiar objetos de mapa previo conservando jugadores
+  const toRemove=[];
+  onScene.children.forEach(c=>{ if(c.userData.isMapObj) toRemove.push(c); });
+  toRemove.forEach(c=>onScene.remove(c));
+
+  function addMap(obj){ obj.userData.isMapObj=true; onScene.add(obj); return obj; }
+
+  // ── SUELO ───────────────────────────────────────────────────
+  const gc=document.createElement('canvas'); gc.width=gc.height=1024;
+  const gx=gc.getContext('2d');
+  gx.fillStyle='#1a1208'; gx.fillRect(0,0,1024,1024);
+  // Tierra irregular
+  gx.fillStyle='#221810';
+  for(let i=0;i<80;i++) gx.fillRect(Math.random()*1024,Math.random()*1024,20+Math.random()*60,15+Math.random()*40);
+  // Manchas hierba muerta
+  gx.fillStyle='#1a2010';
+  for(let i=0;i<40;i++) gx.fillRect(Math.random()*1024,Math.random()*1024,30+Math.random()*80,25+Math.random()*50);
+  // Caminos de tierra
+  gx.fillStyle='#2a1f14'; gx.fillRect(430,0,160,1024); gx.fillRect(0,430,1024,160);
+  const groundTex=new THREE.CanvasTexture(gc);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(56,56),new THREE.MeshLambertMaterial({map:groundTex}));
+  ground.rotation.x=-Math.PI/2; addMap(ground);
+
+  // ── ILUMINACIÓN NOCTURNA ─────────────────────────────────────
+  addMap(new THREE.AmbientLight(0x1a2040,0.6));
+  const moon=new THREE.DirectionalLight(0x3040a0,0.4); moon.position.set(-8,20,5); addMap(moon);
+
+  // ── FUNCIÓN AUXILIAR: fuego/antorcha ────────────────────────
+  function addFire(x,z,scale=1){
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.12,.15,.25,8),new THREE.MeshLambertMaterial({color:0x333333}));
+    base.position.set(x,.12,z); addMap(base);
+    const flame=new THREE.Mesh(new THREE.ConeGeometry(.12*scale,.35*scale,7),new THREE.MeshBasicMaterial({color:0xff6600}));
+    flame.position.set(x,.45*scale,z); flame.userData.isFlame=true; addMap(flame);
+    const light=new THREE.PointLight(0xff4400,2.5*scale,5*scale); light.position.set(x,.6*scale,z); light.userData.isFlameLight=true; addMap(light);
+  }
+
+  // ── FUNCIÓN: edificio abandonado ────────────────────────────
+  function addBuilding(cx,cz,w,d,h,rot,hasLight){
+    const wallM=new THREE.MeshLambertMaterial({color:0x2a2218});
+    const roofM=new THREE.MeshLambertMaterial({color:0x1a1510});
+    const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallM);
+    body.position.set(cx,h/2,cz); body.rotation.y=rot||0; body.castShadow=true;
+    addMap(body); onWalls.push(body);
+    onObs.push({x:cx,z:cz,hw:w/2+.2,hd:d/2+.2});
+    // Techo
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.3,0.15,d+.3),roofM);
+    roof.position.set(cx,h+.075,cz); roof.rotation.y=rot||0; addMap(roof);
+    // Techo inclinado (forma triangular encima)
+    const ridgeM=new THREE.MeshLambertMaterial({color:0x151210});
+    const ridge=new THREE.Mesh(new THREE.CylinderGeometry(0,Math.max(w,d)*.55,1.2,4),ridgeM);
+    ridge.position.set(cx,h+.7,cz); ridge.rotation.y=(rot||0)+Math.PI/4; addMap(ridge);
+    // Ventana con luz tenue
+    if(hasLight){
+      const winM=new THREE.MeshBasicMaterial({color:0x4a4a10});
+      const win=new THREE.Mesh(new THREE.PlaneGeometry(.6,.5),winM);
+      win.position.set(cx,h*.6,cz+(d/2+.01)); addMap(win);
+      const wl=new THREE.PointLight(0x806020,1.2,6); wl.position.set(cx,h*.6,cz+d*.4); addMap(wl);
+    }
+    // Grietas / tablones en fachada
+    const plankM=new THREE.MeshLambertMaterial({color:0x1a100a});
+    for(let i=0;i<3;i++){
+      const plank=new THREE.Mesh(new THREE.BoxGeometry(w*.7,.06,.04),plankM);
+      plank.position.set(cx,0.4+i*.5,cz+d/2+.02); addMap(plank);
+    }
+  }
+
+  // ── FUNCIÓN: carro oxidado ───────────────────────────────────
+  function addCar(x,z,rot){
+    const carM=new THREE.MeshLambertMaterial({color:0x2a1a10});
+    const rustM=new THREE.MeshLambertMaterial({color:0x3d1a08});
+    const body=new THREE.Mesh(new THREE.BoxGeometry(1.9,.7,4.0),carM);
+    body.position.set(x,.4,z); body.rotation.y=rot; body.castShadow=true;
+    addMap(body); onWalls.push(body); onObs.push({x,z,hw:1.1,hd:2.1});
+    const cab=new THREE.Mesh(new THREE.BoxGeometry(1.7,.65,2.0),rustM);
+    cab.position.set(x,.92+.3,z-.3); cab.rotation.y=rot; addMap(cab);
+    // Ruedas
+    [[-.95,-.0,1.2],[.95,-.0,1.2],[-.95,-.0,-1.2],[.95,-.0,-1.2]].forEach(([wx,wy,wz])=>{
+      const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.22,12),new THREE.MeshLambertMaterial({color:0x0a0a0a}));
+      wheel.rotation.z=Math.PI/2; wheel.position.set(x+wx,.28,z+wz); addMap(wheel);
+    });
+  }
+
+  // ── FUNCIÓN: bus abandonado ──────────────────────────────────
+  function addBus(x,z,rot){
+    const busM=new THREE.MeshLambertMaterial({color:0x222018});
+    const bus=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.8,7.5),busM);
+    bus.position.set(x,.9,z); bus.rotation.y=rot; bus.castShadow=true;
+    addMap(bus); onWalls.push(bus); onObs.push({x,z,hw:1.3,hd:3.9});
+    // Ventanas rotas (oscuras)
+    const winM=new THREE.MeshBasicMaterial({color:0x0a0f14});
+    for(let i=-2;i<=2;i++){
+      const win=new THREE.Mesh(new THREE.PlaneGeometry(.55,.5),winM);
+      win.position.set(x+1.21,1.2,z+i*1.1); win.rotation.y=Math.PI/2; addMap(win);
+    }
+    // Ruedas
+    [[-1.2,0,2.8],[1.2,0,2.8],[-1.2,0,-2.8],[1.2,0,-2.8]].forEach(([wx,wy,wz])=>{
+      const w2=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.28,12),new THREE.MeshLambertMaterial({color:0x080808}));
+      w2.rotation.z=Math.PI/2; w2.position.set(x+wx,.32,z+wz); addMap(w2);
+    });
+  }
+
+  // ── FUNCIÓN: barricada de cajas ──────────────────────────────
+  function addBarricade(x,z,rot,count=3){
+    const boxM=new THREE.MeshLambertMaterial({color:0x2a1e0e});
+    for(let i=0;i<count;i++){
+      const box=new THREE.Mesh(new THREE.BoxGeometry(.65,.55,.55),boxM);
+      box.position.set(x+Math.cos(rot)*i*.6,  .28, z+Math.sin(rot)*i*.6);
+      box.rotation.y=rot+Math.random()*.3; addMap(box); onWalls.push(box);
+    }
+    onObs.push({x,z,hw:count*.35,hd:.4});
+  }
+
+  // ── FUNCIÓN: árbol muerto ────────────────────────────────────
+  function addDeadTree(x,z){
+    const trunkM=new THREE.MeshLambertMaterial({color:0x1a1208});
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,3.5,6),trunkM);
+    trunk.position.set(x,1.75,z); addMap(trunk);
+    [[.6,3.2,.5,0,.4],[-.7,2.8,.45,0,.35],[ .3,3.6,.35,0,.28],[-.2,2.4,.4,0,.32]].forEach(([bx,by,bz,_,r])=>{
+      const br=new THREE.Mesh(new THREE.CylinderGeometry(.03,.07,1.4,5),trunkM);
+      br.position.set(x+bx,by,z+bz); br.rotation.z=(bx>0?1:-1)*.6; br.rotation.x=.3; addMap(br);
+    });
+  }
+
+  // ── LAYOUT DEL MAPA ─────────────────────────────────────────
+  // Edificio central (taller con luz verde interior)
+  addBuilding(0,0,6,5,3.2,0,true);
+  // Edificio superior izquierdo (galpón)
+  addBuilding(-13,12,7,5.5,2.8,0,false);
+  // Edificio superior derecho (iglesia pequeña)
+  addBuilding(13,12,4.5,5,4.0,0,true);
+  // Edificio izquierdo (garaje)
+  addBuilding(-13,-2,6,5.5,2.6,.05,true);
+  // Edificio derecho (casa destruida)
+  addBuilding(13,-2,5.5,5,2.8,-.04,false);
+  // Edificio inferior izquierdo (bunker)
+  addBuilding(-8,-13,5,4.5,2.2,0,false);
+  // Edificio inferior central (ruinas)
+  addBuilding(2,-13,4.5,4,2.0,.1,false);
+
+  // Bus en el centro-derecha
+  addBus(5,2,Math.PI/2);
+  // Carros oxidados
+  addCar(-4,6,0.3);
+  addCar(10,-8,-0.2);
+  addCar(-9,8,2.8);
+
+  // Barricadas de cajas
+  addBarricade(4,-5, 0.1, 4);
+  addBarricade(-5,4, 1.6, 3);
+  addBarricade(8,6,  0.8, 3);
+  addBarricade(-3,-7,2.2, 3);
+
+  // Fuegos dispersos (como en la imagen)
+  addFire(-13, 2);   // frente garaje izq
+  addFire( 13, 6);   // esquina der
+  addFire(-8,  12);  // zona superior izq
+  addFire( 3, -11);  // zona inferior
+  addFire( 0,  6,1.4); // fuego grande central
+  addFire(-5, -4, 0.8);
+  addFire( 9, -3, 0.9);
+  addFire(-14,-10, 0.7);
+
+  // Barriles
+  const barrelM=new THREE.MeshLambertMaterial({color:0x1a1010});
+  [[-6,2],[6,-6],[3,8],[-10,5],[11,3],[-4,-10],[7,11],[-11,-7]].forEach(([bx,bz])=>{
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(.25,.28,.7,8),barrelM);
+    b.position.set(bx,.35,bz); addMap(b);
+  });
+
+  // Árboles muertos en bordes
+  addDeadTree(-22,-22); addDeadTree(22,-20); addDeadTree(-20,20);
+  addDeadTree(21,21);   addDeadTree(0,-22);  addDeadTree(-22,5);
+  addDeadTree(22,8);
+
+  // Cerca de madera perimetral
+  const fenceM=new THREE.MeshLambertMaterial({color:0x1a1208});
+  for(let i=-5;i<=5;i++){
+    const post=new THREE.Mesh(new THREE.BoxGeometry(.08,1.2,.08),fenceM);
+    post.position.set(i*4.2,-0.1,-23); addMap(post);
+    const post2=new THREE.Mesh(new THREE.BoxGeometry(.08,1.2,.08),fenceM);
+    post2.position.set(i*4.2,-0.1,23); addMap(post2);
+  }
+
+  // Piedras dispersas
+  const stoneM=new THREE.MeshLambertMaterial({color:0x252220});
+  [[4,4],[-7,8],[8,-4],[-3,12],[11,10],[-12,-5]].forEach(([sx,sz])=>{
+    if(!isNaN(sx)){
+      const s=new THREE.Mesh(new THREE.SphereGeometry(.18+Math.random()*.12,5,4),stoneM);
+      s.position.set(sx,.1,sz); addMap(s);
+    }
+  });
+
+  // Animación de llamas (flickering)
+  function flickerFires(){
+    onScene.children.forEach(c=>{
+      if(c.userData.isFlame){c.scale.y=0.85+Math.random()*.3; c.rotation.y+=.08; c.material.color.setHSL(.06+Math.random()*.04,.9,.5+Math.random()*.1);}
+      if(c.userData.isFlameLight){c.intensity=2+Math.random()*1.5;}
+    });
+    if(zmActive) requestAnimationFrame(flickerFires);
+  }
+  flickerFires();
+}
+
+// ── ZOMBIE REALISTA ───────────────────────────────────────────
+function zmCreateZombie(){
+  const g=new THREE.Group();
+  // Variación aleatoria de zombie (3 tipos)
+  const variant=Math.floor(Math.random()*3);
+  // Piel putrefacta (verdosa / gris)
+  const skinColors=[0x3d4a1a, 0x2e3d18, 0x3a4030];
+  const skinM=new THREE.MeshPhongMaterial({color:skinColors[variant],shininess:5});
+  // Ropa desgarrada (marrón oscuro / gris)
+  const clothColors=[0x2a1a0e, 0x1e1e1e, 0x2e2010];
+  const clothM=new THREE.MeshPhongMaterial({color:clothColors[variant],shininess:3});
+  const darkM=new THREE.MeshPhongMaterial({color:0x0f0f0f,shininess:2});
+
+  // Cabeza ligeramente agrandada y encorvada
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.48,.5,.46),skinM); head.position.y=1.55; head.rotation.x=.25; // encorvado hacia adelante
+  head.castShadow=true; g.add(head);
+
+  // Ojos brillantes (rojizos o amarillos)
+  const eyeColors=[0xff1100,0xffaa00,0xff6600];
+  const eyeM=new THREE.MeshBasicMaterial({color:eyeColors[variant]});
+  [-1,1].forEach(sx=>{
+    const eye=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.03),eyeM);
+    eye.position.set(sx*.12,1.58,.24); g.add(eye);
+    // Brillo de ojos
+    const glow=new THREE.PointLight(eyeColors[variant],.6,1.2); glow.position.set(sx*.1,1.58,.2); g.add(glow);
+  });
+
+  // Boca abierta (dientes)
+  const mouthM=new THREE.MeshBasicMaterial({color:0x0a0000});
+  const mouth=new THREE.Mesh(new THREE.BoxGeometry(.18,.06,.02),mouthM); mouth.position.set(0,1.45,.24); g.add(mouth);
+  const toothM=new THREE.MeshBasicMaterial({color:0xccbb99});
+  [-1,0,1].forEach(ti=>{
+    const tooth=new THREE.Mesh(new THREE.BoxGeometry(.04,.06,.02),toothM); tooth.position.set(ti*.06,1.46,.245); g.add(tooth);
+  });
+
+  // Torso encorvado y corpulento
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(.54,.6,.3),clothM); torso.position.y=1.05; torso.rotation.x=.2; torso.castShadow=true; g.add(torso);
+
+  // Brazos asimétricos (uno levantado tipo zombie)
+  const aLPivot=new THREE.Object3D(); aLPivot.position.set(-.35,1.35,0); g.add(aLPivot);
+  const aLMesh=new THREE.Mesh(new THREE.BoxGeometry(.2,.52,.2),clothM); aLMesh.position.y=-.26; aLPivot.add(aLMesh);
+  aLPivot.rotation.x=-0.9; // brazo izquierdo levantado (ataque)
+
+  const aRPivot=new THREE.Object3D(); aRPivot.position.set(.35,1.35,0); g.add(aRPivot);
+  const aRMesh=new THREE.Mesh(new THREE.BoxGeometry(.2,.52,.2),skinM); aRMesh.position.y=-.26; aRPivot.add(aRMesh);
+  aRPivot.rotation.x=-0.5;
+
+  // Manos con garras
+  const clawM=new THREE.MeshPhongMaterial({color:0x1a1a0a,shininess:8});
+  const lHand=new THREE.Mesh(new THREE.BoxGeometry(.22,.18,.18),skinM); lHand.position.y=-.5; aLPivot.add(lHand);
+  [-1,0,1].forEach(fi=>{
+    const claw=new THREE.Mesh(new THREE.BoxGeometry(.04,.12,.04),clawM); claw.position.set(fi*.06,-.64,0); claw.rotation.x=.4; aLPivot.add(claw);
+  });
+  const rHand=new THREE.Mesh(new THREE.BoxGeometry(.22,.18,.18),skinM); rHand.position.y=-.5; aRPivot.add(rHand);
+
+  // Piernas
+  const lLPivot=new THREE.Object3D(); lLPivot.position.set(-.14,.7,0); g.add(lLPivot);
+  const lLMesh=new THREE.Mesh(new THREE.BoxGeometry(.22,.52,.22),clothM); lLMesh.position.y=-.26; lLPivot.add(lLMesh);
+  const lRPivot=new THREE.Object3D(); lRPivot.position.set(.14,.7,0); g.add(lRPivot);
+  const lRMesh=new THREE.Mesh(new THREE.BoxGeometry(.22,.52,.22),darkM); lRMesh.position.y=-.26; lRPivot.add(lRMesh);
+
+  // Pies
+  const footM=new THREE.MeshPhongMaterial({color:0x0a0808});
+  const fL=new THREE.Mesh(new THREE.BoxGeometry(.24,.12,.28),footM); fL.position.set(-.14,.1,.04); g.add(fL);
+  const fR=new THREE.Mesh(new THREE.BoxGeometry(.24,.12,.28),footM); fR.position.set(.14,.1,.04); g.add(fR);
+
+  // Manchas de sangre (decoración)
+  const bloodM=new THREE.MeshBasicMaterial({color:0x330000});
+  const blood=new THREE.Mesh(new THREE.BoxGeometry(.15,.08,.31),bloodM); blood.position.set(.1,1.1,.16); g.add(blood);
+
+  // Hitboxes
+  const hb=new THREE.Mesh(new THREE.BoxGeometry(.54,.95,.54),new THREE.MeshBasicMaterial({visible:false})); hb.position.y=1.05; g.add(hb); g.userData.hitbox=hb;
+  const headHB=new THREE.Mesh(new THREE.BoxGeometry(.5,.52,.5),new THREE.MeshBasicMaterial({visible:false})); headHB.position.y=1.58; g.add(headHB); g.userData.headHitbox=headHB;
+  const legHB=new THREE.Mesh(new THREE.BoxGeometry(.54,.75,.54),new THREE.MeshBasicMaterial({visible:false})); legHB.position.y=.4; g.add(legHB); g.userData.legHitbox=legHB;
+
+  g.userData.limbs={head,torso,aL:aLPivot,aR:aRPivot,lL:lLPivot,lR:lRPivot};
+  g.userData.anim={walkPhase:0,shootT:0,deathT:0,dead:false,prevX:null,prevZ:null,idleT:Math.random()*100,jumping:false};
+  g.userData.isZombie=true;
+  return g;
+}
+
 function zmStart(){
   if(zmActive) return;
   zmActive=true; zmWave=0; zmBots=[]; zmScore=0; zmHP=100;
   if(!onThreeReady) onInitThree();
+  zmBuildMap(); // Cambiar a mapa nocturno zombie
   // Reusar pantalla PVP
   document.getElementById('duel-canvas').style.display='block';
   document.getElementById('duel-hud').style.display='block';
   document.getElementById('duel-crosshair').style.display='block';
-  onSpawnPlayer(onMySpawn||{x:0,z:0,yaw:0});
+  onSpawnPlayer({x:0,z:0,yaw:0});
   onActive=true;
   // HUD zombie
   document.getElementById('duel-my-name-hud').textContent='ZOMBIES';
@@ -2473,9 +2765,7 @@ function zmSpawnWave(){
 
 function zmSpawnBot(){
   const sp=ZM_SPAWNS[Math.floor(Math.random()*ZM_SPAWNS.length)];
-  const g=onCreateRobloxChar(0x22aa22);
-  // Teñir de verde zombie
-  g.traverse(c=>{ if(c.isMesh&&c.material){ c.material=c.material.clone(); c.material.color.setHex(0x1a4a1a); c.material.emissive=new THREE.Color(0x002200); } });
+  const g=zmCreateZombie();
   g.position.set(sp.x+(Math.random()-.5)*3, 0, sp.z+(Math.random()-.5)*3);
   onScene.add(g);
   const bot={
@@ -2484,7 +2774,7 @@ function zmSpawnBot(){
     slot:'zm_'+Date.now()+'_'+Math.random(),
     alive:true, attackCd:0
   };
-  onOpps.set(bot.slot, {group:g, hitbox:g.userData.hitbox, headHitbox:g.userData.headHitbox});
+  onOpps.set(bot.slot, {group:g, hitbox:g.userData.hitbox, headHitbox:g.userData.headHitbox, legHitbox:g.userData.legHitbox});
   zmBots.push(bot);
 }
 
