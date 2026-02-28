@@ -3493,12 +3493,29 @@ function zmCreateZombie(){
 function zmStart(){
   if(zmActive) return;
   zmActive=true; zmWave=0; zmBots=[]; zmScore=0; zmHP=100;
-  if(!onThreeReady) onInitThree();
-  zmBuildMap(); // Cambiar a mapa nocturno zombie
-  // Reusar pantalla PVP
+
+  // ── Mostrar canvas ANTES de inicializar Three.js ──────────
+  onShowScreen(null);
+  menuScreen.classList.add('hidden');
   document.getElementById('duel-canvas').style.display='block';
   document.getElementById('duel-hud').style.display='block';
   document.getElementById('duel-crosshair').style.display='block';
+
+  // ── Inicializar renderer si es la primera vez ─────────────
+  if(!onThreeReady){
+    onInitThree();
+  } else {
+    // Limpiar escena anterior
+    const rem=[];
+    onScene.children.forEach(c=>{ if(c.userData.isMapObj||c.type==='AmbientLight'||c.type==='DirectionalLight'||c.type==='PointLight') rem.push(c); });
+    rem.forEach(c=>onScene.remove(c));
+    onWalls.length=0; onObs.length=0;
+  }
+
+  zmBuildMap();
+  if(onGun&&onCamera){ onCamera.remove(onGun); onGun=null; }
+  onBuildGun();
+
   onSpawnPlayer({x:0,z:0,yaw:0});
   onActive=true;
   // HUD zombie
