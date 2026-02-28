@@ -242,7 +242,7 @@ wss.on('connection', ws => {
           type:'kill', killerSlot:me.slot, victimSlot:victim.slot,
           killerTeam:me.team, teamScores:[...room.teamScores],
           pScores:{...room.pScores}, matchOver,
-          killerSpawn, victimSpawn, headshot
+          killerSpawn, victimSpawn, zone
         };
         room.players.forEach(p => send(p.ws, killMsg));
 
