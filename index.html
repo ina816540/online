@@ -1719,6 +1719,14 @@ function onAnimGun(dt){
 }
 
 function onBuildMap(){
+  // Limpiar objetos del mapa zombie si existían
+  const toRemove=[];
+  onScene.children.forEach(c=>{ if(c.userData.isMapObj) toRemove.push(c); });
+  toRemove.forEach(c=>onScene.remove(c));
+  onWalls.length=0; onObs.length=0;
+  // Restaurar cielo/niebla PVP
+  onScene.background=new THREE.Color(0x87ceeb);
+  onScene.fog=new THREE.Fog(0x87ceeb,30,75);
   // ── SUELO: tierra con caminos, césped y logo INA ─────────────
   const gc=document.createElement('canvas'); gc.width=gc.height=1024;
   const gx=gc.getContext('2d');
@@ -1742,11 +1750,9 @@ function onBuildMap(){
   const groundTex = new THREE.CanvasTexture(gc);
   groundTex.wrapS=groundTex.wrapT=THREE.RepeatWrapping; groundTex.repeat.set(1,1);
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(44,44),new THREE.MeshLambertMaterial({map:groundTex}));
-  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; onScene.add(ground);
+  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; ground.userData.isMapObj=true; onScene.add(ground);
 
-  // ── CIELO / FOG ───────────────────────────────────────────────
-  onScene.background=new THREE.Color(0x87ceeb);
-  onScene.fog=new THREE.Fog(0x87ceeb,30,75);
+  // ── CIELO / FOG ya seteado arriba ────────────────────────────
 
   // ── MATERIALES ────────────────────────────────────────────────
   const concMat = new THREE.MeshLambertMaterial({color:0xaab0b8}); // concreto gris
@@ -2462,33 +2468,72 @@ function zmBuildMap(){
     const light=new THREE.PointLight(0xff4400,2.5*scale,5*scale); light.position.set(x,.6*scale,z); light.userData.isFlameLight=true; addMap(light);
   }
 
-  // ── FUNCIÓN: edificio abandonado ────────────────────────────
+  // ── FUNCIÓN: edificio abandonado CON PUERTA ─────────────────
   function addBuilding(cx,cz,w,d,h,rot,hasLight){
     const wallM=new THREE.MeshLambertMaterial({color:0x2a2218});
     const roofM=new THREE.MeshLambertMaterial({color:0x1a1510});
-    const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallM);
-    body.position.set(cx,h/2,cz); body.rotation.y=rot||0; body.castShadow=true;
-    addMap(body); onWalls.push(body);
-    onObs.push({x:cx,z:cz,hw:w/2+.2,hd:d/2+.2});
-    // Techo
-    const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.3,0.15,d+.3),roofM);
-    roof.position.set(cx,h+.075,cz); roof.rotation.y=rot||0; addMap(roof);
-    // Techo inclinado (forma triangular encima)
-    const ridgeM=new THREE.MeshLambertMaterial({color:0x151210});
-    const ridge=new THREE.Mesh(new THREE.CylinderGeometry(0,Math.max(w,d)*.55,1.2,4),ridgeM);
-    ridge.position.set(cx,h+.7,cz); ridge.rotation.y=(rot||0)+Math.PI/4; addMap(ridge);
-    // Ventana con luz tenue
-    if(hasLight){
-      const winM=new THREE.MeshBasicMaterial({color:0x4a4a10});
-      const win=new THREE.Mesh(new THREE.PlaneGeometry(.6,.5),winM);
-      win.position.set(cx,h*.6,cz+(d/2+.01)); addMap(win);
-      const wl=new THREE.PointLight(0x806020,1.2,6); wl.position.set(cx,h*.6,cz+d*.4); addMap(wl);
+    const doorW=1.1, doorH=1.9;  // Tamaño de la puerta
+
+    // Construir 4 paredes con hueco de puerta en la pared frontal (sur)
+    // Pared trasera (norte) — sólida
+    const wBack=new THREE.Mesh(new THREE.BoxGeometry(w,.1+h,.22),wallM);
+    wBack.position.set(cx,h/2-.05,cz-d/2+.11); addMap(wBack); onWalls.push(wBack);
+
+    // Paredes laterales — sólidas
+    const wLeft=new THREE.Mesh(new THREE.BoxGeometry(.22,h,d),wallM);
+    wLeft.position.set(cx-w/2+.11,h/2,cz); addMap(wLeft); onWalls.push(wLeft);
+    const wRight=new THREE.Mesh(new THREE.BoxGeometry(.22,h,d),wallM);
+    wRight.position.set(cx+w/2-.11,h/2,cz); addMap(wRight); onWalls.push(wRight);
+
+    // Pared frontal (sur) — con hueco de puerta en el centro
+    const sideW=(w-doorW)/2-.11;
+    if(sideW>0.1){
+      // Segmento izquierdo de pared frontal
+      const wFL=new THREE.Mesh(new THREE.BoxGeometry(sideW,h,.22),wallM);
+      wFL.position.set(cx-(doorW/2+sideW/2),h/2,cz+d/2-.11); addMap(wFL); onWalls.push(wFL);
+      // Segmento derecho de pared frontal
+      const wFR=new THREE.Mesh(new THREE.BoxGeometry(sideW,h,.22),wallM);
+      wFR.position.set(cx+(doorW/2+sideW/2),h/2,cz+d/2-.11); addMap(wFR); onWalls.push(wFR);
     }
-    // Grietas / tablones en fachada
+    // Dintel sobre la puerta
+    const wFTop=new THREE.Mesh(new THREE.BoxGeometry(w,.22*(h-doorH),.22),wallM);
+    wFTop.position.set(cx,doorH+(h-doorH)/2,cz+d/2-.11);
+    if(h>doorH+0.1){ addMap(wFTop); onWalls.push(wFTop); }
+
+    // Colisión: 3 cajas (izq, der, fondo) dejando hueco al frente
+    onObs.push({x:cx-w/2+.6,  z:cz,      hw:.6,  hd:d/2+.1}); // pared izq
+    onObs.push({x:cx+w/2-.6,  z:cz,      hw:.6,  hd:d/2+.1}); // pared der
+    onObs.push({x:cx,          z:cz-d/2+.3, hw:w/2, hd:.3  }); // pared fondo
+
+    // Techo
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.25,0.14,d+.25),roofM);
+    roof.position.set(cx,h+.07,cz); addMap(roof);
+    // Techo inclinado
+    const ridgeM=new THREE.MeshLambertMaterial({color:0x151210});
+    const ridge=new THREE.Mesh(new THREE.CylinderGeometry(0,Math.max(w,d)*.52,1.1,4),ridgeM);
+    ridge.position.set(cx,h+.65,cz); ridge.rotation.y=Math.PI/4; addMap(ridge);
+
+    // Luz interior si tiene
+    if(hasLight){
+      const wl=new THREE.PointLight(0x806020,1.5,7); wl.position.set(cx,h*.6,cz); addMap(wl);
+      // Efecto de luz saliendo por la puerta
+      const dl=new THREE.PointLight(0x604010,.8,3.5); dl.position.set(cx,1.0,cz+d/2+.3); addMap(dl);
+    }
+
+    // Marco de puerta
+    const frameM=new THREE.MeshLambertMaterial({color:0x120c06});
+    const fL=new THREE.Mesh(new THREE.BoxGeometry(.1,doorH,.22),frameM);
+    fL.position.set(cx-doorW/2,doorH/2,cz+d/2-.11); addMap(fL);
+    const fR=new THREE.Mesh(new THREE.BoxGeometry(.1,doorH,.22),frameM);
+    fR.position.set(cx+doorW/2,doorH/2,cz+d/2-.11); addMap(fR);
+    const fT=new THREE.Mesh(new THREE.BoxGeometry(doorW+.1,.1,.22),frameM);
+    fT.position.set(cx,doorH,cz+d/2-.11); addMap(fT);
+
+    // Tablones decorativos en paredes laterales
     const plankM=new THREE.MeshLambertMaterial({color:0x1a100a});
-    for(let i=0;i<3;i++){
-      const plank=new THREE.Mesh(new THREE.BoxGeometry(w*.7,.06,.04),plankM);
-      plank.position.set(cx,0.4+i*.5,cz+d/2+.02); addMap(plank);
+    for(let i=0;i<2;i++){
+      const plank=new THREE.Mesh(new THREE.BoxGeometry(.04,.06,d*.7),plankM);
+      plank.position.set(cx-w/2+.12,0.5+i*.6,cz); addMap(plank);
     }
   }
 
