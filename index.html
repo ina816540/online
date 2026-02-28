@@ -358,6 +358,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   </div>
   <div class="menu-extra-row" style="margin-top:8px">
     <button id="open-1v1-btn" style="background:linear-gradient(135deg,#ff3d71,#e040fb);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(224,64,251,.3);">⚔ 1v1 ONLINE</button>
+    <button id="open-zombie-btn" style="background:linear-gradient(135deg,#1a6622,#44cc22);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(68,204,34,.3);">🧟 ZOMBIES</button>
     <button class="mob-toggle-btn" id="mob-toggle-menu-btn">📱 MODO MÓVIL</button>
   </div>
 </div>
@@ -511,7 +512,49 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     <div id="duel-conn-quality" style="font-size:.48rem;letter-spacing:.15em;padding:2px 7px;border-radius:3px;background:rgba(58,74,106,.3);color:var(--dim)">● —</div>
   </div>
   <div id="duel-kill-feed" style="position:absolute;top:82px;right:14px;display:flex;flex-direction:column;gap:4px"></div>
-  <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">WASD MOVER · MOUSE APUNTAR · CLIC DISPARAR · ESPACIO SALTAR</div>
+  <!-- BARRA DE SALUD PROPIA -->
+  <div style="position:absolute;bottom:54px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:.5rem;letter-spacing:.2em;color:#ff4444">❤ SALUD</span>
+      <span id="duel-hp-num" style="font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;color:#ff4444">100</span>
+    </div>
+    <div style="width:200px;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;border:1px solid rgba(255,68,68,.3)">
+      <div id="duel-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff4444,#ff6644);border-radius:4px;transition:width .15s,background .3s"></div>
+    </div>
+  </div>
+  <!-- BARRA DE SALUD RIVAL (solo 1v1) -->
+  <div id="duel-opp-hp-hud" style="position:absolute;top:80px;left:50%;transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:3px">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:.42rem;letter-spacing:.2em;color:#4488ff" id="duel-opp-hp-label">RIVAL</span>
+      <span id="duel-opp-hp-num" style="font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;color:#4488ff">100</span>
+    </div>
+    <div style="width:160px;height:6px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;border:1px solid rgba(68,136,255,.3)">
+      <div id="duel-opp-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#4488ff,#88ccff);border-radius:4px;transition:width .2s,background .3s"></div>
+    </div>
+  </div>
+  <!-- HP DEL RIVAL (1v1) -->
+  <div id="duel-opp-hp-wrap" style="position:absolute;top:54px;right:16px;display:none;flex-direction:column;align-items:flex-end;gap:3px">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span id="duel-opp-hp-num" style="font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;color:#ff4444">100</span>
+      <span style="font-size:.45rem;letter-spacing:.2em;color:#ff6644">❤ RIVAL</span>
+    </div>
+    <div style="width:160px;height:7px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;border:1px solid rgba(255,68,68,.25)">
+      <div id="duel-opp-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff2200,#ff6644);border-radius:3px;transition:width .2s,background .3s"></div>
+    </div>
+  </div>
+  <!-- ARMA ACTUAL + MUNICIÓN -->
+  <div id="duel-weapon-hud" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px">
+    <div style="display:flex;gap:6px" id="duel-weapon-slots"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <span id="duel-weapon-name" style="font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;letter-spacing:.2em;color:#fff">PISTOLA</span>
+      <span id="duel-ammo-hud" style="font-family:'Orbitron',monospace;font-size:.85rem;font-weight:900;color:var(--accent3)">12 / 12</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;border-left:1px solid rgba(255,255,255,.15);padding-left:12px">
+      <span style="font-size:.45rem;letter-spacing:.15em;color:var(--dim)">GRANADAS</span>
+      <span id="duel-gren-hud" style="font-size:.8rem">💣💣</span>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">1/2/3 ARMA · R RECARGAR · G GRANADA · ESPACIO SALTAR</div>
 </div>
 
 <div id="duel-mobile-controls">
@@ -1432,6 +1475,21 @@ const ON_H=1.65, ON_SPD=7.5, ON_SENS=.002, ON_CD=1500;
 const ON_GRAVITY=22, ON_JUMP_FORCE=8.0;
 let onVelY=0, onPosY=0, onIsGrounded=true;
 
+// ── SISTEMA DE ARMAS ─────────────────────────────────────────
+const WEAPONS = {
+  pistol:  { name:'PISTOLA',  key:'1', dmgHead:50, dmgBody:25, dmgLegs:15, cd:900,  spread:0,    ammoMax:12, reload:1600, pellets:1, color:0x999999 },
+  rifle:   { name:'RIFLE',    key:'2', dmgHead:50, dmgBody:25, dmgLegs:15, cd:140,  spread:0.012,ammoMax:30, reload:2000, pellets:1, color:0x334455 },
+  shotgun: { name:'ESCOPETA', key:'3', dmgHead:50, dmgBody:25, dmgLegs:15, cd:850,  spread:0.09, ammoMax:6,  reload:2400, pellets:7, color:0x553322 }
+};
+let onCurWeapon = 'pistol';
+let onAmmo      = { pistol:12, rifle:30, shotgun:6 };
+let onReloading = false;
+let onReloadT   = null;
+let onMyHP      = 100;
+let onGrenades  = 2;
+let onGrenCooldown = false;
+const onGrenList = [];
+
 document.getElementById('open-1v1-btn').addEventListener('click',()=>{
   menuScreen.classList.add('hidden'); onShowScreen('duel-lobby-screen');
   onMyName = currentUser?.name||'Jugador'; onConnect();
@@ -1533,6 +1591,9 @@ function onMsg(msg) {
     case 'opp_state':    onUpdateOpp(msg.slot,msg.pos,msg.yaw,msg.pitch||0,msg.posY||0); break;
     case 'opp_shoot':  { const o=onOpps.get(msg.slot); if(o&&o.group.userData.anim) o.group.userData.anim.shootT=1; break; }
     case 'kill':         onTeamScores=msg.teamScores; onPScores=msg.pScores; onHandleKill(msg); break;
+    case 'damage':       onHandleDamage(msg); break;
+    case 'opp_hp':       onHandleOppHP(msg); break;
+    case 'opp_grenade':  onHandleOppGrenade(msg); break;
     case 'respawn':      onHandleRespawn(msg.spawn); break;
     case 'player_respawn': onHandlePlayerRespawn(msg.slot,msg.spawn); break;
     case 'join_err':     onLobbyErr(msg.msg); break;
@@ -1614,16 +1675,40 @@ function onInitThree(){
 }
 
 function onBuildGun(){
+  if(onGun){ onCamera.remove(onGun); onGun=null; }
   onGun=new THREE.Group();
-  const m1=new THREE.MeshLambertMaterial({color:0x1a1a2a}),m2=new THREE.MeshLambertMaterial({color:0x0a0a0f}),m3=new THREE.MeshLambertMaterial({color:0xff3d71,emissive:0xff3d71,emissiveIntensity:.6}),m4=new THREE.MeshLambertMaterial({color:0x333348});
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.065,.085,.4),m1); onGun.add(body);
-  const slide=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.36),m4); slide.position.set(0,.065,-.01); onGun.add(slide);
-  const barrel=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,.18),m2); barrel.position.set(0,.03,-.29); onGun.add(barrel);
-  const tip=new THREE.Mesh(new THREE.BoxGeometry(.034,.034,.04),m2); tip.position.set(0,.03,-.39); onGun.add(tip);
-  const handle=new THREE.Mesh(new THREE.BoxGeometry(.055,.12,.065),m1); handle.position.set(0,-.1,.06); handle.rotation.x=.2; onGun.add(handle);
-  const stripe=new THREE.Mesh(new THREE.BoxGeometry(.067,.007,.18),m3); stripe.position.set(0,.048,.0); onGun.add(stripe);
-  const tg=new THREE.Mesh(new THREE.BoxGeometry(.01,.055,.06),m2); tg.position.set(0,-.048,.01); onGun.add(tg);
-  onGun.position.set(.19,-.19,-.33); onGun.rotation.y=.05; onCamera.add(onGun);
+  const wp=WEAPONS[onCurWeapon];
+  const m1=new THREE.MeshLambertMaterial({color:0x1a1a2a}),m2=new THREE.MeshLambertMaterial({color:0x0a0a0f}),m4=new THREE.MeshLambertMaterial({color:0x333348});
+  const mAcc=new THREE.MeshLambertMaterial({color:wp.color,emissive:wp.color,emissiveIntensity:.5});
+  if(onCurWeapon==='pistol'){
+    const body=new THREE.Mesh(new THREE.BoxGeometry(.065,.085,.4),m1); onGun.add(body);
+    const slide=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.36),m4); slide.position.set(0,.065,-.01); onGun.add(slide);
+    const barrel=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,.18),m2); barrel.position.set(0,.03,-.29); onGun.add(barrel);
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(.034,.034,.04),m2); tip.position.set(0,.03,-.39); onGun.add(tip);
+    const handle=new THREE.Mesh(new THREE.BoxGeometry(.055,.12,.065),m1); handle.position.set(0,-.1,.06); handle.rotation.x=.2; onGun.add(handle);
+    const stripe=new THREE.Mesh(new THREE.BoxGeometry(.067,.007,.18),mAcc); stripe.position.set(0,.048,.0); onGun.add(stripe);
+    onGun.position.set(.19,-.19,-.33); onGun.rotation.y=.05;
+  } else if(onCurWeapon==='rifle'){
+    const body=new THREE.Mesh(new THREE.BoxGeometry(.055,.075,.65),m1); onGun.add(body);
+    const top=new THREE.Mesh(new THREE.BoxGeometry(.04,.03,.55),m4); top.position.set(0,.055,0); onGun.add(top);
+    const barrel=new THREE.Mesh(new THREE.BoxGeometry(.028,.028,.3),m2); barrel.position.set(0,.02,-.47); onGun.add(barrel);
+    const muzzle=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,.06),m2); muzzle.position.set(0,.02,-.63); onGun.add(muzzle);
+    const stock=new THREE.Mesh(new THREE.BoxGeometry(.05,.07,.18),m4); stock.position.set(0,-.01,.36); stock.rotation.x=.05; onGun.add(stock);
+    const handle=new THREE.Mesh(new THREE.BoxGeometry(.048,.13,.065),m1); handle.position.set(0,-.1,.12); handle.rotation.x=.18; onGun.add(handle);
+    const scope=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,.2),mAcc); scope.position.set(0,.075,.05); onGun.add(scope);
+    const mag=new THREE.Mesh(new THREE.BoxGeometry(.04,.1,.055),m2); mag.position.set(0,-.06,.07); onGun.add(mag);
+    onGun.position.set(.2,-.18,-.42); onGun.rotation.y=.04;
+  } else if(onCurWeapon==='shotgun'){
+    const body=new THREE.Mesh(new THREE.BoxGeometry(.07,.09,.55),m1); onGun.add(body);
+    const barrel1=new THREE.Mesh(new THREE.BoxGeometry(.03,.028,.38),m2); barrel1.position.set(-.022,.01,-.34); onGun.add(barrel1);
+    const barrel2=new THREE.Mesh(new THREE.BoxGeometry(.03,.028,.38),m2); barrel2.position.set(.022,.01,-.34); onGun.add(barrel2);
+    const muzzle=new THREE.Mesh(new THREE.BoxGeometry(.075,.04,.07),m2); muzzle.position.set(0,.01,-.57); onGun.add(muzzle);
+    const stock=new THREE.Mesh(new THREE.BoxGeometry(.06,.085,.22),mAcc); stock.position.set(0,-.01,.3); onGun.add(stock);
+    const handle=new THREE.Mesh(new THREE.BoxGeometry(.055,.14,.07),m1); handle.position.set(0,-.1,.08); handle.rotation.x=.2; onGun.add(handle);
+    const pump=new THREE.Mesh(new THREE.BoxGeometry(.065,.055,.14),m4); pump.position.set(0,-.018,-.12); onGun.add(pump);
+    onGun.position.set(.2,-.2,-.38); onGun.rotation.y=.05;
+  }
+  onCamera.add(onGun);
 }
 
 function onAnimGun(dt){
@@ -1903,7 +1988,11 @@ function onCreateRobloxChar(teamColor){
   const sg=new THREE.BoxGeometry(.23,.1,.26);
   const sh1=new THREE.Mesh(sg,shoe); sh1.position.set(-.13,.12,.03); g.add(sh1);
   const sh2=new THREE.Mesh(sg,shoe); sh2.position.set(.13,.12,.03); g.add(sh2);
-  const hb=new THREE.Mesh(new THREE.BoxGeometry(.52,1.95,.52),new THREE.MeshBasicMaterial({visible:false})); hb.position.y=.975; g.add(hb); g.userData.hitbox=hb;
+  const hb=new THREE.Mesh(new THREE.BoxGeometry(.52,.95,.52),new THREE.MeshBasicMaterial({visible:false})); hb.position.y=1.1; g.add(hb); g.userData.hitbox=hb;
+  // Hitbox de cabeza
+  const headHB=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.5),new THREE.MeshBasicMaterial({visible:false})); headHB.position.y=1.72; g.add(headHB); g.userData.headHitbox=headHB;
+  // Hitbox de piernas (zona baja)
+  const legHB=new THREE.Mesh(new THREE.BoxGeometry(.52,.85,.52),new THREE.MeshBasicMaterial({visible:false})); legHB.position.y=.42; g.add(legHB); g.userData.legHitbox=legHB;
   const gm1=new THREE.MeshLambertMaterial({color:0x1a1a2a}),gm2=new THREE.MeshLambertMaterial({color:0x0a0a0f}),gm3=new THREE.MeshLambertMaterial({color:teamColor,emissive:teamColor,emissiveIntensity:.5});
   const gunGrp=new THREE.Group();
   const gb=new THREE.Mesh(new THREE.BoxGeometry(.05,.065,.32),gm1); gunGrp.add(gb);
@@ -1938,7 +2027,7 @@ function onAddOppMesh(slot,team){
   if(onOpps.has(slot)) return;
   const group=onCreateRobloxChar(TEAM_COLORS[team]||0x4488ff);
   group.visible=false; onScene.add(group);
-  onOpps.set(slot,{group,hitbox:group.userData.hitbox});
+  onOpps.set(slot,{group,hitbox:group.userData.hitbox,headHitbox:group.userData.headHitbox,legHitbox:group.userData.legHitbox});
 }
 
 function onSpawnPlayer(spawn){
@@ -1946,6 +2035,16 @@ function onSpawnPlayer(spawn){
   onPos={x:spawn.x,z:spawn.z}; onYaw=spawn.yaw; onPitch=0; onAlive=true;
   onVelY=0; onPosY=0; onIsGrounded=true;
   onYawObj.position.set(spawn.x,ON_H,spawn.z); onYawObj.rotation.y=onYaw; onPitchObj.rotation.x=0;
+  // Resetear HP + munición
+  onUpdateHP(100);
+  onAmmo={pistol:WEAPONS.pistol.ammoMax, rifle:WEAPONS.rifle.ammoMax, shotgun:WEAPONS.shotgun.ammoMax};
+  onGrenades=2; onGrenCooldown=false;
+  onReloading=false; onCanShoot=true; clearTimeout(onReloadT);
+  onCurWeapon='pistol';
+  onUpdateWeaponHUD();
+  if(onGun&&onCamera){ onRebuildGunMesh(); }
+  const grenEl=document.getElementById('duel-gren-hud');
+  if(grenEl) grenEl.textContent='💣'.repeat(onGrenades)||'—';
 }
 function onCollides(nx,nz){ for(const o of onObs) if(nx>o.x-o.hw&&nx<o.x+o.hw&&nz>o.z-o.hd&&nz<o.z+o.hd) return true; return false; }
 function onMove(dt){
@@ -1987,22 +2086,170 @@ function onHandlePlayerRespawn(slot,spawn){
 }
 
 function onTryShoot(){
-  if(!onAlive||!onActive||!onCanShoot) return;
-  onCanShoot=false; setTimeout(()=>onCanShoot=true,ON_CD);
+  if(!onAlive||!onActive||!onCanShoot||onReloading) return;
+  const wp=WEAPONS[onCurWeapon];
+  if(onAmmo[onCurWeapon]<=0){ onStartReload(); return; }
+  onCanShoot=false; setTimeout(()=>onCanShoot=true, wp.cd);
+  onAmmo[onCurWeapon]--;
+  onUpdateWeaponHUD();
+  if(onAmmo[onCurWeapon]===0) setTimeout(onStartReload, 300);
   playGunshot(); onGunAnim=1;
   const fl=new THREE.PointLight(0xff3d71,7,2); fl.position.set(0,.03,-.42); onCamera.add(fl); setTimeout(()=>onCamera.remove(fl),55);
   onSend({type:'shoot'});
-  onRaycaster.setFromCamera(new THREE.Vector2(0,0),onCamera);
-  const wallHits=onRaycaster.intersectObjects(onWalls,false);
-  const wallDist=wallHits.length>0?wallHits[0].distance:Infinity;
-  const hitboxes=[...onOpps.values()].map(o=>o.hitbox).filter(Boolean);
-  const oppHits=onRaycaster.intersectObjects(hitboxes,false);
-  if(oppHits.length>0&&oppHits[0].distance<wallDist){
-    const hitHB=oppHits[0].object;
-    for(const [slot,opp] of onOpps){
-      if(opp.hitbox===hitHB){ onSend({type:'hit',victimSlot:slot}); const f=document.getElementById('duel-hit-flash'); f.style.opacity='1'; setTimeout(()=>f.style.opacity='0',80); break; }
+  // Disparar pellets (1 para pistola/rifle, 7 para escopeta)
+  for(let p=0;p<wp.pellets;p++){
+    const spread=wp.spread;
+    const dx=(Math.random()-.5)*spread*2, dy=(Math.random()-.5)*spread*2;
+    const dir=new THREE.Vector2(dx,dy);
+    onRaycaster.setFromCamera(dir,onCamera);
+    const wallHits=onRaycaster.intersectObjects(onWalls,false);
+    const wallDist=wallHits.length>0?wallHits[0].distance:Infinity;
+    let hit=false;
+
+    // ── 1. CABEZA (headshot) ──────────────────────────────
+    const headBoxes=[...onOpps.values()].map(o=>o.headHitbox).filter(Boolean);
+    const headHits=onRaycaster.intersectObjects(headBoxes,false);
+    if(headHits.length>0&&headHits[0].distance<wallDist){
+      for(const [slot,opp] of onOpps){
+        if(opp.headHitbox===headHits[0].object){
+          onSend({type:'hit',victimSlot:slot,dmg:wp.dmgHead,zone:'head'});
+          onShowHitMarker('head');
+          onFlashOppHit(opp);
+          hit=true; break;
+        }
+      }
+      if(hit) continue;
+    }
+
+    // ── 2. CUERPO ─────────────────────────────────────────
+    const bodyBoxes=[...onOpps.values()].map(o=>o.hitbox).filter(Boolean);
+    const bodyHits=onRaycaster.intersectObjects(bodyBoxes,false);
+    if(bodyHits.length>0&&bodyHits[0].distance<wallDist){
+      for(const [slot,opp] of onOpps){
+        if(opp.hitbox===bodyHits[0].object){
+          onSend({type:'hit',victimSlot:slot,dmg:wp.dmgBody,zone:'body'});
+          onShowHitMarker('body');
+          onFlashOppHit(opp);
+          hit=true; break;
+        }
+      }
+      if(hit) continue;
+    }
+
+    // ── 3. PIERNAS ────────────────────────────────────────
+    const legBoxes=[...onOpps.values()].map(o=>o.legHitbox).filter(Boolean);
+    const legHits=onRaycaster.intersectObjects(legBoxes,false);
+    if(legHits.length>0&&legHits[0].distance<wallDist){
+      for(const [slot,opp] of onOpps){
+        if(opp.legHitbox===legHits[0].object){
+          onSend({type:'hit',victimSlot:slot,dmg:wp.dmgLegs,zone:'legs'});
+          onShowHitMarker('legs');
+          onFlashOppHit(opp);
+          break;
+        }
+      }
     }
   }
+}
+
+// zone: 'head' | 'body' | 'legs'
+function onShowHitMarker(zone){
+  const f=document.getElementById('duel-hit-flash');
+  const isHead = zone==='head';
+  const isLegs = zone==='legs';
+  f.style.opacity= isHead ? '0.55' : isLegs ? '0.18' : '0.28';
+  f.style.background = isHead
+    ? 'radial-gradient(ellipse at center,rgba(255,215,0,.65) 0%,transparent 65%)'
+    : 'radial-gradient(ellipse at center,rgba(255,61,113,.35) 0%,transparent 70%)';
+  setTimeout(()=>{ f.style.opacity='0'; }, isHead?140:90);
+  // Marcador flotante
+  if(isHead){
+    const el=document.createElement('div');
+    el.innerHTML='💥 HEADSHOT! <span style="font-size:.75em;color:#ffaa00">+50</span>';
+    el.style.cssText='position:fixed;top:37%;left:50%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:1.15rem;font-weight:900;color:#ffd700;text-shadow:0 0 22px #ffd700,0 0 8px #ff8800;pointer-events:none;z-index:65;animation:float-up 1s ease-out forwards;';
+    document.body.appendChild(el); setTimeout(()=>el.remove(),1000);
+  } else if(isLegs){
+    const el=document.createElement('div');
+    el.textContent='🦵 PIERNA';
+    el.style.cssText='position:fixed;top:42%;left:50%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:.7rem;font-weight:700;color:#aaaaff;text-shadow:0 0 10px #8888ff;pointer-events:none;z-index:65;animation:float-up .7s ease-out forwards;';
+    document.body.appendChild(el); setTimeout(()=>el.remove(),700);
+  }
+}
+
+// Flash rojo breve en el personaje del oponente al recibir bala
+function onFlashOppHit(opp){
+  if(!opp||!opp.group) return;
+  const mats=[];
+  opp.group.traverse(c=>{ if(c.isMesh&&c.material&&c.material.visible!==false){ mats.push({m:c.material,orig:c.material.emissive.clone(),oi:c.material.emissiveIntensity}); c.material.emissive.setHex(0xff0000); c.material.emissiveIntensity=1.2; } });
+  setTimeout(()=>mats.forEach(({m,orig,oi})=>{ m.emissive.copy(orig); m.emissiveIntensity=oi; }),90);
+}
+
+function onStartReload(){
+  if(onReloading||!onAlive) return;
+  const wp=WEAPONS[onCurWeapon];
+  if(onAmmo[onCurWeapon]>=wp.ammoMax) return;
+  onReloading=true; onCanShoot=false;
+  const nameEl=document.getElementById('duel-weapon-name');
+  const origName=wp.name;
+  nameEl.textContent='⟳ RECARGANDO...'; nameEl.style.color='#ffd700';
+  clearTimeout(onReloadT);
+  onReloadT=setTimeout(()=>{
+    onAmmo[onCurWeapon]=wp.ammoMax;
+    onReloading=false; onCanShoot=true;
+    nameEl.textContent=origName; nameEl.style.color='#fff';
+    onUpdateWeaponHUD();
+  }, wp.reload);
+}
+
+function onSwitchWeapon(id){
+  if(onCurWeapon===id||onReloading) return;
+  clearTimeout(onReloadT); onReloading=false; onCanShoot=true;
+  onCurWeapon=id;
+  onUpdateWeaponHUD();
+  onRebuildGunMesh();
+}
+
+function onUpdateWeaponHUD(){
+  const wp=WEAPONS[onCurWeapon];
+  const nameEl=document.getElementById('duel-weapon-name');
+  const ammoEl=document.getElementById('duel-ammo-hud');
+  if(nameEl&&!onReloading) nameEl.textContent=wp.name;
+  if(ammoEl) ammoEl.textContent=onAmmo[onCurWeapon]+' / '+wp.ammoMax;
+  // Resaltar slot activo
+  document.querySelectorAll('.duel-wp-slot').forEach(s=>{
+    s.style.borderColor = s.dataset.wp===onCurWeapon ? '#fff' : 'rgba(255,255,255,.2)';
+    s.style.background  = s.dataset.wp===onCurWeapon ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.05)';
+  });
+}
+
+function onUpdateHP(hp){
+  onMyHP=Math.max(0,Math.min(100,hp));
+  const bar=document.getElementById('duel-hp-bar');
+  const num=document.getElementById('duel-hp-num');
+  if(bar){ bar.style.width=onMyHP+'%'; bar.style.background=onMyHP>60?'linear-gradient(90deg,#44cc66,#66ff88)':onMyHP>30?'linear-gradient(90deg,#ffaa00,#ffd700)':'linear-gradient(90deg,#ff2200,#ff5533)'; }
+  if(num){ num.textContent=onMyHP; num.style.color=onMyHP>60?'#66ff88':onMyHP>30?'#ffd700':'#ff4444'; }
+}
+
+// HP estimado del rival (solo 1v1, calculado client-side)
+let onOppHP = 100;
+function onUpdateOppHP(slot, hp){
+  if(onRoomMode!=='1v1') return;
+  if(hp!==null&&hp!==undefined) onOppHP=Math.max(0,Math.min(100,hp));
+  const hud=document.getElementById('duel-opp-hp-hud');
+  const bar=document.getElementById('duel-opp-hp-bar');
+  const num=document.getElementById('duel-opp-hp-num');
+  const lbl=document.getElementById('duel-opp-hp-label');
+  if(!hud) return;
+  hud.style.display='flex';
+  const oppName=slot!=null?onPlayerNames.get(slot):null;
+  if(lbl&&oppName) lbl.textContent=oppName.toUpperCase();
+  if(bar){ bar.style.width=onOppHP+'%'; bar.style.background=onOppHP>60?'linear-gradient(90deg,#4488ff,#88ccff)':onOppHP>30?'linear-gradient(90deg,#ffaa00,#ffd700)':'linear-gradient(90deg,#ff3300,#ff6600)'; }
+  if(num){ num.textContent=onOppHP; num.style.color=onOppHP>60?'#88ccff':onOppHP>30?'#ffd700':'#ff4444'; }
+}
+
+function onRebuildGunMesh(){
+  if(!onGun||!onCamera) return;
+  onCamera.remove(onGun); onGun=null; onBuildGun();
 }
 
 function onStartGame(msg){
@@ -2010,15 +2257,21 @@ function onStartGame(msg){
   onRoomMode=msg.mode; onFirstTo=msg.firstTo; onTeamScores=[0,0]; onPScores={}; onActive=true; onWaitPlayers=[];
   msg.players.forEach(p=>{ onPlayerNames.set(p.slot,p.name); if(p.slot===onMySlot){onMySpawn=p.spawn;onMyTeam=p.team;} else onAddOppMesh(p.slot,p.team); });
   onSpawnPlayer(onMySpawn);
+  // Mostrar barra rival en 1v1
+  if(msg.mode==='1v1'){ const w=document.getElementById('duel-opp-hp-wrap'); if(w) w.style.display='flex'; }
   const myCol=TEAM_HEX[onMyTeam]||'#ff4444';
   document.getElementById('duel-my-name-hud').textContent=onMyName.toUpperCase();
   document.getElementById('duel-opp-name-hud').textContent=msg.mode==='ffa'?'FFA':'RIVAL';
+  // Mostrar barra HP rival solo en 1v1
+  const oppHpHud=document.getElementById('duel-opp-hp-hud');
+  if(oppHpHud) oppHpHud.style.display=msg.mode==='1v1'?'flex':'none';
+  onOppHP=100;
   document.getElementById('duel-team-label').textContent=TEAM_LBL[onMyTeam]||'?';
   document.getElementById('duel-team-label').style.color=myCol;
   document.getElementById('duel-my-kills').style.color=myCol;
   document.getElementById('duel-my-kills').style.textShadow='0 0 12px '+myCol;
   const ft=document.getElementById('duel-firstto'); if(ft) ft.textContent=msg.firstTo;
-  onPing=0; onUpdatePingDisplay(); onRefreshHUD();
+  onPing=0; onUpdatePingDisplay(); onRefreshHUD(); onInitWeaponSlots();
   const oppNames=msg.players.filter(p=>p.slot!==onMySlot).map(p=>p.name).join(', ');
   document.getElementById('duel-opp-name-lock').textContent=oppNames||'Rival';
   document.getElementById('duel-lock-team').textContent='Equipo: '+TEAM_LBL[onMyTeam];
@@ -2046,10 +2299,371 @@ function onStartGame(msg){
     const dt=Math.min((now-last)/1000,.05); last=now;
     fF++; fA+=dt;
     if(fA>=.5){ document.getElementById('duel-fps-hud').textContent=Math.round(fF/fA)+' FPS'; fF=0; fA=0; }
-    if(onActive){ onMove(dt); onApplyCam(); onAnimGun(dt); onAnimateAllChars(dt); }
+    if(onActive){ onMove(dt); onApplyCam(); onAnimGun(dt); onAnimateAllChars(dt); onUpdateGrenades(dt); onApplyCamShake(dt); }
     onRenderer.render(onScene,onCamera);
   }
   onLoop(performance.now());
+}
+
+// ── MANEJO DE DAÑO RECIBIDO ──────────────────────────────────
+function onHandleDamage(msg){
+  onUpdateHP(msg.hp);
+  const dmg=msg.dmg||25, zone=msg.zone||'body';
+  const isHead=(zone==='head'), isLegs=(zone==='legs');
+
+  // ── Efecto pantalla: intensidad proporcional al daño ──────────
+  const v=document.getElementById('duel-death-vignette');
+  const intensity=Math.min(1, 0.2 + (dmg/100)*1.2); // 15→38%  25→50%  50→80%
+  v.style.display='block'; v.style.opacity=intensity.toFixed(2);
+  v.style.background=isHead
+    ? 'radial-gradient(ellipse at center,rgba(255,0,0,.0) 25%,rgba(255,0,0,.98) 100%)'
+    : 'radial-gradient(ellipse at center,rgba(160,0,0,.0) 35%,rgba(200,0,0,.88) 100%)';
+  const dur=isHead?420:230;
+  setTimeout(()=>{ if(!onAlive) return; v.style.opacity='0'; setTimeout(()=>{ if(!onAlive) return; v.style.display='none'; v.style.background=''; },320); }, dur);
+
+  // ── Shake de cámara proporcional al daño ──────────────────────
+  onCamShake = 0.05 + (dmg/100)*0.32;
+
+  // ── Sonido de impacto ─────────────────────────────────────────
+  try{
+    const ac=new AudioContext();
+    const osc=ac.createOscillator(), g=ac.createGain();
+    osc.connect(g); g.connect(ac.destination);
+    osc.frequency.setValueAtTime(isHead?70:130, ac.currentTime);
+    g.gain.setValueAtTime(isHead?.4:.25, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+.18);
+    osc.start(); osc.stop(ac.currentTime+.18);
+  }catch(e){}
+
+  // ── Mensaje flotante de zona recibida ─────────────────────────
+  const zoneLabel = isHead ? '💀 HEADSHOT  -'+dmg : isLegs ? '🦵 PIERNAS  -'+dmg : '🎯 CUERPO  -'+dmg;
+  const zoneCol   = isHead ? '#ff1111' : isLegs ? '#ff9900' : '#ff5533';
+  const fSize     = isHead ? '1.15rem' : '.82rem';
+  const el=document.createElement('div');
+  el.textContent=zoneLabel;
+  el.style.cssText='position:fixed;top:36%;left:50%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:'+fSize+';font-weight:900;color:'+zoneCol+';text-shadow:0 0 20px '+zoneCol+';pointer-events:none;z-index:65;animation:float-up .9s ease-out forwards;';
+  document.body.appendChild(el); setTimeout(()=>el.remove(),900);
+}
+
+// ── HP del rival cuando le acertamos ──────────────────────────
+function onHandleOppHP(msg){
+  const hp=Math.max(0,Math.min(100,msg.hp||0));
+  const zone=msg.zone||'body', dmg=msg.dmg||0;
+  const wrap=document.getElementById('duel-opp-hp-wrap');
+  const bar =document.getElementById('duel-opp-hp-bar');
+  const num =document.getElementById('duel-opp-hp-num');
+  // Mostrar barra solo si hay exactamente 1 rival
+  if(wrap&&(onRoomMode==='1v1'||onOpps.size<=1)) wrap.style.display='flex';
+  if(bar){
+    bar.style.width=hp+'%';
+    bar.style.background=hp>60?'linear-gradient(90deg,#44cc66,#66ff88)':hp>30?'linear-gradient(90deg,#ffaa00,#ffd700)':'linear-gradient(90deg,#ff2200,#ff5533)';
+    bar.style.filter='brightness(2.2)'; setTimeout(()=>{ bar.style.filter=''; },140);
+  }
+  if(num){ num.textContent=hp; num.style.color=hp>60?'#66ff88':hp>30?'#ffd700':'#ff4444'; }
+
+  // ── Flash rojo en el modelo 3D del rival ──
+  const opp=onOpps.get(msg.slot);
+  if(opp&&opp.group){
+    opp.group.traverse(c=>{
+      if(c.isMesh&&c.material&&c.material.color){
+        if(c.userData._oc===undefined) c.userData._oc=c.material.color.getHex();
+        c.material.color.setHex(0xff1100);
+        c.material.emissive&&c.material.emissive.setHex(0xff1100);
+      }
+    });
+    setTimeout(()=>{
+      if(!opp||!opp.group) return;
+      opp.group.traverse(c=>{
+        if(c.isMesh&&c.material&&c.userData._oc!==undefined){
+          c.material.color.setHex(c.userData._oc);
+          c.material.emissive&&c.material.emissive.setHex(0x000000);
+        }
+      });
+    },90);
+  }
+
+  // ── Notificación de headshot dado ──
+  if(zone==='head'){
+    const he=document.createElement('div');
+    he.textContent='💥 HEADSHOT!';
+    he.style.cssText='position:fixed;top:28%;left:50%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:1.25rem;font-weight:900;color:#ffd700;text-shadow:0 0 25px #ffd700,0 0 50px #ff8800;pointer-events:none;z-index:66;animation:float-up 1s ease-out forwards;';
+    document.body.appendChild(he); setTimeout(()=>he.remove(),1000);
+  }
+
+  // ── Daño flotante en posición rival ──
+  const zLabel = zone==='head'?'+'+dmg+' 🎯':zone==='legs'?'+'+dmg+' 🦵':'+'+dmg;
+  const zCol   = zone==='head'?'#ffd700':zone==='legs'?'#ff9900':'#ff4444';
+  const de=document.createElement('div');
+  de.textContent=zLabel;
+  de.style.cssText='position:fixed;top:44%;left:50%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:.9rem;font-weight:900;color:'+zCol+';text-shadow:0 0 14px '+zCol+';pointer-events:none;z-index:65;animation:float-up .75s ease-out forwards;';
+  document.body.appendChild(de); setTimeout(()=>de.remove(),750);
+}
+
+function onHandleOppGrenade(msg){
+  if(!onScene) return;
+  // Crear grenade visual del oponente
+  const geo=new THREE.SphereGeometry(.12,8,8);
+  const mat=new THREE.MeshLambertMaterial({color:0x4a2a0a});
+  const mesh=new THREE.Mesh(geo,mat); mesh.castShadow=true;
+  // Lanzar desde la posición del oponente
+  const opp=onOpps.get(msg.slot);
+  const startX=msg.pos?msg.pos.x:0, startZ=msg.pos?msg.pos.z:0;
+  mesh.position.set(startX, ON_H-.1, startZ);
+  onScene.add(mesh);
+  const yaw=msg.yaw||0, pitch=msg.pitch||0;
+  const vel=new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch), Math.sin(pitch)+0.4, -Math.cos(yaw)*Math.cos(pitch)).multiplyScalar(18).add(new THREE.Vector3(0,8,0));
+  onGrenList.push({mesh,vel,life:0,exploded:false});
+}
+
+// ── MODO ZOMBIE ───────────────────────────────────────────────
+let zmActive=false, zmWave=0, zmBots=[], zmScore=0, zmHP=100, zmAnimId=null;
+const ZM_SPAWNS=[{x:-18,z:-18},{x:18,z:-18},{x:-18,z:18},{x:18,z:18},{x:0,z:-19},{x:0,z:19}];
+
+function zmStart(){
+  if(zmActive) return;
+  zmActive=true; zmWave=0; zmBots=[]; zmScore=0; zmHP=100;
+  if(!onThreeReady) onInitThree();
+  // Reusar pantalla PVP
+  document.getElementById('duel-canvas').style.display='block';
+  document.getElementById('duel-hud').style.display='block';
+  document.getElementById('duel-crosshair').style.display='block';
+  onSpawnPlayer(onMySpawn||{x:0,z:0,yaw:0});
+  onActive=true;
+  // HUD zombie
+  document.getElementById('duel-my-name-hud').textContent='ZOMBIES';
+  document.getElementById('duel-opp-name-hud').textContent='OLEADA';
+  document.getElementById('duel-my-kills').textContent='0';
+  document.getElementById('duel-opp-kills').textContent='1';
+  onInitWeaponSlots();
+  if(!mobileMode){
+    document.getElementById('duel-lock-screen').style.display='flex';
+    document.getElementById('duel-lock-btn').onclick=()=>{
+      document.getElementById('duel-canvas').requestPointerLock();
+      document.getElementById('duel-lock-screen').style.display='none';
+    };
+  } else {
+    onLocked=true;
+    document.getElementById('duel-mobile-controls').classList.add('active');
+  }
+  if(onAnimId) cancelAnimationFrame(onAnimId);
+  let last=performance.now();
+  function zmLoop(now){
+    onAnimId=requestAnimationFrame(zmLoop);
+    const dt=Math.min((now-last)/1000,.05); last=now;
+    if(zmActive){ onMove(dt); onApplyCam(); onAnimGun(dt); zmUpdateBots(dt); onUpdateGrenades(dt); onApplyCamShake(dt); }
+    onRenderer.render(onScene,onCamera);
+  }
+  zmLoop(performance.now());
+  setTimeout(()=>zmSpawnWave(),800);
+}
+
+function zmSpawnWave(){
+  if(!zmActive) return;
+  zmWave++;
+  document.getElementById('duel-opp-kills').textContent=zmWave;
+  const count=Math.min(3+zmWave*2,16);
+  const waveEl=document.createElement('div');
+  waveEl.textContent='🧟 OLEADA '+zmWave+' · '+count+' ZOMBIES';
+  waveEl.style.cssText='position:fixed;top:30%;left:50%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:1.3rem;font-weight:900;color:#44ff44;text-shadow:0 0 20px #00ff00;pointer-events:none;z-index:65;animation:float-up 1.8s ease-out forwards;';
+  document.body.appendChild(waveEl); setTimeout(()=>waveEl.remove(),1800);
+  for(let i=0;i<count;i++){
+    setTimeout(()=>{ if(zmActive) zmSpawnBot(); }, i*400);
+  }
+}
+
+function zmSpawnBot(){
+  const sp=ZM_SPAWNS[Math.floor(Math.random()*ZM_SPAWNS.length)];
+  const g=onCreateRobloxChar(0x22aa22);
+  // Teñir de verde zombie
+  g.traverse(c=>{ if(c.isMesh&&c.material){ c.material=c.material.clone(); c.material.color.setHex(0x1a4a1a); c.material.emissive=new THREE.Color(0x002200); } });
+  g.position.set(sp.x+(Math.random()-.5)*3, 0, sp.z+(Math.random()-.5)*3);
+  onScene.add(g);
+  const bot={
+    group:g, hp:Math.min(40+zmWave*15,200),
+    hitbox:g.userData.hitbox, headHitbox:g.userData.headHitbox,
+    slot:'zm_'+Date.now()+'_'+Math.random(),
+    alive:true, attackCd:0
+  };
+  onOpps.set(bot.slot, {group:g, hitbox:g.userData.hitbox, headHitbox:g.userData.headHitbox});
+  zmBots.push(bot);
+}
+
+function zmUpdateBots(dt){
+  const px=onPos.x, pz=onPos.z;
+  zmBots.forEach(bot=>{
+    if(!bot.alive) return;
+    const bx=bot.group.position.x, bz=bot.group.position.z;
+    const dx=px-bx, dz=pz-bz, dist=Math.sqrt(dx*dx+dz*dz);
+    // Rotar hacia el jugador
+    bot.group.rotation.y=Math.atan2(dx,dz);
+    // Moverse hacia el jugador
+    if(dist>0.8){
+      const spd=(1.8+zmWave*0.15)*dt;
+      bot.group.position.x+=dx/dist*spd;
+      bot.group.position.z+=dz/dist*spd;
+    } else {
+      // Atacar
+      bot.attackCd-=dt;
+      if(bot.attackCd<=0){
+        bot.attackCd=1.2;
+        zmHP=Math.max(0,zmHP-15);
+        onUpdateHP(zmHP);
+        onCamShake=0.35;
+        if(zmHP<=0){ zmGameOver(); return; }
+      }
+    }
+    // Animar
+    onAnimateChar(bot.group,dt);
+  });
+  // Checar si oleada completada
+  if(zmBots.length>0&&zmBots.every(b=>!b.alive)){
+    zmBots=[];
+    // Curar un poco entre oleadas
+    zmHP=Math.min(100,zmHP+20); onUpdateHP(zmHP);
+    setTimeout(()=>{ if(zmActive) zmSpawnWave(); },2000);
+  }
+}
+
+function zmOnShoot(){
+  if(!zmActive||!onCanShoot||onReloading) return;
+  const wp=WEAPONS[onCurWeapon];
+  if(onAmmo[onCurWeapon]<=0){ onStartReload(); return; }
+  onCanShoot=false; setTimeout(()=>onCanShoot=true,wp.cd);
+  onAmmo[onCurWeapon]--; onUpdateWeaponHUD();
+  if(onAmmo[onCurWeapon]===0) setTimeout(onStartReload,300);
+  playGunshot(); onGunAnim=1;
+  for(let p=0;p<wp.pellets;p++){
+    const spread=wp.spread;
+    const dir=new THREE.Vector2((Math.random()-.5)*spread*2,(Math.random()-.5)*spread*2);
+    onRaycaster.setFromCamera(dir,onCamera);
+    const wallHits=onRaycaster.intersectObjects(onWalls,false);
+    const wallDist=wallHits.length>0?wallHits[0].distance:Infinity;
+    // Head
+    const headBoxes=zmBots.filter(b=>b.alive&&b.headHitbox).map(b=>b.headHitbox);
+    const hHits=onRaycaster.intersectObjects(headBoxes,false);
+    if(hHits.length>0&&hHits[0].distance<wallDist){
+      const hit=zmBots.find(b=>b.headHitbox===hHits[0].object);
+      if(hit&&hit.alive){ zmDamageBot(hit,wp.dmgHead,true); continue; }
+    }
+    // Body
+    const bodyBoxes=zmBots.filter(b=>b.alive&&b.hitbox).map(b=>b.hitbox);
+    const bHits=onRaycaster.intersectObjects(bodyBoxes,false);
+    if(bHits.length>0&&bHits[0].distance<wallDist){
+      const hit=zmBots.find(b=>b.hitbox===bHits[0].object);
+      if(hit&&hit.alive) zmDamageBot(hit,wp.dmgBody,false);
+    }
+  }
+}
+
+function zmDamageBot(bot,dmg,head){
+  bot.hp-=dmg;
+  onShowHitMarker(head);
+  if(bot.hp<=0){
+    bot.alive=false;
+    onOpps.delete(bot.slot);
+    if(bot.group.userData.anim){ bot.group.userData.anim.dead=true; bot.group.userData.anim.deathT=0; }
+    setTimeout(()=>onScene.remove(bot.group),1500);
+    zmScore+=head?200:100; zmScore+=zmWave*10;
+    document.getElementById('duel-my-kills').textContent=zmScore;
+    const el=document.createElement('div');
+    el.textContent=head?'💥 +'+(200+zmWave*10):'+'+( 100+zmWave*10);
+    el.style.cssText='position:fixed;top:45%;left:50%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:.85rem;color:'+(head?'#ffd700':'#00ff88')+';pointer-events:none;z-index:65;animation:float-up .7s ease-out forwards;';
+    document.body.appendChild(el); setTimeout(()=>el.remove(),700);
+  }
+}
+
+function zmGameOver(){
+  zmActive=false;
+  zmBots.forEach(b=>{ if(onScene) onScene.remove(b.group); }); zmBots=[];
+  onOpps.forEach(o=>onScene.remove(o.group)); onOpps.clear();
+  onCleanup();
+  const t=document.getElementById('duel-go-title');
+  t.textContent='💀 GAME OVER'; t.style.color='#ff3d71'; t.style.textShadow='0 0 30px #ff3d71';
+  document.getElementById('duel-go-vs').textContent='MODO ZOMBIE · OLEADA '+zmWave;
+  document.getElementById('duel-go-score').textContent='PUNTUACIÓN: '+zmScore;
+  document.getElementById('duel-gameover-screen').classList.remove('hidden');
+}
+
+// ── GRANADAS ─────────────────────────────────────────────────
+function onThrowGrenade(){
+  if(!onAlive||!onActive||onGrenades<=0||onGrenCooldown) return;
+  onGrenades--;
+  onGrenCooldown=true;
+  setTimeout(()=>onGrenCooldown=false,3500);
+  const grenEl=document.getElementById('duel-gren-hud');
+  if(grenEl) grenEl.textContent=onGrenades>0?'💣'.repeat(onGrenades):'—';
+  // Crear mesh de granada
+  const geo=new THREE.SphereGeometry(.12,8,8);
+  const mat=new THREE.MeshLambertMaterial({color:0x2a4a1a});
+  const mesh=new THREE.Mesh(geo,mat); mesh.castShadow=true;
+  // Posición: frente a la cámara
+  const dir=new THREE.Vector3(); onCamera.getWorldDirection(dir);
+  const startPos=new THREE.Vector3(onPos.x, ON_H+onPosY-.1, onPos.z).addScaledVector(dir,.4);
+  mesh.position.copy(startPos);
+  onScene.add(mesh);
+  onSend({type:'grenade', pos:{x:onPos.x,z:onPos.z}, yaw:onYaw, pitch:onPitch});
+  // Física simple
+  const vel=dir.clone().multiplyScalar(18).add(new THREE.Vector3(0,8,0));
+  const gData={mesh,vel,life:0,exploded:false};
+  onGrenList.push(gData);
+}
+
+function onUpdateGrenades(dt){
+  for(let i=onGrenList.length-1;i>=0;i--){
+    const g=onGrenList[i]; if(g.exploded){onGrenList.splice(i,1);continue;}
+    g.life+=dt;
+    g.vel.y-=18*dt;
+    g.mesh.position.addScaledVector(g.vel,dt);
+    g.mesh.rotation.x+=dt*8; g.mesh.rotation.z+=dt*5;
+    if(g.mesh.position.y<0.15) g.mesh.position.y=0.15;
+    if(g.life>=2.5) onExplodeGrenade(g,i);
+  }
+}
+
+function onExplodeGrenade(g,idx){
+  g.exploded=true;
+  const pos=g.mesh.position.clone();
+  onScene.remove(g.mesh);
+  // Flash de explosión
+  const fl=new THREE.PointLight(0xff6600,20,8); fl.position.copy(pos); onScene.add(fl);
+  setTimeout(()=>onScene.remove(fl),180);
+  // Esfera de onda visual
+  const sphere=new THREE.Mesh(new THREE.SphereGeometry(.1,12,12),new THREE.MeshBasicMaterial({color:0xff6600,transparent:true,opacity:.9}));
+  sphere.position.copy(pos); onScene.add(sphere);
+  let t=0;
+  function expandWave(){
+    t+=0.05; sphere.scale.setScalar(1+t*40); sphere.material.opacity=Math.max(0,.9-t*3);
+    if(t<.3) requestAnimationFrame(expandWave); else onScene.remove(sphere);
+  }
+  requestAnimationFrame(expandWave);
+  // Shake de cámara si cerca
+  const dist=new THREE.Vector3(onPos.x,ON_H,onPos.z).distanceTo(pos);
+  if(dist<6){ onCamShake=0.4*(1-dist/6); }
+}
+
+let onCamShake=0;
+function onApplyCamShake(dt){
+  if(onCamShake<=0) return;
+  onCamShake=Math.max(0,onCamShake-dt*3);
+  onCamera.position.x=(Math.random()-.5)*onCamShake*.12;
+  onCamera.position.y=(Math.random()-.5)*onCamShake*.12;
+}
+
+// ── INIT WEAPON HUD SLOTS ─────────────────────────────────────
+function onInitWeaponSlots(){
+  const container=document.getElementById('duel-weapon-slots');
+  if(!container) return;
+  container.innerHTML='';
+  Object.entries(WEAPONS).forEach(([id,wp])=>{
+    const slot=document.createElement('div');
+    slot.className='duel-wp-slot';
+    slot.dataset.wp=id;
+    slot.style.cssText='padding:4px 10px;border:1px solid rgba(255,255,255,.2);border-radius:3px;cursor:pointer;font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:.1em;color:#ccc;background:rgba(255,255,255,.05);transition:all .15s;';
+    slot.innerHTML='<div style="font-size:.65rem">'+wp.key+'</div><div>'+wp.name+'</div>';
+    slot.onclick=()=>onSwitchWeapon(id);
+    container.appendChild(slot);
+  });
+  onUpdateWeaponHUD();
 }
 
 function onHandleKill(msg){
@@ -2063,6 +2677,8 @@ function onHandleKill(msg){
     onAddFeed(killerName+' ➤ '+onMyName,'#ff4444');
     if(!msg.matchOver) setTimeout(()=>{ if(onActive){ onHandleRespawn(msg.victimSpawn||onMySpawn); } },1500);
   } else if(msg.killerSlot===onMySlot){
+    // Resetear HP del rival en la barra (respawneará con 100)
+    onOppHP=100; onUpdateOppHP(msg.victimSlot,100);
     // Yo eliminé al rival → yo TAMBIÉN respawnero en MI spawn (equipo del killer)
     document.getElementById('duel-kill-notif').style.opacity='1';
     setTimeout(()=>document.getElementById('duel-kill-notif').style.opacity='0',1600);
@@ -2113,11 +2729,12 @@ function onShowGameOver(won){
 }
 function onSetErr(msg){ onCleanup(); onLobbyErr(msg); onShowScreen('duel-lobby-screen'); onConnect(); }
 function onCleanup(){
-  onActive=false; onLocked=false; clearInterval(onStateIv);
+  zmActive=false; onActive=false; onLocked=false; clearInterval(onStateIv);
   try{document.exitPointerLock();}catch(e){}
   document.getElementById('duel-canvas').style.display='none'; document.getElementById('duel-hud').style.display='none';
   document.getElementById('duel-crosshair').style.display='none'; document.getElementById('duel-lock-screen').style.display='none';
   document.getElementById('duel-death-vignette').style.display='none'; document.getElementById('duel-respawn-msg').style.display='none';
+  const oppHpW=document.getElementById('duel-opp-hp-wrap'); if(oppHpW) oppHpW.style.display='none';
   document.getElementById('duel-mobile-controls').classList.remove('active');
   onOpps.forEach(o=>{if(onScene)onScene.remove(o.group);}); onOpps.clear();
   if(onAnimId){cancelAnimationFrame(onAnimId);onAnimId=null;}
@@ -2142,8 +2759,27 @@ document.getElementById('duel-lock-btn').addEventListener('click',()=>{
   }
 });
 document.addEventListener('mousemove',e=>{ if((!onLocked&&!mobileMode)||!onActive) return; onMX+=e.movementX; onMY+=e.movementY; });
-document.getElementById('duel-canvas').addEventListener('click',()=>{ if(onLocked&&onActive&&!mobileMode) onTryShoot(); });
-document.addEventListener('keydown',e=>{ onKeys[e.key]=true; });
+document.getElementById('duel-canvas').addEventListener('click',()=>{
+  if(!onLocked||!mobileMode) {
+    if(zmActive) zmOnShoot();
+    else if(onActive) onTryShoot();
+  }
+});
+document.getElementById('open-zombie-btn').addEventListener('click',()=>{
+  menuScreen.classList.add('hidden');
+  onMyName=currentUser?.name||'Jugador';
+  onMySpawn={x:0,z:0,yaw:0};
+  zmStart();
+});
+document.addEventListener('keydown',e=>{
+  onKeys[e.key]=true;
+  if(!onActive) return;
+  if(e.key==='1') onSwitchWeapon('pistol');
+  if(e.key==='2') onSwitchWeapon('rifle');
+  if(e.key==='3') onSwitchWeapon('shotgun');
+  if(e.key==='r'||e.key==='R') onStartReload();
+  if(e.key==='g'||e.key==='G'){ if(zmActive||onActive) onThrowGrenade(); }
+});
 document.addEventListener('keyup',  e=>{ onKeys[e.key]=false; });
 
 function onAnimateAllChars(dt){ onOpps.forEach(opp=>{ if(opp.group&&opp.group.visible) onAnimateChar(opp.group,dt); }); }
@@ -2314,7 +2950,7 @@ duelLookZone.addEventListener('touchcancel', e=>{duelLook.active=false; duelLook
 
 document.getElementById('duel-btn-fire').addEventListener('touchstart', e=>{
   e.preventDefault();
-  if(mobileMode&&onActive) onTryShoot();
+  if(mobileMode&&onActive){ if(zmActive) zmOnShoot(); else onTryShoot(); }
 },{passive:false});
 
 document.getElementById('duel-btn-jump').addEventListener('touchstart', e=>{
