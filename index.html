@@ -2629,29 +2629,35 @@ function botsStartMatch(count, diff){
   if(btActive) botsCleanup();
   btActive=true; btBots=[]; btDiff=diff; btFirstTo=10;
   btScore={player:0};
-  Object.keys(btScore); // init
-  if(!onThreeReady) onInitThree();
-  onBuildMap(); onBuildLights();
 
-  // Set up scene as PVP
+  // ── Mostrar canvas ANTES de inicializar Three.js ──────────
+  onShowScreen(null);
+  document.getElementById('duel-canvas').style.display='block';
+  document.getElementById('duel-hud').style.display='block';
+  document.getElementById('duel-crosshair').style.display='block';
+
+  // ── Inicializar Three.js (necesita canvas visible) ────────
+  if(!onThreeReady) onInitThree();
+  else { onBuildMap(); onBuildLights(); }
+
+  // Set up vars
   onMyTeam=0; onMySlot=0; onRoomMode='1v1'; onFirstTo=btFirstTo; onActive=true;
   onPlayerNames=new Map([[0,currentUser?.name||'TÚ']]);
   onTeamScores=[0,0]; onPScores={};
+  onAlive=true; onCanShoot=true; onReloading=false;
 
   // Spawn player
   const pSpawn=BT_SPAWNS_RED[0];
   onMySpawn=pSpawn;
   onSpawnPlayer(pSpawn);
 
-  // Show HUD
-  document.getElementById('duel-canvas').style.display='block';
-  document.getElementById('duel-hud').style.display='block';
-  document.getElementById('duel-crosshair').style.display='block';
+  // HUD
   document.getElementById('duel-my-name-hud').textContent=(currentUser?.name||'TÚ').toUpperCase();
   document.getElementById('duel-opp-name-hud').textContent=count===1?'🤖 BOT':'🤖 BOTS';
   document.getElementById('duel-my-kills').textContent='0';
   document.getElementById('duel-opp-kills').textContent='0';
-  document.getElementById('duel-score-label').textContent='FIRST TO '+btFirstTo;
+  const sl=document.getElementById('duel-score-label'); if(sl) sl.textContent='FIRST TO '+btFirstTo;
+  const oppW=document.getElementById('duel-opp-hp-wrap'); if(oppW) oppW.style.display='flex';
   onInitWeaponSlots();
 
   // Lock pointer
