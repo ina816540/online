@@ -2625,44 +2625,251 @@ const BT_DIFF={
 const BT_SPAWNS_RED=[ {x:-14,z:-12,yaw:0.75},{x:-12,z:-5,yaw:0.6},{x:-15,z:1,yaw:0.35} ];
 const BT_SPAWNS_BLUE=[ {x:14,z:12,yaw:-Math.PI+0.75},{x:12,z:5,yaw:-Math.PI+0.6},{x:15,z:-1,yaw:-Math.PI+0.35} ];
 
+// ════════════════════════════════════════════════════════════
+// 🤖 MAPA BOT TRAINING
+// ════════════════════════════════════════════════════════════
+function btBuildMap(){
+  // Cielo de día, luz de tarde
+  onScene.background = new THREE.Color(0x7ab8d4);
+  onScene.fog = new THREE.Fog(0x9dcce0, 35, 90);
+
+  // ── Luces ──────────────────────────────────────────────────
+  onScene.add(new THREE.AmbientLight(0xfff0dd, 0.9));
+  const sun = new THREE.DirectionalLight(0xffe8aa, 1.4);
+  sun.position.set(15, 28, 10); sun.castShadow = true;
+  sun.shadow.mapSize.width = sun.shadow.mapSize.height = 2048;
+  onScene.add(sun);
+  const fill = new THREE.DirectionalLight(0x88aacc, 0.4);
+  fill.position.set(-10, 12, -18); onScene.add(fill);
+
+  function addM(obj){ obj.userData.isMapObj=true; onScene.add(obj); return obj; }
+
+  // ── Suelo: tierra seca con hierba y texto BOT TRAINING ────
+  const gc=document.createElement('canvas'); gc.width=gc.height=1024;
+  const gx=gc.getContext('2d');
+  // Base tierra
+  gx.fillStyle='#b8924a'; gx.fillRect(0,0,1024,1024);
+  // Variación de tierra
+  for(let i=0;i<120;i++){
+    gx.fillStyle=`rgba(${160+Math.random()*30|0},${120+Math.random()*20|0},${50+Math.random()*20|0},0.4)`;
+    gx.fillRect(Math.random()*1024,Math.random()*1024,20+Math.random()*50,15+Math.random()*35);
+  }
+  // Parches hierba
+  gx.fillStyle='#6a8c3a';
+  [[0,0,260,260],[764,0,260,260],[0,764,260,260],[764,764,260,260],
+   [280,180,80,60],[650,700,90,55],[350,620,70,60],[700,300,65,55],
+   [120,450,85,50],[830,420,80,55]].forEach(([x,y,w,h])=>gx.fillRect(x,y,w,h));
+  // Camino perimetral
+  gx.strokeStyle='#c8a060'; gx.lineWidth=55;
+  gx.beginPath(); gx.ellipse(512,512,460,460,0,0,Math.PI*2); gx.stroke();
+  // Manchas sangre
+  gx.fillStyle='rgba(100,0,0,0.3)';
+  gx.beginPath(); gx.ellipse(512,560,35,20,0,0,Math.PI*2); gx.fill();
+  gx.beginPath(); gx.ellipse(490,590,20,12,0.5,0,Math.PI*2); gx.fill();
+  // Texto BOT TRAINING
+  gx.save(); gx.globalAlpha=0.22; gx.font='bold 90px Arial Black';
+  gx.textAlign='center'; gx.textBaseline='middle'; gx.fillStyle='#ffffff';
+  gx.fillText('BOT',512,470); gx.fillText('TRAINING',512,570); gx.restore();
+  const groundTex=new THREE.CanvasTexture(gc);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(52,52),new THREE.MeshLambertMaterial({map:groundTex}));
+  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; addM(ground);
+
+  // ── Muro perimetral de piedra/sacos ───────────────────────
+  const wallM=new THREE.MeshLambertMaterial({color:0x8a7a5a});
+  const wallTop=new THREE.MeshLambertMaterial({color:0x6a5a3a});
+  function addPerimWall(cx,cz,w,d){
+    const wl=new THREE.Mesh(new THREE.BoxGeometry(w,1.1,d),wallM);
+    wl.position.set(cx,0.55,cz); wl.castShadow=true; addM(wl); onWalls.push(wl);
+    const cap=new THREE.Mesh(new THREE.BoxGeometry(w+.05,.18,d+.05),wallTop);
+    cap.position.set(cx,1.15,cz); addM(cap);
+    onObs.push({x:cx,z:cz,hw:w/2+.1,hd:d/2+.1});
+  }
+  // 4 segmentos de muro perimetral (sin cerrar del todo, con huecos)
+  addPerimWall(0,-22,20,1.0);  addPerimWall(0,22,20,1.0);
+  addPerimWall(-22,0,1.0,20);  addPerimWall(22,0,1.0,20);
+  addPerimWall(-11,-22,8,1.0); addPerimWall(11,-22,8,1.0);
+  addPerimWall(-11,22,8,1.0);  addPerimWall(11,22,8,1.0);
+  addPerimWall(-22,-11,1.0,8); addPerimWall(-22,11,1.0,8);
+  addPerimWall(22,-11,1.0,8);  addPerimWall(22,11,1.0,8);
+
+  // ── Bloques de concreto centrales (como en la imagen) ─────
+  const concM=new THREE.MeshLambertMaterial({color:0xb0b8c0});
+  const concD=new THREE.MeshLambertMaterial({color:0x8a9298});
+  function addConcreteBlock(x,z,w=1.8,h=1.5,d=0.6,ry=0){
+    const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),concM);
+    b.position.set(x,h/2,z); b.rotation.y=ry; b.castShadow=true; addM(b); onWalls.push(b);
+    const top=new THREE.Mesh(new THREE.BoxGeometry(w+.05,.1,d+.05),concD);
+    top.position.set(x,h+.05,z); top.rotation.y=ry; addM(top);
+    const hw=ry!==0?d/2+.15:w/2+.15, hd=ry!==0?w/2+.15:d/2+.15;
+    onObs.push({x,z,hw,hd});
+  }
+  // Par de bloques superiores
+  addConcreteBlock(-3.5,-7, 1.8,1.5,0.6);
+  addConcreteBlock( 3.5,-7, 1.8,1.5,0.6);
+  // Par central
+  addConcreteBlock(-4, 0,  1.8,1.5,0.6);
+  addConcreteBlock( 4, 0,  1.8,1.5,0.6);
+  // Par inferior
+  addConcreteBlock(-3.5, 7, 1.8,1.5,0.6);
+  addConcreteBlock( 3.5, 7, 1.8,1.5,0.6);
+  // Bloque solitario arriba
+  addConcreteBlock(0,-10, 1.8,1.5,0.6);
+
+  // ── BASE ROJA (esquina inferior-izquierda) ────────────────
+  const redM=new THREE.MeshLambertMaterial({color:0xcc2200});
+  const redRoof=new THREE.MeshLambertMaterial({color:0xaa1800});
+  const redBase=new THREE.Mesh(new THREE.BoxGeometry(5.5,2.8,4.5),new THREE.MeshLambertMaterial({color:0x8a6a4a}));
+  redBase.position.set(-14,1.4,14); addM(redBase); onWalls.push(redBase);
+  onObs.push({x:-14,z:14,hw:3.0,hd:2.5});
+  const redRoofM=new THREE.Mesh(new THREE.BoxGeometry(5.7,0.2,4.7),redM);
+  redRoofM.position.set(-14,2.9,14); addM(redRoofM);
+  // Puerta base roja (hueco)
+  const rdoorL=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.8,0.3),new THREE.MeshLambertMaterial({color:0x8a6a4a}));
+  rdoorL.position.set(-15.5,1.4,11.8); addM(rdoorL);
+  const rdoorR=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.8,0.3),new THREE.MeshLambertMaterial({color:0x8a6a4a}));
+  rdoorR.position.set(-12.5,1.4,11.8); addM(rdoorR);
+  // Letrero ROJO
+  const rSign=new THREE.Mesh(new THREE.PlaneGeometry(2,.5),new THREE.MeshBasicMaterial({color:0xff3300}));
+  rSign.position.set(-14,2.5,11.64); addM(rSign);
+  // Luz base roja
+  const rLight=new THREE.PointLight(0xff4400,1.8,8); rLight.position.set(-14,2,14); addM(rLight);
+
+  // ── BASE AZUL (esquina inferior-derecha) ──────────────────
+  const blueM=new THREE.MeshLambertMaterial({color:0x1155cc});
+  const blueBase=new THREE.Mesh(new THREE.BoxGeometry(5.5,2.8,4.5),new THREE.MeshLambertMaterial({color:0x4a6a8a}));
+  blueBase.position.set(14,1.4,14); addM(blueBase); onWalls.push(blueBase);
+  onObs.push({x:14,z:14,hw:3.0,hd:2.5});
+  const blueRoofM=new THREE.Mesh(new THREE.BoxGeometry(5.7,0.2,4.7),blueM);
+  blueRoofM.position.set(14,2.9,14); addM(blueRoofM);
+  // Puerta base azul
+  const bdoorL=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.8,0.3),new THREE.MeshLambertMaterial({color:0x4a6a8a}));
+  bdoorL.position.set(12.5,1.4,11.8); addM(bdoorL);
+  const bdoorR=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.8,0.3),new THREE.MeshLambertMaterial({color:0x4a6a8a}));
+  bdoorR.position.set(15.5,1.4,11.8); addM(bdoorR);
+  // Luz base azul
+  const bLight=new THREE.PointLight(0x2244ff,1.8,8); bLight.position.set(14,2,14); addM(bLight);
+
+  // ── CAJAS de madera esparcidas ─────────────────────────────
+  const boxM=new THREE.MeshLambertMaterial({color:0x8B5c1a});
+  const boxD=new THREE.MeshLambertMaterial({color:0x6a4010});
+  [[-18,-8,0.3],[-17,-5,0],[-16,-14,0.1],[18,-8,-0.2],[17,-5,0.1],[16,-13,-0.1],
+   [-18,5,0.2],[18,5,-0.15],[-8,-18,0.4],[8,-18,-0.3],[-8,18,0.1],[8,18,0.2]].forEach(([x,z,ry])=>{
+    const sz=0.55+Math.random()*.3;
+    const box=new THREE.Mesh(new THREE.BoxGeometry(sz,sz,sz),boxM);
+    box.position.set(x,sz/2,z); box.rotation.y=ry; box.castShadow=true; addM(box);
+  });
+
+  // ── BARRILES de colores ────────────────────────────────────
+  [[0xcc2200,-20,-14],[0xcc2200,-19,-10],[0x1155cc,20,-14],[0x1155cc,19,-10],
+   [0x226622,-16,0],[0x226622,16,0],[0xaa8800,-10,-20],[0xaa8800,10,-20],
+   [0xcc2200,-20,14],[0x1155cc,20,14]].forEach(([col,x,z])=>{
+    const brl=new THREE.Mesh(new THREE.CylinderGeometry(.26,.3,.72,10),new THREE.MeshLambertMaterial({color:col}));
+    brl.position.set(x,.36,z); brl.castShadow=true; addM(brl);
+  });
+
+  // ── SACOS DE ARENA perimetrales ────────────────────────────
+  const sandM=new THREE.MeshLambertMaterial({color:0xc8a86a});
+  function addSandbags(cx,cz,count,dir){
+    for(let i=0;i<count;i++){
+      const sb=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.38,0.42),sandM);
+      const stagger=(i%2)*.08;
+      sb.position.set(cx+dir[0]*i*.5,0.2+stagger,cz+dir[1]*i*.5);
+      sb.rotation.y=(Math.random()-.5)*.3; sb.castShadow=true; addM(sb);
+    }
+  }
+  addSandbags(-20,-20,5,[1,0]); addSandbags(15,-20,5,[1,0]);
+  addSandbags(-20,20,5,[1,0]);  addSandbags(15,20,5,[1,0]);
+  addSandbags(-22,-18,5,[0,1]); addSandbags(-22,13,5,[0,1]);
+  addSandbags(21,-18,5,[0,1]);  addSandbags(21,13,5,[0,1]);
+
+  // ── CONOS naranja ──────────────────────────────────────────
+  const coneM=new THREE.MeshLambertMaterial({color:0xff6600});
+  [[-5,-3],[5,-3],[0,4],[-3,10],[3,10],[-8,2],[8,2]].forEach(([x,z])=>{
+    if(!isNaN(x)){
+      const cone=new THREE.Mesh(new THREE.CylinderGeometry(0,0.18,0.55,8),coneM);
+      cone.position.set(x,0.275,z); addM(cone);
+    }
+  });
+
+  // ── ÁRBOLES en bordes ──────────────────────────────────────
+  const trunkM=new THREE.MeshLambertMaterial({color:0x5a3a1a});
+  const leavesColors=[0x2d5a1b,0x3a7a22,0x255a18,0x4a8a28];
+  [[-22,-22],[ 22,-22],[-22,22],[22,22],[-22,-8],[22,-8],[-22,8],[22,8],[0,-24],[0,24]].forEach(([x,z],i)=>{
+    const h=2.5+Math.random()*.8;
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,h,6),trunkM);
+    trunk.position.set(x,h/2,z); addM(trunk);
+    const leaves=new THREE.Mesh(new THREE.SphereGeometry(1.2+Math.random()*.4,7,5),new THREE.MeshLambertMaterial({color:leavesColors[i%4]}));
+    leaves.position.set(x,h+.7,z); leaves.castShadow=true; addM(leaves);
+  });
+
+  // ── Antorcha/fuego en base roja ────────────────────────────
+  const flame=new THREE.Mesh(new THREE.ConeGeometry(.1,.3,6),new THREE.MeshBasicMaterial({color:0xff6600}));
+  flame.position.set(-17,1.1,14); flame.userData.isFlame=true; addM(flame);
+  const fLight=new THREE.PointLight(0xff4400,2,5); fLight.position.set(-17,1.5,14); fLight.userData.isFlameLight=true; addM(fLight);
+  function flickerBt(){ onScene.children.forEach(c=>{ if(c.userData.isFlame){c.scale.y=0.9+Math.random()*.25; c.rotation.y+=.1;} if(c.userData.isFlameLight) c.intensity=1.5+Math.random()*1.2; }); if(btActive) requestAnimationFrame(flickerBt); }
+  flickerBt();
+}
+
 function botsStartMatch(count, diff){
   if(btActive) botsCleanup();
   btActive=true; btBots=[]; btDiff=diff; btFirstTo=10;
   btScore={player:0};
 
-  // ── Mostrar canvas ANTES de inicializar Three.js ──────────
+  // ── 1. Ocultar todas las pantallas y mostrar canvas ───────
   onShowScreen(null);
-  document.getElementById('duel-canvas').style.display='block';
+  menuScreen.classList.add('hidden');
+  document.getElementById('bots-screen').classList.add('hidden');
+  const cv=document.getElementById('duel-canvas');
+  cv.style.display='block';
   document.getElementById('duel-hud').style.display='block';
   document.getElementById('duel-crosshair').style.display='block';
 
-  // ── Inicializar Three.js (necesita canvas visible) ────────
-  if(!onThreeReady) onInitThree();
-  else { onBuildMap(); onBuildLights(); }
+  // ── 2. Inicializar renderer si es la primera vez ──────────
+  if(!onThreeReady){
+    onInitThree();       // crea renderer, escena, cámara
+  } else {
+    // Limpiar escena anterior completamente
+    const remove=[];
+    onScene.children.forEach(c=>{ if(c.userData.isMapObj||c.type==='AmbientLight'||c.type==='DirectionalLight'||c.type==='PointLight') remove.push(c); });
+    remove.forEach(c=>onScene.remove(c));
+    onWalls.length=0; onObs.length=0;
+  }
 
-  // Set up vars
+  // ── 3. Construir mapa BOT TRAINING ───────────────────────
+  btBuildMap();
+
+  // ── 4. Cámara y arma ─────────────────────────────────────
+  if(onGun&&onCamera){ onCamera.remove(onGun); onGun=null; }
+  onBuildGun();
+
+  // ── 5. Variables de partida ───────────────────────────────
   onMyTeam=0; onMySlot=0; onRoomMode='1v1'; onFirstTo=btFirstTo; onActive=true;
   onPlayerNames=new Map([[0,currentUser?.name||'TÚ']]);
   onTeamScores=[0,0]; onPScores={};
-  onAlive=true; onCanShoot=true; onReloading=false;
+  onAlive=false; onCanShoot=true; onReloading=false;
 
-  // Spawn player
+  // ── 6. Spawn jugador ─────────────────────────────────────
   const pSpawn=BT_SPAWNS_RED[0];
   onMySpawn=pSpawn;
   onSpawnPlayer(pSpawn);
 
-  // HUD
+  // ── 7. HUD ───────────────────────────────────────────────
   document.getElementById('duel-my-name-hud').textContent=(currentUser?.name||'TÚ').toUpperCase();
   document.getElementById('duel-opp-name-hud').textContent=count===1?'🤖 BOT':'🤖 BOTS';
   document.getElementById('duel-my-kills').textContent='0';
   document.getElementById('duel-opp-kills').textContent='0';
   const sl=document.getElementById('duel-score-label'); if(sl) sl.textContent='FIRST TO '+btFirstTo;
   const oppW=document.getElementById('duel-opp-hp-wrap'); if(oppW) oppW.style.display='flex';
+  document.getElementById('duel-death-vignette').style.display='none';
+  document.getElementById('duel-respawn-msg').style.display='none';
   onInitWeaponSlots();
 
-  // Lock pointer
+  // ── 8. Pointer lock ───────────────────────────────────────
   if(!mobileMode){
     document.getElementById('duel-lock-screen').style.display='flex';
+    // Nombre del oponente en la pantalla de bloqueo
+    const lockOpp=document.getElementById('duel-opp-name-lock'); if(lockOpp) lockOpp.textContent=count+' BOT'+(count>1?'S':'');
+    const lockTeam=document.getElementById('duel-lock-team'); if(lockTeam) lockTeam.textContent='Equipo: ROJO';
   } else {
     onLocked=true;
     document.getElementById('duel-mobile-controls').classList.add('active');
