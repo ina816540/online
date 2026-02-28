@@ -114,7 +114,7 @@ wss.on('connection', ws => {
           chatHistory: []
         };
         rooms.set(room.id, room);
-        me = { ws, slot:0, team:0, name:(msg.playerName||'Jugador').substring(0,20), alive:true };
+        me = { ws, slot:0, team:0, name:(msg.playerName||'Jugador').substring(0,20), alive:true, hp:100 };
         room.players.push(me);
         room.pScores[me.name] = 0;
         send(ws, {
@@ -139,7 +139,7 @@ wss.on('connection', ws => {
         room = r;
         const slot = room.players.length;
         const team = room.mode === 'ffa' ? slot : slot % 2;
-        me = { ws, slot, team, name:(msg.playerName||'Jugador').substring(0,20), alive:true };
+        me = { ws, slot, team, name:(msg.playerName||'Jugador').substring(0,20), alive:true, hp:100 };
         room.players.push(me);
         room.pScores[me.name] = 0;
         const spawn = getSpawn(room, me);
@@ -205,42 +205,44 @@ wss.on('connection', ws => {
         room.players.forEach(p => { if (p !== me) send(p.ws, { type:'opp_shoot', slot:me.slot }); });
         break;
 
-      // ── HIT ───────────────────────────────────────────────
+      // ── HIT (daño con HP) ─────────────────────────────────
       case 'hit': {
         if (!room || !me || !me.alive) return;
         const victim = room.players.find(p => p.slot === msg.victimSlot);
         if (!victim || !victim.alive) return;
         if (room.mode !== 'ffa' && me.team === victim.team) return; // sin FF
 
-        // Ambos mueren temporalmente
+        const zone     = msg.zone || 'body'; // 'head','body','legs'
+        const dmg      = Math.max(1, Math.min(150, msg.dmg || 25));
+        victim.hp      = Math.max(0, (victim.hp || 100) - dmg);
+
+        // Notificar daño a la víctima
+        send(victim.ws, { type:'damage', hp: victim.hp, dmg, zone, attackerSlot: me.slot });
+        // Notificar al atacante la HP actual del rival (para barra rival)
+        send(me.ws, { type:'opp_hp', slot: victim.slot, hp: victim.hp, dmg, zone });
+
+        if (victim.hp > 0) break; // Sigue vivo
+
+        // ── KILL ──────────────────────────────────────────
         victim.alive = false;
         me.alive     = false;
 
-        // Actualizar puntaje
         if (room.mode === 'ffa') {
           room.pScores[me.name] = (room.pScores[me.name] || 0) + 1;
         } else {
           room.teamScores[me.team]++;
         }
 
-        const myScore  = room.mode === 'ffa' ? room.pScores[me.name] : room.teamScores[me.team];
+        const myScore   = room.mode === 'ffa' ? room.pScores[me.name] : room.teamScores[me.team];
         const matchOver = myScore >= room.firstTo;
-
-        // Calcular spawns de ambos
         const victimSpawn = getSpawn(room, victim);
         const killerSpawn = getSpawn(room, me);
 
-        // Notificar kill a todos (con spawns incluidos para que el cliente los use)
         const killMsg = {
-          type:        'kill',
-          killerSlot:  me.slot,
-          victimSlot:  victim.slot,
-          killerTeam:  me.team,
-          teamScores:  [...room.teamScores],
-          pScores:     {...room.pScores},
-          matchOver,
-          killerSpawn: killerSpawn,  // spawn del killer (equipo del killer)
-          victimSpawn: victimSpawn   // spawn de la víctima (equipo de la víctima)
+          type:'kill', killerSlot:me.slot, victimSlot:victim.slot,
+          killerTeam:me.team, teamScores:[...room.teamScores],
+          pScores:{...room.pScores}, matchOver,
+          killerSpawn, victimSpawn, headshot
         };
         room.players.forEach(p => send(p.ws, killMsg));
 
@@ -249,26 +251,25 @@ wss.on('connection', ws => {
           setTimeout(() => rooms.delete(room.id), 15000);
           pushRoomList();
         } else {
-          // ── RESPAWN DE AMBOS después de 1.5s ─────────────
           setTimeout(() => {
             if (room.closed) return;
-
-            // Respawnear víctima
-            victim.alive = true;
+            victim.alive = true; victim.hp = 100;
             send(victim.ws, { type:'respawn', spawn: victimSpawn });
-            room.players.forEach(p => {
-              if (p !== victim) send(p.ws, { type:'player_respawn', slot: victim.slot, spawn: victimSpawn });
-            });
-
-            // Respawnear killer también
-            me.alive = true;
+            room.players.forEach(p => { if (p !== victim) send(p.ws, { type:'player_respawn', slot:victim.slot, spawn:victimSpawn }); });
+            me.alive = true; me.hp = 100;
             send(me.ws, { type:'respawn', spawn: killerSpawn });
-            room.players.forEach(p => {
-              if (p !== me) send(p.ws, { type:'player_respawn', slot: me.slot, spawn: killerSpawn });
-            });
-
+            room.players.forEach(p => { if (p !== me) send(p.ws, { type:'player_respawn', slot:me.slot, spawn:killerSpawn }); });
           }, RESPAWN_DELAY);
         }
+        break;
+      }
+
+      // ── GRANADA (broadcast visual) ─────────────────────
+      case 'grenade': {
+        if (!room || !me) return;
+        room.players.forEach(p => {
+          if (p !== me) send(p.ws, { type:'opp_grenade', slot:me.slot, pos:msg.pos, yaw:msg.yaw, pitch:msg.pitch });
+        });
         break;
       }
     }
