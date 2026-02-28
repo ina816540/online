@@ -354,13 +354,67 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     <div class="user-badge"><span id="menu-user-av">🎯</span><span id="menu-user-name">—</span></div>
     <button class="extra-btn" id="open-lb-btn">🏆 RÉCORDS</button>
     <button class="extra-btn" id="open-stats-btn">📊 ESTADÍSTICAS</button>
+    <button class="extra-btn" id="open-friends-btn">👥 AMIGOS</button>
     <button class="extra-btn" id="logout-btn">⏏ CERRAR SESIÓN</button>
   </div>
   <div class="menu-extra-row" style="margin-top:8px">
     <button id="open-1v1-btn" style="background:linear-gradient(135deg,#ff3d71,#e040fb);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(224,64,251,.3);">⚔ 1v1 ONLINE</button>
     <button id="open-zombie-btn" style="background:linear-gradient(135deg,#1a6622,#44cc22);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(68,204,34,.3);">🧟 ZOMBIES</button>
+    <button id="open-bots-btn" style="background:linear-gradient(135deg,#1a4a7a,#2277cc);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(34,119,204,.3);">🤖 VS BOTS</button>
     <button class="mob-toggle-btn" id="mob-toggle-menu-btn">📱 MODO MÓVIL</button>
   </div>
+</div>
+
+<!-- FRIENDS SCREEN -->
+<div class="screen hidden" id="friends-screen" style="max-width:480px;margin:auto;padding:24px 16px">
+  <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:.2em;color:var(--accent);margin-bottom:18px;text-align:center">👥 AMIGOS</div>
+  <!-- Agregar amigo -->
+  <div style="display:flex;gap:8px;margin-bottom:18px">
+    <input id="friend-search-input" placeholder="Buscar usuario..." maxlength="20"
+      style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);font-family:'Orbitron',monospace;font-size:.65rem;padding:9px 12px;outline:none;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)">
+    <button id="friend-search-btn"
+      style="background:var(--accent);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:900;letter-spacing:.12em;padding:9px 16px;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)">BUSCAR</button>
+  </div>
+  <div id="friend-search-result" style="margin-bottom:14px;min-height:36px"></div>
+  <!-- Solicitudes pendientes -->
+  <div id="friend-requests-wrap" style="display:none;margin-bottom:16px">
+    <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim);margin-bottom:6px">📬 SOLICITUDES PENDIENTES</div>
+    <div id="friend-requests-list"></div>
+  </div>
+  <!-- Lista de amigos -->
+  <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim);margin-bottom:8px">TUS AMIGOS <span id="friends-count" style="color:var(--accent)">0</span></div>
+  <div id="friends-list" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto"></div>
+  <div id="friends-empty" style="text-align:center;color:var(--dim);font-size:.6rem;padding:24px 0">No tienes amigos aún — ¡busca uno!</div>
+  <button id="friends-back-btn" style="margin-top:20px;width:100%;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:11px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">← VOLVER</button>
+</div>
+
+<!-- BOTS LOBBY -->
+<div class="screen hidden" id="bots-screen" style="max-width:460px;margin:auto;padding:24px 16px">
+  <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:.2em;color:#2277cc;margin-bottom:18px;text-align:center">🤖 PRÁCTICA VS BOTS</div>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.6rem;letter-spacing:.15em;color:var(--dim)">NÚMERO DE BOTS</span>
+      <div style="display:flex;gap:6px">
+        <button class="bot-count-btn" data-n="1" style="padding:5px 13px;background:rgba(34,119,204,.7);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;font-weight:900;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">1</button>
+        <button class="bot-count-btn" data-n="2" style="padding:5px 13px;background:rgba(34,119,204,.35);border:1px solid rgba(34,119,204,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">2</button>
+        <button class="bot-count-btn" data-n="3" style="padding:5px 13px;background:rgba(34,119,204,.35);border:1px solid rgba(34,119,204,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">3</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.6rem;letter-spacing:.15em;color:var(--dim)">DIFICULTAD</span>
+      <div style="display:flex;gap:6px">
+        <button class="bot-diff-btn" data-d="easy"   style="padding:5px 13px;background:rgba(34,204,34,.7);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:900;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">FÁCIL</button>
+        <button class="bot-diff-btn" data-d="medium" style="padding:5px 13px;background:rgba(255,170,0,.35);border:1px solid rgba(255,170,0,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">MEDIO</button>
+        <button class="bot-diff-btn" data-d="hard"   style="padding:5px 13px;background:rgba(255,61,61,.35);border:1px solid rgba(255,61,61,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">DIFÍCIL</button>
+      </div>
+    </div>
+    <div style="background:rgba(34,119,204,.08);border:1px solid rgba(34,119,204,.2);padding:10px 14px;font-size:.55rem;line-height:1.9;color:var(--dim)" id="bots-desc">
+      <b style="color:#66aaff">FÁCIL</b> — Los bots patrullan lentamente y tienen mala puntería<br>
+      <b style="color:#fff">1 BOT</b> — Ideal para calentar, mapa PVP normal
+    </div>
+  </div>
+  <button id="bots-start-btn" style="width:100%;background:linear-gradient(135deg,#1a4a7a,#2277cc);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.8rem;font-weight:900;letter-spacing:.2em;padding:14px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);box-shadow:0 0 20px rgba(34,119,204,.4)">🤖 INICIAR PRÁCTICA</button>
+  <button id="bots-back-btn" style="margin-top:10px;width:100%;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:11px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">← VOLVER</button>
 </div>
 
 <!-- SETTINGS -->
@@ -857,6 +911,144 @@ function applyCfgToDOM() {
 // ============================================================
 let lbMode = 'all';
 document.getElementById('open-lb-btn').addEventListener('click', () => { document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('lb-screen').classList.remove('hidden'); loadLB(); });
+
+// ── BOTS: lobby navigation ────────────────────────────────────
+let botsCount=1, botsDiff='easy';
+document.getElementById('open-bots-btn').addEventListener('click',()=>{ document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('bots-screen').classList.remove('hidden'); });
+document.getElementById('bots-back-btn').addEventListener('click',()=>{ document.getElementById('bots-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); });
+document.querySelectorAll('.bot-count-btn').forEach(b=>b.addEventListener('click',()=>{
+  botsCount=parseInt(b.dataset.n);
+  document.querySelectorAll('.bot-count-btn').forEach(x=>{ x.style.background='rgba(34,119,204,.35)'; x.style.border='1px solid rgba(34,119,204,.5)'; });
+  b.style.background='rgba(34,119,204,.8)'; b.style.border='none';
+  updateBotsDesc();
+}));
+document.querySelectorAll('.bot-diff-btn').forEach(b=>b.addEventListener('click',()=>{
+  botsDiff=b.dataset.d;
+  document.querySelectorAll('.bot-diff-btn').forEach(x=>{ x.style.opacity='.5'; x.style.fontWeight='400'; });
+  b.style.opacity='1'; b.style.fontWeight='900';
+  updateBotsDesc();
+}));
+function updateBotsDesc(){
+  const diffMap={easy:{label:'FÁCIL',col:'#66ff66',txt:'patrullan lentamente y tienen mala puntería'},medium:{label:'MEDIO',col:'#ffaa00',txt:'rastrean tu posición y disparan con precisión normal'},hard:{label:'DIFÍCIL',col:'#ff4444',txt:'reaccionan rápido, flanquean y tienen mira precisa'}};
+  const d=diffMap[botsDiff];
+  document.getElementById('bots-desc').innerHTML=`<b style="color:${d.col}">${d.label}</b> — Los bots ${d.txt}<br><b style="color:#fff">${botsCount} BOT${botsCount>1?'S':''}</b> — Mapa PVP normal, kills hasta 10`;
+}
+document.getElementById('bots-start-btn').addEventListener('click',()=>{
+  document.getElementById('bots-screen').classList.add('hidden');
+  botsStartMatch(botsCount, botsDiff);
+});
+
+// ── FRIENDS: navigation ───────────────────────────────────────
+document.getElementById('open-friends-btn').addEventListener('click',()=>{ document.getElementById('menu-screen').classList.add('hidden'); document.getElementById('friends-screen').classList.remove('hidden'); loadFriends(); });
+document.getElementById('friends-back-btn').addEventListener('click',()=>{ document.getElementById('friends-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); });
+document.getElementById('friend-search-btn').addEventListener('click', searchFriend);
+document.getElementById('friend-search-input').addEventListener('keydown',e=>{ if(e.key==='Enter') searchFriend(); });
+
+// ── FRIENDS SYSTEM ────────────────────────────────────────────
+async function searchFriend(){
+  if(!currentUser){ alert('Debes iniciar sesión'); return; }
+  const q=document.getElementById('friend-search-input').value.trim().toLowerCase();
+  if(!q) return;
+  const res=document.getElementById('friend-search-result');
+  res.innerHTML='<span style="color:var(--dim);font-size:.58rem">Buscando...</span>';
+  const {data,error}=await sbClient.from('game_users').select('id,display_name,avatar').eq('username',q).single();
+  if(error||!data){ res.innerHTML='<span style="color:#ff4444;font-size:.58rem">⚠ Usuario no encontrado</span>'; return; }
+  if(data.id===currentUser.id){ res.innerHTML='<span style="color:#ff4444;font-size:.58rem">⚠ Eres tú mismo</span>'; return; }
+  // Check if already friends
+  const {data:existing}=await sbClient.from('friendships').select('id,status').or(`requester_id.eq.${currentUser.id},addressee_id.eq.${currentUser.id}`).or(`requester_id.eq.${data.id},addressee_id.eq.${data.id}`);
+  const rel=existing?.find(r=>(r.requester_id===currentUser.id&&r.addressee_id===data.id)||(r.requester_id===data.id&&r.addressee_id===currentUser.id));
+  let actionBtn='';
+  if(!rel) actionBtn=`<button onclick="sendFriendReq('${data.id}','${data.display_name}')" style="padding:5px 12px;background:var(--accent);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.55rem;font-weight:900;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">+ AGREGAR</button>`;
+  else if(rel.status==='pending') actionBtn='<span style="color:#ffd700;font-size:.55rem">⏳ PENDIENTE</span>';
+  else if(rel.status==='accepted') actionBtn='<span style="color:#44ff88;font-size:.55rem">✓ YA SON AMIGOS</span>';
+  res.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border)">
+    <span style="font-size:1.4rem">${data.avatar||'🎮'}</span>
+    <span style="font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;flex:1">${data.display_name}</span>
+    ${actionBtn}
+  </div>`;
+}
+
+async function sendFriendReq(toId, toName){
+  const {error}=await sbClient.from('friendships').insert({requester_id:currentUser.id,addressee_id:toId,status:'pending',created_at:new Date().toISOString()});
+  if(error){ document.getElementById('friend-search-result').innerHTML='<span style="color:#ff4444;font-size:.58rem">Error al enviar solicitud</span>'; return; }
+  document.getElementById('friend-search-result').innerHTML=`<span style="color:#44ff88;font-size:.58rem">✓ Solicitud enviada a ${toName}</span>`;
+}
+
+async function loadFriends(){
+  if(!currentUser) return;
+  const list=document.getElementById('friends-list');
+  const empty=document.getElementById('friends-empty');
+  const reqWrap=document.getElementById('friend-requests-wrap');
+  const reqList=document.getElementById('friend-requests-list');
+  list.innerHTML=''; reqList.innerHTML='';
+
+  // Load accepted friends
+  const {data:fs}=await sbClient.from('friendships').select('*').or(`requester_id.eq.${currentUser.id},addressee_id.eq.${currentUser.id}`).eq('status','accepted');
+  const friendIds=(fs||[]).map(f=>f.requester_id===currentUser.id?f.addressee_id:f.requester_id);
+  document.getElementById('friends-count').textContent=friendIds.length;
+  if(friendIds.length===0){ empty.style.display='block'; list.style.display='none'; }
+  else{
+    empty.style.display='none'; list.style.display='flex';
+    const {data:users}=await sbClient.from('game_users').select('id,display_name,avatar,last_seen').in('id',friendIds);
+    (users||[]).forEach(u=>{
+      const online=u.last_seen&&(Date.now()-new Date(u.last_seen).getTime())<120000;
+      const fr=fs.find(f=>f.requester_id===u.id||f.addressee_id===u.id);
+      const el=document.createElement('div');
+      el.style.cssText='display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border)';
+      el.innerHTML=`<span style="font-size:1.3rem">${u.avatar||'🎮'}</span>
+        <div style="flex:1">
+          <div style="font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700">${u.display_name}</div>
+          <div style="font-size:.48rem;color:${online?'#44ff88':'var(--dim)'}">${online?'● EN LÍNEA':'○ Desconectado'}</div>
+        </div>
+        <button onclick="inviteFriend('${u.display_name}')" style="padding:4px 10px;background:rgba(34,119,204,.6);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.5rem;cursor:pointer;clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)">INVITAR</button>
+        <button onclick="removeFriend('${fr?.id}','${u.display_name}')" style="padding:4px 8px;background:rgba(255,50,50,.2);border:1px solid rgba(255,50,50,.3);color:#ff6666;font-family:'Orbitron',monospace;font-size:.48rem;cursor:pointer">✕</button>`;
+      list.appendChild(el);
+    });
+  }
+
+  // Load pending requests (sent TO me)
+  const {data:reqs}=await sbClient.from('friendships').select('*').eq('addressee_id',currentUser.id).eq('status','pending');
+  if(reqs&&reqs.length>0){
+    reqWrap.style.display='block';
+    const {data:reqUsers}=await sbClient.from('game_users').select('id,display_name,avatar').in('id',reqs.map(r=>r.requester_id));
+    reqs.forEach(req=>{
+      const u=reqUsers?.find(x=>x.id===req.requester_id);
+      if(!u) return;
+      const el=document.createElement('div');
+      el.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.2);margin-bottom:5px';
+      el.innerHTML=`<span style="font-size:1.2rem">${u.avatar||'🎮'}</span>
+        <span style="font-family:'Orbitron',monospace;font-size:.6rem;flex:1">${u.display_name}</span>
+        <button onclick="acceptFriendReq('${req.id}','${u.display_name}')" style="padding:4px 10px;background:rgba(68,255,136,.7);border:none;color:#000;font-family:'Orbitron',monospace;font-size:.5rem;font-weight:900;cursor:pointer">✓ ACEPTAR</button>
+        <button onclick="declineFriendReq('${req.id}')" style="padding:4px 8px;background:rgba(255,50,50,.3);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.5rem;cursor:pointer">✕</button>`;
+      reqList.appendChild(el);
+    });
+  } else reqWrap.style.display='none';
+
+  // Update last_seen
+  sbClient.from('game_users').update({last_seen:new Date().toISOString()}).eq('id',currentUser.id);
+}
+
+async function acceptFriendReq(reqId, name){
+  await sbClient.from('friendships').update({status:'accepted'}).eq('id',reqId);
+  loadFriends();
+}
+async function declineFriendReq(reqId){
+  await sbClient.from('friendships').delete().eq('id',reqId);
+  loadFriends();
+}
+async function removeFriend(friendshipId, name){
+  if(!confirm('¿Eliminar a '+name+' de amigos?')) return;
+  await sbClient.from('friendships').delete().eq('id',friendshipId);
+  loadFriends();
+}
+function inviteFriend(name){
+  // Copy invite message to clipboard
+  const room=document.getElementById('duel-room-name-input')?.value||'mi sala';
+  navigator.clipboard?.writeText('¡Te invito a jugar INA TRAINER! Únete a la sala: '+room).then(()=>alert('¡Invitación copiada! Pégala en el chat de '+name));
+}
+
+// Update last_seen every 60s while logged in
+setInterval(()=>{ if(currentUser) sbClient.from('game_users').update({last_seen:new Date().toISOString()}).eq('id',currentUser.id); }, 60000);
 document.getElementById('lb-back-btn').addEventListener('click', () => { document.getElementById('lb-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); });
 document.getElementById('lb-refresh-btn').addEventListener('click', loadLB);
 document.getElementById('lb-tabs').querySelectorAll('.lb-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.lb-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); lbMode = t.dataset.mode; loadLB(); }));
@@ -2419,6 +2611,336 @@ function onHandleOppGrenade(msg){
   const yaw=msg.yaw||0, pitch=msg.pitch||0;
   const vel=new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch), Math.sin(pitch)+0.4, -Math.cos(yaw)*Math.cos(pitch)).multiplyScalar(18).add(new THREE.Vector3(0,8,0));
   onGrenList.push({mesh,vel,life:0,exploded:false});
+}
+
+// ════════════════════════════════════════════════════════════
+// 🤖 MODO BOTS OFFLINE
+// ════════════════════════════════════════════════════════════
+let btActive=false, btBots=[], btScore={player:0}, btAnimId=null, btDiff='easy', btFirstTo=10;
+const BT_DIFF={
+  easy:   {spd:2.5,  aimErr:0.18, reactionT:1.8, shootCd:1400, dmg:15, vision:12},
+  medium: {spd:4.0,  aimErr:0.08, reactionT:0.9, shootCd:900,  dmg:20, vision:18},
+  hard:   {spd:5.5,  aimErr:0.02, reactionT:0.3, shootCd:500,  dmg:25, vision:24}
+};
+const BT_SPAWNS_RED=[ {x:-14,z:-12,yaw:0.75},{x:-12,z:-5,yaw:0.6},{x:-15,z:1,yaw:0.35} ];
+const BT_SPAWNS_BLUE=[ {x:14,z:12,yaw:-Math.PI+0.75},{x:12,z:5,yaw:-Math.PI+0.6},{x:15,z:-1,yaw:-Math.PI+0.35} ];
+
+function botsStartMatch(count, diff){
+  if(btActive) botsCleanup();
+  btActive=true; btBots=[]; btDiff=diff; btFirstTo=10;
+  btScore={player:0};
+  Object.keys(btScore); // init
+  if(!onThreeReady) onInitThree();
+  onBuildMap(); onBuildLights();
+
+  // Set up scene as PVP
+  onMyTeam=0; onMySlot=0; onRoomMode='1v1'; onFirstTo=btFirstTo; onActive=true;
+  onPlayerNames=new Map([[0,currentUser?.name||'TÚ']]);
+  onTeamScores=[0,0]; onPScores={};
+
+  // Spawn player
+  const pSpawn=BT_SPAWNS_RED[0];
+  onMySpawn=pSpawn;
+  onSpawnPlayer(pSpawn);
+
+  // Show HUD
+  document.getElementById('duel-canvas').style.display='block';
+  document.getElementById('duel-hud').style.display='block';
+  document.getElementById('duel-crosshair').style.display='block';
+  document.getElementById('duel-my-name-hud').textContent=(currentUser?.name||'TÚ').toUpperCase();
+  document.getElementById('duel-opp-name-hud').textContent=count===1?'🤖 BOT':'🤖 BOTS';
+  document.getElementById('duel-my-kills').textContent='0';
+  document.getElementById('duel-opp-kills').textContent='0';
+  document.getElementById('duel-score-label').textContent='FIRST TO '+btFirstTo;
+  onInitWeaponSlots();
+
+  // Lock pointer
+  if(!mobileMode){
+    document.getElementById('duel-lock-screen').style.display='flex';
+  } else {
+    onLocked=true;
+    document.getElementById('duel-mobile-controls').classList.add('active');
+  }
+
+  // Create bots
+  for(let i=0;i<count;i++){
+    const sp=BT_SPAWNS_BLUE[i%BT_SPAWNS_BLUE.length];
+    btSpawnBot(i+1, sp, diff);
+  }
+
+  // Update HUD back button to return to menu
+  document.getElementById('duel-menu-btn').onclick=()=>{
+    botsCleanup();
+    document.getElementById('duel-canvas').style.display='none';
+    document.getElementById('duel-hud').style.display='none';
+    document.getElementById('duel-crosshair').style.display='none';
+    document.getElementById('menu-screen').classList.remove('hidden');
+  };
+
+  // Start loop
+  if(btAnimId) cancelAnimationFrame(btAnimId);
+  let last=performance.now();
+  function btLoop(now){
+    btAnimId=requestAnimationFrame(btLoop);
+    const dt=Math.min((now-last)/1000,.05); last=now;
+    if(btActive){ onMove(dt); onApplyCam(); onAnimGun(dt); btUpdateBots(dt); onUpdateGrenades(dt); onApplyCamShake(dt); onAnimateAllChars(dt); }
+    onRenderer.render(onScene,onCamera);
+  }
+  btLoop(performance.now());
+}
+
+function btSpawnBot(slot, spawn, diff){
+  const col=TEAM_COLORS[1]||0x2277ff;
+  const g=onCreateRobloxChar(col);
+  g.position.set(spawn.x,0,spawn.z);
+  onScene.add(g);
+  const cfg=BT_DIFF[diff];
+  const bot={
+    slot, group:g,
+    hitbox:g.userData.hitbox,
+    headHitbox:g.userData.headHitbox,
+    legHitbox:g.userData.legHitbox,
+    hp:100, alive:true,
+    spawn, diff, cfg,
+    state:'patrol',      // patrol | chase | shoot | dead
+    patrolTarget:null,
+    shootCd:0,
+    reactionT:0,
+    stuckT:0,
+    prevX:null, prevZ:null,
+    name:'BOT '+(slot)
+  };
+  onOpps.set(slot,{group:g,hitbox:g.userData.hitbox,headHitbox:g.userData.headHitbox,legHitbox:g.userData.legHitbox});
+  onPlayerNames.set(slot, bot.name);
+  btBots.push(bot);
+}
+
+function btUpdateBots(dt){
+  if(!btActive) return;
+  btBots.forEach(bot=>{
+    if(!bot.alive) return;
+    const cfg=bot.cfg;
+    const px=onPos.x, pz=onPos.z;
+    const bx=bot.group.position.x, bz=bot.group.position.z;
+    const dx=px-bx, dz=pz-bz;
+    const dist=Math.sqrt(dx*dx+dz*dz);
+
+    // ── Visión de línea recta (sin obstáculos por simplicidad) ──
+    const canSee = dist < cfg.vision;
+
+    // ── Máquina de estados ──────────────────────────────────────
+    if(!canSee){
+      bot.state='patrol';
+      bot.reactionT=cfg.reactionT;
+    } else if(canSee && bot.reactionT>0){
+      bot.reactionT-=dt;
+      bot.state='chase';
+    } else {
+      bot.state= dist>5 ? 'chase' : 'shoot';
+    }
+
+    // ── Patrulla: ir a punto aleatorio ──────────────────────────
+    if(bot.state==='patrol'){
+      if(!bot.patrolTarget || btDist(bot.group.position,bot.patrolTarget)<1.2){
+        bot.patrolTarget={x:(Math.random()-.5)*24, z:(Math.random()-.5)*24};
+      }
+      const tx=bot.patrolTarget.x-bx, tz=bot.patrolTarget.z-bz;
+      const td=Math.sqrt(tx*tx+tz*tz)||1;
+      const spd=cfg.spd*.5*dt;
+      const nx=bx+tx/td*spd, nz=bz+tz/td*spd;
+      if(!onCollides(nx,nz)){ bot.group.position.x=nx; bot.group.position.z=nz; }
+      bot.group.rotation.y=Math.atan2(tx,tz);
+    }
+
+    // ── Perseguir jugador ────────────────────────────────────────
+    if(bot.state==='chase'||bot.state==='shoot'){
+      bot.group.rotation.y=Math.atan2(dx,dz);
+      if(bot.state==='chase'&&dist>1.5){
+        const spd=cfg.spd*dt;
+        const nx=bx+dx/dist*spd, nz=bz+dz/dist*spd;
+        if(!onCollides(nx,nz)){ bot.group.position.x=nx; bot.group.position.z=nz; }
+        else{
+          // Intentar rodear obstáculo
+          const nx2=bx+(-dz/dist)*spd, nz2=bz+(dx/dist)*spd;
+          if(!onCollides(nx2,nz2)){ bot.group.position.x=nx2; bot.group.position.z=nz2; }
+        }
+      }
+    }
+
+    // ── Disparar al jugador ──────────────────────────────────────
+    bot.shootCd=Math.max(0,bot.shootCd-dt*1000);
+    if(bot.state==='shoot' && bot.shootCd<=0 && onAlive){
+      bot.shootCd=cfg.shootCd;
+      // Error de puntería
+      const aimX=dx/dist + (Math.random()-.5)*cfg.aimErr*2;
+      const aimZ=dz/dist + (Math.random()-.5)*cfg.aimErr*2;
+      // Calcular si acierta (dot product)
+      const acc=1-cfg.aimErr;
+      const roll=Math.random();
+      if(roll<acc){
+        // Zona aleatoria ponderada
+        const r2=Math.random();
+        const zone=r2<.15?'head':r2<.55?'body':'legs';
+        const dmg=zone==='head'?50:zone==='body'?cfg.dmg:15;
+        onMyHP=Math.max(0,onMyHP-dmg);
+        onUpdateHP(onMyHP);
+        onHandleDamage({hp:onMyHP, dmg, zone});
+        if(onMyHP<=0) btPlayerDied(bot);
+      }
+      // Flash de disparo en el bot
+      if(bot.group.userData.anim) bot.group.userData.anim.shootT=1;
+      onAddFeed(bot.name+' ➤ '+(currentUser?.name||'TÚ'),'#4488ff');
+    }
+
+    onAnimateChar(bot.group, dt);
+  });
+}
+
+function btDist(a,b){ const dx=a.x-b.x,dz=a.z-b.z; return Math.sqrt(dx*dx+dz*dz); }
+
+function btPlayerDied(killer){
+  if(!onAlive) return;
+  onAlive=false;
+  onTeamScores[1]=(onTeamScores[1]||0)+1;
+  document.getElementById('duel-opp-kills').textContent=onTeamScores[1];
+  document.getElementById('duel-death-vignette').style.display='block';
+  document.getElementById('duel-death-vignette').style.opacity='1';
+  const rm=document.getElementById('duel-respawn-msg');
+  rm.textContent='💀 REAPARECIENDO...'; rm.style.display='block'; rm.style.color='#ff3d71';
+  if(onTeamScores[1]>=btFirstTo){ btGameOver(false); return; }
+  setTimeout(()=>{
+    if(!btActive) return;
+    onSpawnPlayer(onMySpawn);
+    document.getElementById('duel-death-vignette').style.display='none';
+    document.getElementById('duel-respawn-msg').style.display='none';
+    // Bots también respawnean
+    btBots.forEach(b=>btRespawnBot(b));
+  },1500);
+}
+
+function btBotKilled(bot){
+  bot.alive=false; bot.hp=0;
+  onOpps.delete(bot.slot);
+  if(bot.group.userData.anim){ bot.group.userData.anim.dead=true; bot.group.userData.anim.deathT=0; }
+  setTimeout(()=>{ onScene.remove(bot.group); },1500);
+
+  onTeamScores[0]=(onTeamScores[0]||0)+1;
+  document.getElementById('duel-my-kills').textContent=onTeamScores[0];
+  onAddFeed((currentUser?.name||'TÚ')+' ➤ '+bot.name,'#44ff88');
+
+  // Show opp HP at 0
+  const wrap=document.getElementById('duel-opp-hp-wrap');
+  const bar=document.getElementById('duel-opp-hp-bar');
+  const num=document.getElementById('duel-opp-hp-num');
+  if(wrap) wrap.style.display='flex';
+  if(bar){ bar.style.width='0%'; bar.style.background='linear-gradient(90deg,#ff2200,#ff5533)'; }
+  if(num){ num.textContent=0; num.style.color='#ff4444'; }
+
+  if(onTeamScores[0]>=btFirstTo){ btGameOver(true); return; }
+
+  // Respawn bot after 1.5s
+  setTimeout(()=>{
+    if(!btActive) return;
+    btRespawnBot(bot);
+    // Player also respawns
+    onSpawnPlayer(onMySpawn);
+    document.getElementById('duel-death-vignette').style.display='none';
+    document.getElementById('duel-respawn-msg').style.display='none';
+  },1500);
+}
+
+function btRespawnBot(bot){
+  const sp=BT_SPAWNS_BLUE[bot.slot%BT_SPAWNS_BLUE.length];
+  // Rebuild mesh
+  const col=TEAM_COLORS[1]||0x2277ff;
+  const g=onCreateRobloxChar(col);
+  g.position.set(sp.x+(Math.random()-.5)*2, 0, sp.z+(Math.random()-.5)*2);
+  onScene.add(g);
+  bot.group=g; bot.hp=100; bot.alive=true; bot.spawn=sp;
+  bot.hitbox=g.userData.hitbox; bot.headHitbox=g.userData.headHitbox; bot.legHitbox=g.userData.legHitbox;
+  onOpps.set(bot.slot,{group:g,hitbox:g.userData.hitbox,headHitbox:g.userData.headHitbox,legHitbox:g.userData.legHitbox});
+  // Update opp HP bar
+  const bar=document.getElementById('duel-opp-hp-bar');
+  const num=document.getElementById('duel-opp-hp-num');
+  if(bar){ bar.style.width='100%'; bar.style.background='linear-gradient(90deg,#44cc66,#66ff88)'; }
+  if(num){ num.textContent=100; num.style.color='#66ff88'; }
+}
+
+function btGameOver(won){
+  btActive=false;
+  const t=document.getElementById('duel-go-title');
+  const s=document.getElementById('duel-go-score');
+  if(t){ t.textContent=won?'¡VICTORIA!':'DERROTA'; t.style.color=won?'var(--green)':'var(--accent2)'; }
+  if(s) s.textContent='Tú '+onTeamScores[0]+' — Bots '+onTeamScores[1];
+  document.getElementById('duel-go-vs').textContent='VS BOTS · '+btDiff.toUpperCase();
+  onShowScreen('duel-gameover-screen');
+  // Play again → bots again
+  document.getElementById('play-again-btn').onclick=()=>{ onShowScreen(null); botsStartMatch(btBots.length,btDiff); };
+  document.getElementById('menu-btn').onclick=()=>{ botsCleanup(); onShowScreen(null); document.getElementById('menu-screen').classList.remove('hidden'); };
+}
+
+function botsCleanup(){
+  btActive=false;
+  btBots.forEach(b=>{ if(b.group&&onScene) onScene.remove(b.group); });
+  btBots=[]; onOpps.clear();
+  if(btAnimId){ cancelAnimationFrame(btAnimId); btAnimId=null; }
+  onActive=false; onLocked=false;
+  try{ document.exitPointerLock(); }catch(e){}
+}
+
+// ── Hook: interceptar hits del jugador para dañar bots ────────
+const _origTryShoot=onTryShoot;
+function onTryShoot(){
+  if(!btActive){ _origTryShoot(); return; }
+  if(!onAlive||!onActive||!onCanShoot||onReloading) return;
+  const wp=WEAPONS[onCurWeapon];
+  if(onAmmo[onCurWeapon]<=0){ onStartReload(); return; }
+  onCanShoot=false; setTimeout(()=>onCanShoot=true,wp.cd);
+  onAmmo[onCurWeapon]--; onUpdateWeaponHUD();
+  if(onAmmo[onCurWeapon]===0) setTimeout(onStartReload,300);
+  playGunshot(); onGunAnim=1;
+  const fl=new THREE.PointLight(0xff3d71,7,2); fl.position.set(0,.03,-.42); onCamera.add(fl); setTimeout(()=>onCamera.remove(fl),55);
+
+  for(let p=0;p<wp.pellets;p++){
+    const dx2=(Math.random()-.5)*wp.spread*2, dy2=(Math.random()-.5)*wp.spread*2;
+    onRaycaster.setFromCamera(new THREE.Vector2(dx2,dy2),onCamera);
+    const wallHits=onRaycaster.intersectObjects(onWalls,false);
+    const wallDist=wallHits.length>0?wallHits[0].distance:Infinity;
+
+    // Head
+    const heads=btBots.filter(b=>b.alive&&b.headHitbox).map(b=>b.headHitbox);
+    const hh=onRaycaster.intersectObjects(heads,false);
+    if(hh.length>0&&hh[0].distance<wallDist){
+      const bot=btBots.find(b=>b.headHitbox===hh[0].object);
+      if(bot&&bot.alive){
+        btDamageBotByPlayer(bot,wp.dmgHead,'head'); onShowHitMarker(true); continue;
+      }
+    }
+    // Body
+    const bodies=btBots.filter(b=>b.alive&&b.hitbox).map(b=>b.hitbox);
+    const bh=onRaycaster.intersectObjects(bodies,false);
+    if(bh.length>0&&bh[0].distance<wallDist){
+      const bot=btBots.find(b=>b.hitbox===bh[0].object);
+      if(bot&&bot.alive){ btDamageBotByPlayer(bot,wp.dmgBody,'body'); onShowHitMarker(false); continue; }
+    }
+    // Legs
+    const legs=btBots.filter(b=>b.alive&&b.legHitbox).map(b=>b.legHitbox);
+    const lh=onRaycaster.intersectObjects(legs,false);
+    if(lh.length>0&&lh[0].distance<wallDist){
+      const bot=btBots.find(b=>b.legHitbox===lh[0].object);
+      if(bot&&bot.alive){ btDamageBotByPlayer(bot,wp.dmgLegs,'legs'); onShowHitMarker(false); }
+    }
+  }
+}
+
+function btDamageBotByPlayer(bot,dmg,zone){
+  bot.hp=Math.max(0,bot.hp-dmg);
+  // Flash rojo en bot
+  bot.group.traverse(c=>{ if(c.isMesh&&c.material?.color){ if(!c.userData._oc) c.userData._oc=c.material.color.getHex(); c.material.color.setHex(0xff1100); } });
+  setTimeout(()=>bot.group.traverse(c=>{ if(c.isMesh&&c.userData._oc) c.material.color.setHex(c.userData._oc); }),90);
+  // Update opp HP bar
+  onHandleOppHP({slot:bot.slot, hp:bot.hp, dmg, zone});
+  if(bot.hp<=0) btBotKilled(bot);
 }
 
 // ── MODO ZOMBIE ───────────────────────────────────────────────
