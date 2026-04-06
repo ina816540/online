@@ -1649,3 +1649,40 @@ input[type=range]::-webkit-slider-thumb {
 #duel-mobile-controls.active {
     display: block !important;
 }
+
+.donate-btn {
+    background: transparent;
+    color: #00e0ff;
+    border: 2px solid #00e0ff;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    
+    /* glow base */
+    box-shadow: 0 0 10px rgba(0, 224, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* hover */
+.donate-btn:hover {
+    color: #0ff;
+    border-color: #0ff;
+    
+    /* glow fuerte */
+    box-shadow: 
+        0 0 10px #00e0ff,
+        0 0 20px #00e0ff,
+        0 0 40px #00e0ff;
+    
+    transform: translateY(-2px);
+}
+
+/* click */
+.donate-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 5px #00e0ff;
+}
