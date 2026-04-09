@@ -58,7 +58,10 @@ function initThree() {
     });
 }
 
+let practiceRoomObjects = []; // track objetos del room normal para poder ocultarlos
+
 function buildPracticeRoom() {
+    practiceRoomObjects = [];
     const col = new THREE.Color(CFG.room.color);
     scene.background = col;
     scene.fog = new THREE.Fog(col, 20, 80);
@@ -67,25 +70,36 @@ function buildPracticeRoom() {
     const room = new THREE.Mesh(new THREE.BoxGeometry(30, 10, 50), roomMat);
     room.position.set(0, 3.3, -23);
     scene.add(room);
+    practiceRoomObjects.push(room);
     
     const grid = new THREE.GridHelper(60, 30, 0x222244, 0x111133);
     grid.position.set(0, -1.7, 0);
     scene.add(grid);
+    practiceRoomObjects.push(grid);
     
     const wallMat = new THREE.MeshLambertMaterial({ color: 0x0d0520, side: THREE.DoubleSide });
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(28, 8), wallMat);
     wall.position.set(0, 2.3, -22);
     scene.add(wall);
+    practiceRoomObjects.push(wall);
     
     const lm = new THREE.LineBasicMaterial({ color: 0x331155 });
     for (let i = -14; i <= 14; i += 2) {
         const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i, -1.7, -22), new THREE.Vector3(i, 6.3, -22)]);
-        scene.add(new THREE.Line(g, lm));
+        const line = new THREE.Line(g, lm);
+        scene.add(line);
+        practiceRoomObjects.push(line);
     }
     for (let j = -1.7; j <= 6.3; j += 2) {
         const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-14, j, -22), new THREE.Vector3(14, j, -22)]);
-        scene.add(new THREE.Line(g, lm));
+        const line = new THREE.Line(g, lm);
+        scene.add(line);
+        practiceRoomObjects.push(line);
     }
+}
+
+function setPracticeRoomVisible(visible) {
+    practiceRoomObjects.forEach(o => { o.visible = visible; });
 }
 
 function buildGun() {
@@ -131,25 +145,33 @@ function buildGun() {
     camera.add(gunGroup);
 }
 
+let defaultLights = [];
+
 function buildLights() {
-    scene.add(new THREE.AmbientLight(0x221133, 1.2));
+    const al = new THREE.AmbientLight(0x221133, 1.2);
+    scene.add(al); defaultLights.push(al);
     const spot = new THREE.SpotLight(0xffffff, 1.5);
     spot.position.set(0, 8, -10);
     spot.target.position.set(0, 0, -20);
     spot.angle = 0.5;
     spot.penumbra = 0.4;
     spot.castShadow = true;
-    scene.add(spot);
-    scene.add(spot.target);
+    scene.add(spot); scene.add(spot.target);
+    defaultLights.push(spot); defaultLights.push(spot.target);
     const dl1 = new THREE.DirectionalLight(0x6622aa, 0.6);
     dl1.position.set(-10, 5, 0);
-    scene.add(dl1);
+    scene.add(dl1); defaultLights.push(dl1);
     const dl2 = new THREE.DirectionalLight(0x00e5ff, 0.3);
     dl2.position.set(10, 3, -20);
-    scene.add(dl2);
+    scene.add(dl2); defaultLights.push(dl2);
+}
+
+function setDefaultLightsVisible(visible) {
+    defaultLights.forEach(l => { l.visible = visible; });
 }
 
 function updateRoomColor() {
+    if (state && state.modeId === 'humanoid') return; // no pisar el fondo del humanoid
     const col = new THREE.Color(CFG.room.color);
     scene.background = col;
     scene.fog = new THREE.Fog(col, 20, 80);
@@ -233,6 +255,33 @@ function startGame(modeId, diff) {
         strafeTargetSpeed = 0.8;
         strafeTargetDir = 1;
     }
+
+    if (modeId === 'humanoid') {
+        state.humanoid = {
+            startTime: performance.now(),
+            mesh: null,
+            x: 0,
+            y: 0,          // Y offset para salto
+            velY: 0,       // velocidad vertical
+            isGrounded: true,
+            dir: 1,
+            speed: 2.2,
+            speedMultiplier: 1.0,
+            pauseTimer: 0,
+            isPaused: false,
+            microAccelTimer: 0,
+            microAccelActive: false,
+            jumpTimer: 0,  // timer para próximo salto
+            hp: 100,
+            maxHp: 100,
+            hits: 0,
+            headshots: 0,
+            parts: {}
+        };
+        // Construir escenario BloodStrike
+        buildHumanoidScene();
+        spawnHumanoidTarget();
+    }
     
     document.getElementById('menu-screen').classList.add('hidden');
     document.getElementById('results-screen').classList.add('hidden');
@@ -291,6 +340,8 @@ function startGame(modeId, diff) {
             
             if (modeId === 'strafing') {
                 updateStrafing(dt);
+            } else if (modeId === 'humanoid') {
+                updateHumanoid(dt);
             } else {
                 updateTargets(dt);
                 if (modeId === 'tracking') updateTracking(dt);
@@ -448,13 +499,13 @@ function beginTimerAndSpawn() {
     state.timerStarted = true;
     if (state.modeId === 'tracking') startTracking3D();
     else if (state.modeId === 'gridshot') initGridShot();
-    else if (state.modeId === 'strafing') {
+    else if (state.modeId === 'strafing' || state.modeId === 'humanoid') {
         startTimer();
     } else {
         startSpawner3D();
     }
     if (state.modeId === 'survival') startSurvivalTimer();
-    else if (state.modeId !== 'strafing' && state.modeId !== 'gridshot' && state.modeId !== 'tracking') startTimer();
+    else if (state.modeId !== 'strafing' && state.modeId !== 'humanoid' && state.modeId !== 'gridshot' && state.modeId !== 'tracking') startTimer();
 }
 
 function startSpawner3D() {
@@ -685,6 +736,10 @@ function onShoot() {
         strafeShoot();
         return;
     }
+    if (m === 'humanoid') {
+        humanoidShoot();
+        return;
+    }
     playGunshot();
     triggerShoot();
     const ch = document.getElementById('crosshair');
@@ -795,6 +850,21 @@ function endGame() {
     clearInterval(state.timerIv);
     clearInterval(state.spawnIv);
     document.exitPointerLock();
+    if (state.humanoid && state.humanoid.mesh) {
+        scene.remove(state.humanoid.mesh);
+        state.humanoid.mesh = null;
+        const ch = document.getElementById('crosshair');
+        if (ch) ch.style.filter = '';
+        // Limpiar escenario humanoid
+        if (state.humanoid.sceneObjects) {
+            state.humanoid.sceneObjects.forEach(o => scene.remove(o));
+            state.humanoid.sceneObjects = [];
+        }
+        // Restaurar escenario y luces originales
+        setPracticeRoomVisible(true);
+        setDefaultLightsVisible(true);
+        updateRoomColor();
+    }
     state.targets.forEach(t => { if (t.mesh) scene.remove(t.mesh); });
     state.targets = [];
     document.getElementById('three-canvas').style.display = 'none';
@@ -986,6 +1056,647 @@ dp('wide', (c, w, h, t) => {
         c.stroke();
     });
 });
+dp('humanoid', (c, w, h, t) => {
+    c.fillStyle = '#060208'; c.fillRect(0, 0, w, h);
+    const x = w * 0.5 + Math.sin(t / 900) * w * 0.38;
+    const cy = h * 0.5;
+    const sc = h * 0.014;
+    // Cuerpo
+    c.beginPath();
+    c.roundRect(x - sc * 3, cy - sc * 8, sc * 6, sc * 10, sc);
+    c.fillStyle = 'rgba(255,110,199,0.15)'; c.fill();
+    c.strokeStyle = 'rgba(255,110,199,0.85)'; c.lineWidth = 1.5; c.stroke();
+    // Cabeza
+    c.beginPath();
+    c.arc(x, cy - sc * 10.5, sc * 2.5, 0, Math.PI * 2);
+    c.fillStyle = 'rgba(255,110,199,0.2)'; c.fill();
+    c.strokeStyle = 'rgba(255,110,199,0.9)'; c.lineWidth = 1.5; c.stroke();
+    // Piernas animadas
+    const lg = Math.sin(t / 200) * sc * 2;
+    c.strokeStyle = 'rgba(255,110,199,0.7)'; c.lineWidth = 2.5;
+    c.beginPath(); c.moveTo(x - sc, cy + sc * 2); c.lineTo(x - sc + lg, cy + sc * 7); c.stroke();
+    c.beginPath(); c.moveTo(x + sc, cy + sc * 2); c.lineTo(x + sc - lg, cy + sc * 7); c.stroke();
+    // Crosshair
+    c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(x - 8, cy - sc * 4); c.lineTo(x + 8, cy - sc * 4); c.stroke();
+    c.beginPath(); c.moveTo(x, cy - sc * 4 - 8); c.lineTo(x, cy - sc * 4 + 8); c.stroke();
+    // Tracking ring
+    c.beginPath(); c.arc(x, cy - sc * 4, 11, 0, Math.PI * 2);
+    c.strokeStyle = 'rgba(255,110,199,0.5)'; c.lineWidth = 1; c.stroke();
+});
+
+// ==================== HUMANOID STRAFE MODE ====================
+
+function buildHumanoidScene() {
+    // ---- OCULTAR el escenario de práctica normal ----
+    setPracticeRoomVisible(false);
+    setDefaultLightsVisible(false);
+
+    // Limpiar objetos previos del humanoid si existen
+    if (state.humanoid.sceneObjects) {
+        state.humanoid.sceneObjects.forEach(o => scene.remove(o));
+    }
+    state.humanoid.sceneObjects = [];
+
+    const add = (obj) => { scene.add(obj); state.humanoid.sceneObjects.push(obj); };
+
+    // ---- CIELO azul claro estilo BloodStrike ----
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.FogExp2(0xb0d8f0, 0.018);
+
+    // ---- SUELO (baldosas) ----
+    const floorGeo = new THREE.PlaneGeometry(60, 60, 20, 20);
+    const floorMat = new THREE.MeshLambertMaterial({ color: 0x8a8a8a });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1.7;
+    floor.receiveShadow = true;
+    add(floor);
+
+    // Grid de baldosas sobre el suelo
+    const tileGrid = new THREE.GridHelper(60, 30, 0x666666, 0x777777);
+    tileGrid.position.y = -1.69;
+    add(tileGrid);
+
+    // ---- PAREDES grises estilo BloodStrike ----
+    const wallMatBS = new THREE.MeshLambertMaterial({ color: 0xb0b0b0 });
+
+    // Pared trasera
+    const wBack = new THREE.Mesh(new THREE.PlaneGeometry(60, 12), wallMatBS);
+    wBack.position.set(0, 4.3, -28);
+    add(wBack);
+
+    // Pared izquierda
+    const wLeft = new THREE.Mesh(new THREE.PlaneGeometry(60, 12), wallMatBS);
+    wLeft.rotation.y = Math.PI / 2;
+    wLeft.position.set(-28, 4.3, -4);
+    add(wLeft);
+
+    // Pared derecha
+    const wRight = new THREE.Mesh(new THREE.PlaneGeometry(60, 12), wallMatBS);
+    wRight.rotation.y = -Math.PI / 2;
+    wRight.position.set(28, 4.3, -4);
+    add(wRight);
+
+    // ---- CAJAS / cover estilo BloodStrike ----
+    const boxMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+    const concMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
+
+    const boxes = [
+        { pos: [-8, -0.7, -18], size: [1.6, 2, 1.6], mat: boxMat },
+        { pos: [8,  -0.7, -18], size: [1.6, 2, 1.6], mat: boxMat },
+        { pos: [-4, -1.2, -22], size: [3, 1, 1.2],   mat: concMat },
+        { pos: [4,  -1.2, -22], size: [3, 1, 1.2],   mat: concMat },
+        { pos: [0,  -0.2, -26], size: [2, 3, 2],      mat: concMat },
+    ];
+    boxes.forEach(b => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(...b.size), b.mat);
+        m.position.set(...b.pos);
+        m.castShadow = true; m.receiveShadow = true;
+        add(m);
+    });
+
+    // ---- LUCES estilo outdoor ----
+    // Ambient fuerte (cielo abierto)
+    const ambient = new THREE.AmbientLight(0xffffff, 1.4);
+    add(ambient);
+
+    // Luz direccional (sol)
+    const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
+    sun.position.set(10, 20, 5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 1024;
+    sun.shadow.mapSize.height = 1024;
+    add(sun);
+
+    // Fill light sutil
+    const fill = new THREE.DirectionalLight(0xc8e0ff, 0.5);
+    fill.position.set(-8, 6, -10);
+    add(fill);
+}
+
+function buildHumanoidMesh() {
+    const group = new THREE.Group();
+
+    // Materiales estilo soldado táctico BloodStrike
+    const skinMat   = new THREE.MeshPhongMaterial({ color: 0xc68642, shininess: 20 });
+    const uniformMat= new THREE.MeshPhongMaterial({ color: 0x3d4c2e, shininess: 30 }); // verde militar
+    const gearMat   = new THREE.MeshPhongMaterial({ color: 0x2a2a2a, shininess: 60 });
+    const vestMat   = new THREE.MeshPhongMaterial({ color: 0x4a3728, shininess: 40 });  // marrón chaleco
+    const helmetMat = new THREE.MeshPhongMaterial({ color: 0x3a3a28, shininess: 50 });  // verde oliva oscuro
+    const bootMat   = new THREE.MeshPhongMaterial({ color: 0x1a1410, shininess: 80 });
+    const gloveMat  = new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 50 });
+    const gunMetal  = new THREE.MeshPhongMaterial({ color: 0x1c1c1c, shininess: 100 });
+
+    // === ESCALA REAL: humanoide de 1.75m ===
+    // El grupo entero escala a tamaño de jugador real
+    // base Y en suelo = -1.7 (misma que yawObj)
+
+    // --- CABEZA ---
+    const headGroup = new THREE.Group();
+    // Cráneo
+    const skull = new THREE.Mesh(new THREE.SphereGeometry(0.115, 16, 14), skinMat);
+    headGroup.add(skull);
+    // Casco táctico (cubre parte superior y lados)
+    const helmetTop = new THREE.Mesh(new THREE.SphereGeometry(0.128, 16, 12), helmetMat);
+    helmetTop.scale.y = 0.72;
+    helmetTop.position.y = 0.035;
+    headGroup.add(helmetTop);
+    // Ala frontal del casco
+    const helmetBrim = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.03, 0.08), helmetMat);
+    helmetBrim.position.set(0, -0.02, 0.1);
+    headGroup.add(helmetBrim);
+    // Cara / balaclave
+    const face = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 0.06), skinMat);
+    face.position.set(0, -0.055, 0.1);
+    headGroup.add(face);
+    // Googles
+    const gogGeo = new THREE.BoxGeometry(0.18, 0.055, 0.04);
+    const gogMat = new THREE.MeshPhongMaterial({ color: 0x111111, shininess: 200, specular: 0x444444 });
+    const gogs = new THREE.Mesh(gogGeo, gogMat);
+    gogs.position.set(0, 0.01, 0.125);
+    headGroup.add(gogs);
+    // Correa de casco
+    const strapMat = new THREE.MeshPhongMaterial({ color: 0x222222 });
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.12, 0.005), strapMat);
+    strap.position.set(0.09, -0.04, 0.06);
+    headGroup.add(strap);
+
+    // userData para headshot detection
+    headGroup.userData.isHead = true;
+    headGroup.position.y = 1.62; // altura de la cabeza desde base del grupo
+    group.add(headGroup);
+
+    // --- CUELLO ---
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.048, 0.07, 8), skinMat);
+    neck.position.y = 1.5;
+    group.add(neck);
+
+    // --- TORSO ---
+    const torsoGroup = new THREE.Group();
+    // Cuerpo base (uniforme)
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.48, 0.19), uniformMat);
+    torsoGroup.add(torso);
+    // Chaleco táctico
+    const vest = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.44, 0.14), vestMat);
+    vest.position.z = 0.025;
+    torsoGroup.add(vest);
+    // Placa balística frontal
+    const bplate = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.26, 0.05), gearMat);
+    bplate.position.set(0, 0.05, 0.1);
+    torsoGroup.add(bplate);
+    // Bolsillos MOLLE
+    const mGeo = new THREE.BoxGeometry(0.07, 0.055, 0.038);
+    [-0.1, 0.1].forEach(xOff => {
+        [0.08, -0.04].forEach(yOff => {
+            const m = new THREE.Mesh(mGeo, gearMat);
+            m.position.set(xOff, yOff, 0.12);
+            torsoGroup.add(m);
+        });
+    });
+    // Cinturón táctico
+    const beltM = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.045, 0.21), gearMat);
+    beltM.position.y = -0.26;
+    torsoGroup.add(beltM);
+    // Hebilla
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.025), new THREE.MeshPhongMaterial({ color: 0xaaaaaa, shininess: 200 }));
+    buckle.position.set(0, -0.26, 0.12);
+    torsoGroup.add(buckle);
+
+    torsoGroup.position.y = 1.15;
+    group.add(torsoGroup);
+
+    // --- CADERA ---
+    const hipsM = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.14, 0.18), uniformMat);
+    hipsM.position.y = 0.88;
+    group.add(hipsM);
+
+    // --- BRAZO IZQUIERDO ---
+    const armLGroup = new THREE.Group();
+    // Hombro
+    const shldL = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), uniformMat);
+    shldL.position.y = 0.14;
+    armLGroup.add(shldL);
+    // Bícep
+    const upArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.044, 0.29, 10), uniformMat);
+    upArmL.position.y = -0.01;
+    armLGroup.add(upArmL);
+    // Codo
+    const elL = new THREE.Mesh(new THREE.SphereGeometry(0.048, 10, 10), gearMat);
+    elL.position.y = -0.16;
+    armLGroup.add(elL);
+    // Antebrazo
+    const foArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.034, 0.26, 10), uniformMat);
+    foArmL.position.y = -0.31;
+    armLGroup.add(foArmL);
+    // Guante
+    const glL = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.075, 0.055), gloveMat);
+    glL.position.y = -0.46;
+    armLGroup.add(glL);
+    armLGroup.position.set(-0.215, 1.26, 0);
+    armLGroup.rotation.z = 0.12;
+    group.add(armLGroup);
+
+    // --- BRAZO DERECHO (con arma) ---
+    const armRGroup = new THREE.Group();
+    const shldR = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), uniformMat);
+    shldR.position.y = 0.14;
+    armRGroup.add(shldR);
+    const upArmR = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.044, 0.29, 10), uniformMat);
+    upArmR.position.y = -0.01;
+    armRGroup.add(upArmR);
+    const elR = new THREE.Mesh(new THREE.SphereGeometry(0.048, 10, 10), gearMat);
+    elR.position.y = -0.16;
+    armRGroup.add(elR);
+    const foArmR = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.034, 0.26, 10), uniformMat);
+    foArmR.position.y = -0.31;
+    armRGroup.add(foArmR);
+    const glR = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.075, 0.055), gloveMat);
+    glR.position.y = -0.46;
+    armRGroup.add(glR);
+
+    // Arma (rifle táctico)
+    const gunGroup2 = new THREE.Group();
+    const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.065, 0.36), gunMetal);
+    gunGroup2.add(receiver);
+    const barrelG = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.28, 8), gunMetal);
+    barrelG.rotation.x = Math.PI / 2;
+    barrelG.position.set(0, 0.015, -0.28);
+    gunGroup2.add(barrelG);
+    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.055, 0.18), gearMat);
+    stock.position.set(0, -0.005, 0.22);
+    gunGroup2.add(stock);
+    const mag = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.1, 0.038), gunMetal);
+    mag.position.set(0, -0.075, 0.02);
+    gunGroup2.add(mag);
+    const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.12, 10), gearMat);
+    scope.rotation.x = Math.PI / 2;
+    scope.position.set(0, 0.05, -0.06);
+    gunGroup2.add(scope);
+    gunGroup2.position.set(0.04, -0.38, -0.12);
+    gunGroup2.rotation.x = -0.3;
+    armRGroup.add(gunGroup2);
+
+    armRGroup.position.set(0.215, 1.26, 0);
+    armRGroup.rotation.z = -0.12;
+    armRGroup.rotation.x = 0.25;
+    group.add(armRGroup);
+
+    // --- PIERNA IZQUIERDA ---
+    const legLGroup = new THREE.Group();
+    const thighL = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.058, 0.38, 10), uniformMat);
+    legLGroup.add(thighL);
+    // Bolsillo de muslo
+    const tPocL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.052), gearMat);
+    tPocL.position.set(-0.04, 0.04, 0.04);
+    legLGroup.add(tPocL);
+    const knL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), gearMat);
+    knL.position.y = -0.21;
+    legLGroup.add(knL);
+    // Rodillera
+    const kpadL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.07, 0.04), gearMat);
+    kpadL.position.set(0, -0.21, 0.05);
+    legLGroup.add(kpadL);
+    const shinLM = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.042, 0.36, 10), uniformMat);
+    shinLM.position.y = -0.4;
+    legLGroup.add(shinLM);
+    const btL = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.085, 0.175), bootMat);
+    btL.position.set(-0.01, -0.63, 0.025);
+    legLGroup.add(btL);
+    legLGroup.position.set(-0.095, 0.855, 0);
+    group.add(legLGroup);
+
+    // --- PIERNA DERECHA ---
+    const legRGroup = new THREE.Group();
+    const thighR = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.058, 0.38, 10), uniformMat);
+    legRGroup.add(thighR);
+    const tPocR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.052), gearMat);
+    tPocR.position.set(0.04, 0.04, 0.04);
+    legRGroup.add(tPocR);
+    const knR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), gearMat);
+    knR.position.y = -0.21;
+    legRGroup.add(knR);
+    const kpadR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.07, 0.04), gearMat);
+    kpadR.position.set(0, -0.21, 0.05);
+    legRGroup.add(kpadR);
+    const shinRM = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.042, 0.36, 10), uniformMat);
+    shinRM.position.y = -0.4;
+    legRGroup.add(shinRM);
+    const btR = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.085, 0.175), bootMat);
+    btR.position.set(0.01, -0.63, 0.025);
+    legRGroup.add(btR);
+    legRGroup.position.set(0.095, 0.855, 0);
+    group.add(legRGroup);
+
+    // Sombra en el suelo
+    const shadowGeo = new THREE.CircleGeometry(0.25, 16);
+    const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 });
+    const shadow2D = new THREE.Mesh(shadowGeo, shadowMat);
+    shadow2D.rotation.x = -Math.PI / 2;
+    shadow2D.position.y = -1.695; // justo en el suelo
+    group.add(shadow2D);
+    group.userData.shadow2D = shadow2D;
+
+    group.userData.parts = { headGroup, torsoGroup, armLGroup, armRGroup, legLGroup, legRGroup, hipsM };
+    return group;
+}
+
+// Hitboxes separadas: cabeza y cuerpo para headshot
+function buildHumanoidHitboxes(group) {
+    // Hitbox de cuerpo completo
+    const bodyHitGeo = new THREE.BoxGeometry(0.42, 1.4, 0.28);
+    const bodyHitMat = new THREE.MeshBasicMaterial({ visible: false });
+    const bodyHitbox = new THREE.Mesh(bodyHitGeo, bodyHitMat);
+    bodyHitbox.position.y = 0.75;
+    bodyHitbox.userData.zone = 'body';
+    group.add(bodyHitbox);
+
+    // Hitbox de cabeza (más pequeña, más difícil = más puntos)
+    const headHitGeo = new THREE.SphereGeometry(0.14, 8, 8);
+    const headHitMat = new THREE.MeshBasicMaterial({ visible: false });
+    const headHitbox = new THREE.Mesh(headHitGeo, headHitMat);
+    headHitbox.position.y = 1.62;
+    headHitbox.userData.zone = 'head';
+    group.add(headHitbox);
+
+    group.userData.bodyHitbox = bodyHitbox;
+    group.userData.headHitbox = headHitbox;
+}
+
+function spawnHumanoidTarget() {
+    if (!state.humanoid) return;
+    const group = buildHumanoidMesh();
+    buildHumanoidHitboxes(group);
+    // Z=-10: ajustado para ver el humanoid a escala 2.2
+    group.position.set(state.humanoid.x || 0, -1.7, -10);
+    scene.add(group);
+    if (state.humanoid.sceneObjects) state.humanoid.sceneObjects.push(group);
+    state.humanoid.mesh = group;
+    state.humanoid.parts = group.userData.parts;
+    state.humanoid.groundY = -1.7;
+
+    group.scale.set(0.01, 0.01, 0.01);
+    let sa = 0;
+    const si = () => {
+        sa += 0.025;
+        const s = Math.min(2.2, sa / 0.15 * 2.2);  // escala final = 2.2 (tamaño real BloodStrike)
+        group.scale.set(s, s, s);
+        if (s < 2.2) requestAnimationFrame(si);
+    };
+    requestAnimationFrame(si);
+
+    // Barra de HP del humanoid en HUD
+    _humanoidUpdateHPBar();
+}
+
+const HMN_BOUNDS = { left: -5, right: 5 };  // más estrecho por estar más cerca
+const HMN_JUMP_FORCE = 5.2;
+const HMN_GRAVITY   = -14;
+const HMN_DISTANCE_Z = -10;
+
+function updateHumanoid(dt) {
+    if (!state.running || !state.humanoid || !state.humanoid.mesh) return;
+    const h = state.humanoid;
+    const elapsed = (performance.now() - h.startTime) / 1000;
+
+    // Progresión de velocidad
+    h.speedMultiplier = Math.min(3.2, 1.0 + elapsed / 22);
+    const baseSpeed = 2.2 * DIFF[state.diff].speed * CFG.tgt.speedMult * h.speedMultiplier;
+
+    // --- PAUSA entre direcciones ---
+    if (h.pauseTimer > 0) {
+        h.pauseTimer -= dt;
+        if (h.pauseTimer <= 0) {
+            h.isPaused = false;
+            h.dir = Math.random() > 0.5 ? 1 : -1;
+            h.speed = baseSpeed * (0.55 + Math.random() * 0.9);
+        }
+    }
+
+    // --- MICRO-ACELERACIONES (después de 12s) ---
+    if (h.microAccelTimer > 0) {
+        h.microAccelTimer -= dt;
+        if (h.microAccelTimer <= 0) h.microAccelActive = false;
+    }
+    if (!h.microAccelActive && Math.random() < 0.004 * dt * 60 && elapsed > 12) {
+        h.microAccelActive = true;
+        h.microAccelTimer = 0.12 + Math.random() * 0.22;
+        h.speed = Math.min(baseSpeed * 2.6, h.speed * (1.9 + Math.random()));
+    }
+
+    // --- CAMBIO ESPONTÁNEO DE DIRECCIÓN ---
+    if (!h.isPaused && Math.random() < 0.007 * dt * 60) {
+        h.dir *= -1;
+        h.speed = baseSpeed * (0.5 + Math.random() * 1.1);
+    }
+
+    // --- MOVIMIENTO LATERAL ---
+    if (!h.isPaused) {
+        h.x += h.dir * h.speed * dt;
+        if (h.x > HMN_BOUNDS.right) {
+            h.x = HMN_BOUNDS.right;
+            h.isPaused = true;
+            h.pauseTimer = 0.06 + Math.random() * 0.2;
+            h.dir = -1;
+        } else if (h.x < HMN_BOUNDS.left) {
+            h.x = HMN_BOUNDS.left;
+            h.isPaused = true;
+            h.pauseTimer = 0.06 + Math.random() * 0.2;
+            h.dir = 1;
+        }
+    }
+
+    // --- SALTOS ---
+    h.jumpTimer -= dt;
+    if (h.isGrounded && h.jumpTimer <= 0 && Math.random() < 0.018 * dt * 60) {
+        h.velY = HMN_JUMP_FORCE * (0.8 + Math.random() * 0.4);
+        h.isGrounded = false;
+        h.jumpTimer = 2.5 + Math.random() * 3.0; // espera mínima entre saltos
+    }
+
+    // Física vertical
+    if (!h.isGrounded) {
+        h.velY += HMN_GRAVITY * dt;
+        h.y += h.velY * dt;
+        if (h.y <= 0) {
+            h.y = 0;
+            h.velY = 0;
+            h.isGrounded = true;
+        }
+    }
+
+    // Aplicar posición al mesh
+    h.mesh.position.x = h.x;
+    h.mesh.position.y = (h.groundY || -1.7) + h.y;
+    h.mesh.position.z = HMN_DISTANCE_Z;
+
+    // Actualizar sombra (se aplana cuando está en el aire)
+    if (h.mesh.userData.shadow2D) {
+        const shadowScale = Math.max(0.4, 1.0 - h.y * 0.15);
+        h.mesh.userData.shadow2D.scale.set(shadowScale, shadowScale, shadowScale);
+        h.mesh.userData.shadow2D.position.y = -1.695 - h.mesh.position.y + (h.groundY || -1.7);
+    }
+
+    // Rotación hacia dirección de movimiento
+    const targetRot = h.isPaused ? h.mesh.rotation.y : (h.dir > 0 ? 0.12 : -0.12);
+    h.mesh.rotation.y += (targetRot - h.mesh.rotation.y) * dt * 7;
+
+    // --- ANIMACIÓN DE CAMINADO ---
+    const walkCycle = performance.now() / 1000;
+    const walkSpd = (!h.isPaused && h.isGrounded) ? Math.min(7, h.speed * 1.3) : (h.isGrounded ? 0 : 3);
+    const inAir = !h.isGrounded;
+    const legSwing = inAir ? 0.45 : Math.sin(walkCycle * walkSpd) * 0.32;
+    const armSwing = inAir ? -0.5 : Math.sin(walkCycle * walkSpd + Math.PI) * 0.26;
+    const bodyBob  = inAir ? 0 : Math.abs(Math.sin(walkCycle * walkSpd)) * 0.022;
+    const jumpLean = inAir ? (h.velY > 0 ? -0.2 : 0.1) : 0;
+
+    if (h.parts) {
+        h.parts.legLGroup.rotation.x = legSwing;
+        h.parts.legRGroup.rotation.x = -legSwing;
+        h.parts.armLGroup.rotation.x = armSwing;
+        h.parts.armRGroup.rotation.x = -armSwing;
+        h.parts.torsoGroup.position.y = 1.15 + bodyBob;
+        h.parts.torsoGroup.rotation.x = jumpLean;
+        h.parts.headGroup.position.y = 1.62 + bodyBob * 0.6;
+    }
+}
+
+// ---- SISTEMA DE DISPARO HUMANOID ----
+function humanoidShoot() {
+    if (!state.running || !locked) return;
+    if (state.modeId !== 'humanoid') return;
+    if (!state.humanoid || !state.humanoid.mesh) return;
+
+    playGunshot();
+    triggerShoot();
+    const ch = document.getElementById('crosshair');
+    ch.classList.add('shoot');
+    setTimeout(() => ch.classList.remove('shoot'), 100);
+
+    state.shots++;
+
+    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+    const h = state.humanoid;
+    const headHitbox = h.mesh.userData.headHitbox;
+    const bodyHitbox = h.mesh.userData.bodyHitbox;
+
+    // Headshot primero (hitbox más prioritaria)
+    const headHits = headHitbox ? raycaster.intersectObject(headHitbox, false) : [];
+    if (headHits.length > 0) {
+        // HEADSHOT
+        h.hits++;
+        h.headshots++;
+        state.hits++;
+        state.combo++;
+        if (state.combo > state.bestCombo) state.bestCombo = state.combo;
+        const pts = 250 + Math.min(state.combo, 10) * 20;
+        state.score += pts;
+        playHitSound();
+        showHitFlash();
+        _humanoidShowDamage(pts, true, headHitbox.getWorldPosition(new THREE.Vector3()));
+        _humanoidHurt(h, 40);
+        updateHUD();
+        return;
+    }
+
+    // Bodyshot
+    const bodyHits = bodyHitbox ? raycaster.intersectObject(bodyHitbox, false) : [];
+    if (bodyHits.length > 0) {
+        h.hits++;
+        state.hits++;
+        state.combo++;
+        if (state.combo > state.bestCombo) state.bestCombo = state.combo;
+        const pts = 100 + Math.min(state.combo, 10) * 10;
+        state.score += pts;
+        playHitSound();
+        showHitFlash();
+        _humanoidShowDamage(pts, false, bodyHitbox.getWorldPosition(new THREE.Vector3()));
+        _humanoidHurt(h, 20);
+        updateHUD();
+        return;
+    }
+
+    // Miss
+    state.combo = 0;
+    document.getElementById('combo-disp').classList.remove('show');
+    playMissSound();
+    updateHUD();
+}
+
+// Flash rojo en el humanoid al recibir daño
+function _humanoidHurt(h, dmg) {
+    if (!h.mesh) return;
+    h.hp = Math.max(0, h.hp - dmg);
+    _humanoidUpdateHPBar();
+
+    // Parpadeo rojo
+    h.mesh.traverse(child => {
+        if (child.isMesh && child.material && child.material.color) {
+            const origColor = child.material.color.clone();
+            child.material.emissive = new THREE.Color(0xff0000);
+            child.material.emissiveIntensity = 0.8;
+            setTimeout(() => {
+                if (child.material) {
+                    child.material.emissive = new THREE.Color(0x000000);
+                    child.material.emissiveIntensity = 0;
+                }
+            }, 120);
+        }
+    });
+
+    // Si llega a 0 HP — respawn del humanoid
+    if (h.hp <= 0) {
+        scene.remove(h.mesh);
+        h.mesh = null;
+        h.hp = h.maxHp;
+        h.x = (Math.random() - 0.5) * 12;
+        h.y = 0;
+        h.velY = 0;
+        h.isGrounded = true;
+        setTimeout(() => {
+            if (state.running && state.modeId === 'humanoid') spawnHumanoidTarget();
+        }, 600);
+    }
+}
+
+function _humanoidUpdateHPBar() {
+    const h = state.humanoid;
+    if (!h) return;
+    const pct = Math.round((h.hp / h.maxHp) * 100);
+    // Usar el HUD de accuracy para mostrar la HP del bot
+    document.getElementById('acc-pct').textContent = pct + '%';
+    document.getElementById('acc-fill').style.width = pct + '%';
+    document.getElementById('acc-fill').style.background = pct > 50 ? 'var(--green)' : pct > 25 ? '#ffd700' : 'var(--accent2)';
+}
+
+function _humanoidShowDamage(pts, isHead, worldPos) {
+    if (!CFG.vis.pts) return;
+    const v = worldPos.clone().project(camera);
+    const x = (v.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-0.5 * v.y + 0.5) * window.innerHeight;
+    const el = document.createElement('div');
+    el.textContent = (isHead ? '💀 ' : '') + '+' + pts;
+    const color = isHead ? '#ffd700' : '#ff6ec7';
+    el.style.cssText = `position:fixed;left:${x}px;top:${y}px;font-family:Orbitron,monospace;font-weight:900;font-size:${isHead ? '1.3' : '1'}rem;color:${color};text-shadow:0 0 12px ${color};pointer-events:none;z-index:60;transform:translate(-50%,-50%);animation:float-up .8s ease-out forwards;`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+
+    // Combo visual para headshot
+    if (isHead && CFG.vis.combo) {
+        document.getElementById('combo-num').textContent = '💀 HS!';
+        document.getElementById('combo-disp').classList.add('show');
+        clearTimeout(state.comboT);
+        state.comboT = setTimeout(() => document.getElementById('combo-disp').classList.remove('show'), 1200);
+    } else if (state.combo >= 2 && CFG.vis.combo) {
+        document.getElementById('combo-num').textContent = state.combo;
+        document.getElementById('combo-disp').classList.add('show');
+        clearTimeout(state.comboT);
+        state.comboT = setTimeout(() => document.getElementById('combo-disp').classList.remove('show'), 1400);
+    }
+}
+
+// ==================== FIN HUMANOID STRAFE ====================
 
 function animPrevs() {
     const t = performance.now();
@@ -1046,7 +1757,7 @@ function hidePause() {
     if (state.running && state.timerStarted) {
         if (state.modeId === 'survival') startSurvivalTimer();
         else startTimer();
-        if (state.modeId !== 'tracking' && state.modeId !== 'strafing' && state.modeId !== 'gridshot') startSpawner3D();
+        if (state.modeId !== 'tracking' && state.modeId !== 'strafing' && state.modeId !== 'humanoid' && state.modeId !== 'gridshot') startSpawner3D();
     }
 }
 
