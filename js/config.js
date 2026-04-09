@@ -12,6 +12,7 @@ const MODES = {
     survival:  { id:'survival',  tag:'SURVIVAL',    name:'Supervivencia', desc:'Sin tiempo. 3 vidas. Cada objetivo perdido cuesta una vida.', color:'#ffd700' },
     gridshot:  { id:'gridshot',  tag:'GRIDSHOT',    name:'Grid Shot',     desc:'Cuadrícula 3x3. Dispara en orden aleatorio.', color:'#e040fb' },
     wide:      { id:'wide',      tag:'WIDE ANGLE',  name:'Wide Angle',    desc:'Objetivos en los extremos. Entrena movimientos amplios.', color:'#ff6b35' },
+    humanoid:  { id:'humanoid', tag:'HUMANOID',    name:'Humanoid Strafe', desc:'Sigue al humanoide con la mira mientras se desplaza lateralmente. Puntuación por precisión de tracking. Sin disparar — solo smooth aim.', color:'#ff6ec7' },
 };
 
 // Dificultades (todos los modos duran 60 segundos)
