@@ -1,0 +1,8 @@
+{
+  "appId": "com.inatrainer.app",
+  "webDir": "www",
+  "appName": "ina1",
+  "server": {
+    "androidScheme": "https"
+  }
+}

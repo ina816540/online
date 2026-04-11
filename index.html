@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INA TRAINER</title>
+    <meta name="description" content="INA Trainer es un entrenador online donde puedes mejorar tus habilidades y practicar.">
+    <meta name="keywords" content="inatrainery, ina trainer, entrenador online, juego ina trainer">
+    <meta name="robots" content="index, follow">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Librerías externas -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <canvas id="three-canvas"></canvas>
+
+    <div id="crosshair">
+        <div class="ch-line ch-top"></div>
+        <div class="ch-line ch-bottom"></div>
+        <div class="ch-line ch-left"></div>
+        <div class="ch-line ch-right"></div>
+        <div class="ch-dot"></div>
+    </div>
+
+    <div id="hit-flash"></div>
+
+    <div id="hud">
+        <div class="hud-block"><span class="hud-lbl">PUNTUACIÓN</span><span class="hud-val" id="score-val">0</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <span class="hud-lbl">TIEMPO</span><span class="hud-val" id="timer-val">60</span>
+            <span class="mode-tag" id="mode-tag">CLICKING</span>
+        </div>
+        <div class="hud-block"><span class="hud-lbl">DISPAROS / ACIERTOS</span><span class="hud-val" id="shots-val">0 / 0</span></div>
+        <div class="hud-block" id="fps-block" style="position:fixed;top:12px;right:28px;text-align:right;"><span class="hud-lbl">FPS</span><span class="hud-val" id="fps-val" style="color:var(--green);font-size:1rem;">—</span></div>
+    </div>
+
+    <div id="lives-hud"><span class="life" id="lf1">♥</span><span class="life" id="lf2">♥</span><span class="life" id="lf3">♥</span></div>
+
+    <div id="combo-disp">✦ COMBO x<span id="combo-num">0</span></div>
+
+    <div id="bottom-bar">
+        <div style="font-size:.55rem;letter-spacing:.2em;color:var(--dim)">PRECISIÓN</div>
+        <div class="acc-wrap"><div class="acc-lbl">ACCURACY · <span id="acc-pct">0</span>%</div><div class="acc-bg"><div class="acc-fill" id="acc-fill"></div></div></div>
+        <button class="quit-btn" id="quit-btn">[ SALIR ]</button>
+    </div>
+
+    <div id="mobile-controls">
+        <div id="joy-zone"><div id="joy-base"></div><div id="joy-knob"></div></div>
+        <div id="look-zone"></div>
+        <div id="btn-fire">🔴</div>
+        <div id="btn-jump">⬆</div>
+        <button id="btn-pause-mob">⏸ PAUSA</button>
+    </div>
+
+    <div id="lock-overlay" style="display:none">
+        <h2>🎯 INA TRAINER</h2>
+        <p id="lock-hint">Mueve el mouse para apuntar<br>Clic izquierdo para disparar<br>Presiona <strong style="color:var(--accent)">ESC</strong> para pausar</p>
+        <button class="lock-btn" id="lock-btn">🖱 CLIC PARA JUGAR</button>
+        <button class="mob-toggle-btn" id="mob-toggle-btn" style="margin-top:4px">📱 MODO MÓVIL</button>
+        <div style="font-size:.56rem;letter-spacing:.2em;color:var(--dim);margin-top:6px">MODO: <span id="lock-mode-name" style="color:var(--accent)">—</span></div>
+    </div>
+
+    <!-- Pausa (práctica) – simplificado -->
+    <div id="pause-overlay" style="display:none;position:fixed;inset:0;z-index:90;background:rgba(5,8,15,.88);backdrop-filter:blur(6px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+        <div style="font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;letter-spacing:.4em;color:var(--accent);text-shadow:0 0 30px var(--accent);">⏸ PAUSA</div>
+        <div style="font-size:.65rem;letter-spacing:.3em;color:var(--dim);">MODO: <span id="pause-mode-name" style="color:var(--accent)">—</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:10px;">
+            <button id="pause-resume-btn" class="lock-btn" style="width:240px;font-size:.8rem;">▶ REANUDAR</button>
+            <button id="pause-quit-btn" style="width:240px;background:none;border:1px solid var(--border);color:var(--accent2);font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.2em;padding:13px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;">✕ SALIR AL MENÚ</button>
+        </div>
+        <div style="font-size:.54rem;letter-spacing:.25em;color:var(--dim);margin-top:6px;">Presiona <strong style="color:var(--accent)">ESC</strong> o haz clic en Reanudar para continuar</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="screen" id="login-screen">
+        <div class="login-logo"><h1>INA TRAINER</h1><p>ENTRENADOR FPS 3D · COMPETITIVO</p></div>
+        <div class="auth-box">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">⚡ INICIAR SESIÓN</button>
+                <button class="auth-tab" id="tab-register" onclick="switchTab('register')">✦ REGISTRARSE</button>
+            </div>
+            <div class="auth-panel" id="panel-login">
+                <div class="field-wrap"><label>USUARIO</label><div class="field-input-row"><span class="field-icon">◈</span><input class="auth-input" id="login-username" type="text" placeholder="Tu nombre de usuario" maxlength="20" autocomplete="username" autocorrect="off" autocapitalize="off"></div></div>
+                <div class="field-wrap"><label>CONTRASEÑA</label><div class="field-input-row"><span class="field-icon">🔒</span><input class="auth-input" id="login-password" type="password" placeholder="Tu contraseña" maxlength="40" autocomplete="current-password"></div></div>
+                <div class="auth-msg" id="login-msg"></div>
+                <button class="auth-submit" id="login-submit" onclick="doLogin()"><span class="btn-text">▶ ENTRAR</span><div class="btn-loader"><div class="spinner"></div></div></button>
+                <div class="auth-divider"><span>¿Aún no tienes cuenta?</span></div>
+                <button style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:9px;cursor:pointer;transition:all .2s;width:100%" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'" onclick="switchTab('register')">CREAR CUENTA GRATIS →</button>
+            </div>
+            <div class="auth-panel" id="panel-register" style="display:none">
+                <div class="field-wrap"><label>ELIGE TU AVATAR</label><div class="avatar-row" id="avatar-row"><span class="avatar-opt selected" data-av="🎯">🎯</span><span class="avatar-opt" data-av="🔫">🔫</span><span class="avatar-opt" data-av="⚡">⚡</span><span class="avatar-opt" data-av="🐺">🐺</span><span class="avatar-opt" data-av="🦊">🦊</span><span class="avatar-opt" data-av="💀">💀</span><span class="avatar-opt" data-av="🐉">🐉</span><span class="avatar-opt" data-av="🤖">🤖</span><span class="avatar-opt" data-av="👾">👾</span><span class="avatar-opt" data-av="🎮">🎮</span></div></div>
+                <div class="field-wrap"><label>NOMBRE DE USUARIO <span style="color:var(--dim);font-size:.5rem">(mín. 3 caracteres)</span></label><div class="field-input-row"><span class="field-icon">◈</span><input class="auth-input" id="reg-username" type="text" placeholder="Elige un nombre único" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="off" oninput="checkUsernameAvail()"></div><div style="font-size:.54rem;letter-spacing:.1em;min-height:14px;margin-top:2px" id="username-avail"></div></div>
+                <div class="field-wrap"><label>CONTRASEÑA <span style="color:var(--dim);font-size:.5rem">(mín. 6 caracteres)</span></label><div class="field-input-row"><span class="field-icon">🔒</span><input class="auth-input" id="reg-password" type="password" placeholder="Elige una contraseña" maxlength="40" autocomplete="new-password" oninput="updatePwStrength()"></div><div class="pw-strength"><div class="pw-strength-fill" id="pw-strength-fill"></div></div></div>
+                <div class="field-wrap"><label>CONFIRMAR CONTRASEÑA</label><div class="field-input-row"><span class="field-icon">🔒</span><input class="auth-input" id="reg-confirm" type="password" placeholder="Repite la contraseña" maxlength="40" autocomplete="new-password"></div></div>
+                <div class="auth-msg" id="register-msg"></div>
+                <button class="auth-submit" id="register-submit" onclick="doRegister()"><span class="btn-text">✦ CREAR CUENTA</span><div class="btn-loader"><div class="spinner"></div></div></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="screen hidden" id="lb-screen">
+        <div class="lb-header">🏆 TABLA DE RÉCORDS</div><div class="lb-sub">MEJORES JUGADORES GLOBALES</div>
+        <div class="lb-wrap">
+            <div class="lb-tabs" id="lb-tabs"><button class="lb-tab active" data-mode="all">TODOS</button><button class="lb-tab" data-mode="clicking">CLICKING</button><button class="lb-tab" data-mode="flicking">FLICKING</button><button class="lb-tab" data-mode="micro">MICRO</button><button class="lb-tab" data-mode="gridshot">GRIDSHOT</button><button class="lb-tab" data-mode="strafe">STRAFE</button><button class="lb-tab" data-mode="wide">WIDE</button></div>
+            <table class="lb-table"><thead>汽<th>#</th><th>JUGADOR</th><th>PUNTUACIÓN</th><th>PRECISIÓN</th><th>MODO</th><th>DIFICULTAD</th> </thead><tbody id="lb-body"> <td colspan="6" class="lb-loading">⟳ CARGANDO... </tbody>    </table>
+            <div class="lb-footer"><button class="btn btn-s" id="lb-refresh-btn">↺ ACTUALIZAR</button><button class="btn btn-p" id="lb-back-btn">← VOLVER</button></div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="screen hidden" id="stats-screen">
+        <div class="stats-hdr">📊 MIS ESTADÍSTICAS</div>
+        <div class="stats-wrap">
+            <div class="profile-card"><div class="profile-avatar" id="profile-av">🎯</div><div class="profile-info"><h2 id="profile-name">—</h2><p>JUGADOR INA TRAINER</p></div></div>
+            <div class="stats-cards">
+                <div class="st-card"><div class="st-val" id="st-games">0</div><div class="st-lbl">PARTIDAS</div></div>
+                <div class="st-card"><div class="st-val" id="st-best">0</div><div class="st-lbl">MEJOR PUNTUACIÓN</div></div>
+                <div class="st-card"><div class="st-val" id="st-acc">0%</div><div class="st-lbl">PRECISIÓN MEDIA</div></div>
+                <div class="st-card"><div class="st-val" id="st-hits">0</div><div class="st-lbl">TOTAL ACIERTOS</div></div>
+                <div class="st-card"><div class="st-val" id="st-shots">0</div><div class="st-lbl">TOTAL DISPAROS</div></div>
+                <div class="st-card"><div class="st-val" id="st-combo">0</div><div class="st-lbl">MEJOR COMBO</div></div>
+            </div>
+            <div class="mode-records"><div class="mr-title">✦ RÉCORDS POR MODO</div><div id="mr-rows"></div></div>
+            <div class="stats-footer"><button class="btn btn-p" id="stats-back-btn">← VOLVER</button></div>
+        </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="screen hidden" id="menu-screen">
+        <div class="logo"><h1>INA TRAINER</h1><p>ENTRENADOR FPS 3D</p></div>
+        <div id="menu-online-badge" style="display:flex;align-items:center;gap:7px;margin-bottom:6px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);padding:5px 14px;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)">
+            <span style="width:7px;height:7px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;display:inline-block;animation:ping-pulse 2s infinite"></span>
+            <span style="font-size:.58rem;letter-spacing:.2em;color:#00ff88"><span id="menu-online-count">—</span> JUGANDO AHORA</span>
+        </div>
+        <div class="sec-lbl">— SELECCIONA MODO —</div>
+        <div class="modes-grid" id="modes-grid"></div>
+        <div class="bot-row">
+            <div class="sec-lbl" style="margin:0 6px 0 0">DIFICULTAD:</div>
+            <button class="diff-btn" data-d="easy">FÁCIL</button>
+            <button class="diff-btn act" data-d="medium">MEDIO</button>
+            <button class="diff-btn" data-d="hard">DIFÍCIL</button>
+            <button class="start-btn" id="start-btn">▶ JUGAR</button>
+            <button class="cfg-btn" id="open-cfg-btn">⚙ CFG</button>
+        </div>
+        <div class="menu-extra-row">
+            <div class="user-badge"><span id="menu-user-av">🎯</span><span id="menu-user-name">—</span></div>
+            <button class="extra-btn" id="open-lb-btn">🏆 RÉCORDS</button>
+            <button class="extra-btn" id="open-stats-btn">📊 ESTADÍSTICAS</button>
+            <button class="extra-btn" id="open-friends-btn">👥 AMIGOS</button>
+            <button class="extra-btn" id="logout-btn">⏏ CERRAR SESIÓN</button>
+            <button class="donate-btn" onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QV2L8XZV6QSP2', '_blank')">
+          ☕ Donar con PayPal
+            </button>
+        </div>
+        <div class="menu-extra-row" style="margin-top:8px">
+            <button id="open-1v1-btn" style="background:linear-gradient(135deg,#ff3d71,#e040fb);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(224,64,251,.3);">⚔ 1v1 ONLINE</button>
+            <button id="open-zombie-btn" style="background:linear-gradient(135deg,#1a6622,#44cc22);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(68,204,34,.3);">🧟 ZOMBIES</button>
+            <button id="open-bots-btn" style="background:linear-gradient(135deg,#1a4a7a,#2277cc);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:11px 28px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;box-shadow:0 0 20px rgba(34,119,204,.3);">🤖 VS BOTS</button>
+            <button class="mob-toggle-btn" id="mob-toggle-menu-btn">📱 MODO MÓVIL</button>
+        </div>
+    </div>
+
+    <!-- FRIENDS SCREEN -->
+    <div class="screen hidden" id="friends-screen" style="max-width:480px;margin:auto;padding:24px 16px">
+        <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:.2em;color:var(--accent);margin-bottom:18px;text-align:center">👥 AMIGOS</div>
+        <div style="display:flex;gap:8px;margin-bottom:18px">
+            <input id="friend-search-input" placeholder="Buscar usuario..." maxlength="20"
+                style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);font-family:'Orbitron',monospace;font-size:.65rem;padding:9px 12px;outline:none;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)">
+            <button id="friend-search-btn"
+                style="background:var(--accent);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:900;letter-spacing:.12em;padding:9px 16px;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)">BUSCAR</button>
+        </div>
+        <div id="friend-search-result" style="margin-bottom:14px;min-height:36px"></div>
+        <div id="friend-requests-wrap" style="display:none;margin-bottom:16px">
+            <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim);margin-bottom:6px">📬 SOLICITUDES PENDIENTES</div>
+            <div id="friend-requests-list"></div>
+        </div>
+        <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim);margin-bottom:8px">TUS AMIGOS <span id="friends-count" style="color:var(--accent)">0</span></div>
+        <div id="friends-list" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto"></div>
+        <div id="friends-empty" style="text-align:center;color:var(--dim);font-size:.6rem;padding:24px 0">No tienes amigos aún — ¡busca uno!</div>
+        <button id="friends-back-btn" style="margin-top:20px;width:100%;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:11px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">← VOLVER</button>
+    </div>
+
+    <!-- BOTS LOBBY -->
+    <div class="screen hidden" id="bots-screen" style="max-width:460px;margin:auto;padding:24px 16px">
+        <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;letter-spacing:.2em;color:#2277cc;margin-bottom:18px;text-align:center">🤖 PRÁCTICA VS BOTS</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:22px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:.6rem;letter-spacing:.15em;color:var(--dim)">NÚMERO DE BOTS</span>
+                <div style="display:flex;gap:6px">
+                    <button class="bot-count-btn" data-n="1" style="padding:5px 13px;background:rgba(34,119,204,.7);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;font-weight:900;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">1</button>
+                    <button class="bot-count-btn" data-n="2" style="padding:5px 13px;background:rgba(34,119,204,.35);border:1px solid rgba(34,119,204,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">2</button>
+                    <button class="bot-count-btn" data-n="3" style="padding:5px 13px;background:rgba(34,119,204,.35);border:1px solid rgba(34,119,204,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">3</button>
+                    <button class="bot-count-btn" data-n="5" style="padding:5px 13px;background:rgba(34,119,204,.35);border:1px solid rgba(34,119,204,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">5</button>
+                    <button class="bot-count-btn" data-n="6" style="padding:5px 13px;background:rgba(34,119,204,.35);border:1px solid rgba(34,119,204,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.65rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">6</button>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:.6rem;letter-spacing:.15em;color:var(--dim)">DIFICULTAD</span>
+                <div style="display:flex;gap:6px">
+                    <button class="bot-diff-btn" data-d="easy"   style="padding:5px 13px;background:rgba(34,204,34,.7);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:900;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">FÁCIL</button>
+                    <button class="bot-diff-btn" data-d="medium" style="padding:5px 13px;background:rgba(255,170,0,.35);border:1px solid rgba(255,170,0,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">MEDIO</button>
+                    <button class="bot-diff-btn" data-d="hard"   style="padding:5px 13px;background:rgba(255,61,61,.35);border:1px solid rgba(255,61,61,.5);color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)">DIFÍCIL</button>
+                </div>
+            </div>
+            <div style="background:rgba(34,119,204,.08);border:1px solid rgba(34,119,204,.2);padding:10px 14px;font-size:.55rem;line-height:1.9;color:var(--dim)" id="bots-desc">
+                <b style="color:#66aaff">FÁCIL</b> — Los bots patrullan lentamente y tienen mala puntería<br>
+                <b style="color:#fff">1 BOT</b> — Ideal para calentar, mapa PVP normal
+            </div>
+        </div>
+        <button id="bots-start-btn" style="width:100%;background:linear-gradient(135deg,#1a4a7a,#2277cc);border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.8rem;font-weight:900;letter-spacing:.2em;padding:14px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);box-shadow:0 0 20px rgba(34,119,204,.4)">🤖 INICIAR PRÁCTICA</button>
+        <button id="bots-back-btn" style="margin-top:10px;width:100%;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:11px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">← VOLVER</button>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="screen hidden" id="settings-screen">
+        <div class="cfg-hdr">⚙ CONFIGURACIÓN</div>
+        <div class="cfg-grid">
+            <!-- MIRA -->
+            <div class="cfg-group">
+                <div class="cg-title">✦ MIRA</div>
+                <div class="cfg-row"><span class="c-lbl">Color</span><div class="color-opts" id="ch-colors"><div class="color-opt active" data-c="#ffffff" style="background:#fff"></div><div class="color-opt" data-c="#00e5ff" style="background:#00e5ff"></div><div class="color-opt" data-c="#00ff88" style="background:#00ff88"></div><div class="color-opt" data-c="#ff3d71" style="background:#ff3d71"></div><div class="color-opt" data-c="#ffd700" style="background:#ffd700"></div><div class="color-opt" data-c="#e040fb" style="background:#e040fb"></div></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Tamaño</span></div><div class="sl-wrap"><input type="range" id="ch-size" min="6" max="24" value="12"><span class="sv" id="ch-size-v">12</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Grosor</span></div><div class="sl-wrap"><input type="range" id="ch-thick" min="1" max="5" value="2"><span class="sv" id="ch-thick-v">2</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Separación</span></div><div class="sl-wrap"><input type="range" id="ch-gap" min="2" max="16" value="8"><span class="sv" id="ch-gap-v">8</span></div></div>
+                <div class="cfg-row"><span class="c-lbl">Punto central</span><label class="toggle"><input type="checkbox" id="ch-dot" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
+            </div>
+
+            <!-- CÁMARA / JUEGO (7 sliders + botón sincronizar) -->
+            <div class="cfg-group">
+                <div class="cg-title">🎮 CÁMARA / JUEGO</div>
+                <div class="cfg-row"><div><span class="c-lbl">Sin apuntar</span></div><div class="sl-wrap"><input type="range" id="sens-hipfire" min="1" max="300" value="30"><span class="sv" id="sens-hipfire-v">30</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Rojo (punto rojo)</span></div><div class="sl-wrap"><input type="range" id="sens-reddot" min="1" max="300" value="30"><span class="sv" id="sens-reddot-v">30</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Posición táctica</span></div><div class="sl-wrap"><input type="range" id="sens-tactical" min="1" max="300" value="30"><span class="sv" id="sens-tactical-v">30</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Mira 2x</span></div><div class="sl-wrap"><input type="range" id="sens-scope2x" min="1" max="300" value="25"><span class="sv" id="sens-scope2x-v">25</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Mira 3x</span></div><div class="sl-wrap"><input type="range" id="sens-scope3x" min="1" max="300" value="22"><span class="sv" id="sens-scope3x-v">22</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Mira 4x</span></div><div class="sl-wrap"><input type="range" id="sens-scope4x" min="1" max="300" value="20"><span class="sv" id="sens-scope4x-v">20</span></div></div>
+                <div class="cfg-row"><div><span class="c-lbl">Mira 6x</span></div><div class="sl-wrap"><input type="range" id="sens-scope6x" min="1" max="300" value="18"><span class="sv" id="sens-scope6x-v">18</span></div></div>
+                <div class="cfg-row">
+                    <button id="sync-sens-btn" class="cfg-btn" style="width:100%;">🔄 Igualar todas a Sin apuntar</button>
+                </div>
+            </div>
+
+            <!-- VISUAL (con toggle de límite FPS) -->
+            <div class="cfg-group">
+                <div class="cg-title">◈ VISUAL</div>
+                <div class="cfg-row"><span class="c-lbl">Efectos de impacto</span><label class="toggle"><input type="checkbox" id="fx-tog" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
+                <div class="cfg-row"><span class="c-lbl">Puntos flotantes</span><label class="toggle"><input type="checkbox" id="pts-tog" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
+                <div class="cfg-row"><span class="c-lbl">Mostrar combo</span><label class="toggle"><input type="checkbox" id="combo-tog" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
+                <div class="cfg-row"><span class="c-lbl">Limitar FPS a 60</span><label class="toggle"><input type="checkbox" id="limit-fps-tog" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
+                <div class="cfg-row"><span class="c-lbl">Color entorno</span><div class="color-opts" id="room-colors"><div class="color-opt active" data-c="#1a0a2e" style="background:#1a0a2e"></div><div class="color-opt" data-c="#0a1a2e" style="background:#0a1a2e"></div><div class="color-opt" data-c="#0a2e0a" style="background:#0a2e0a"></div><div class="color-opt" data-c="#1a1a1a" style="background:#1a1a1a"></div></div></div>
+            </div>
+
+            <!-- AUDIO -->
+            <div class="cfg-group">
+                <div class="cg-title">♪ AUDIO</div>
+                <div class="cfg-row"><span class="c-lbl">Sonido disparo</span><label class="toggle"><input type="checkbox" id="snd-shot" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
+                <div class="cfg-row"><span class="c-lbl">Sonido acierto</span><label class="toggle"><input type="checkbox" id="snd-hit" checked><div class="ttrack"></div><div class="tthumb"></div></label></div>
+                <div class="cfg-row"><span class="c-lbl">Sonido fallo</span><label class="toggle"><input type="checkbox" id="snd-miss"><div class="ttrack"></div><div class="tthumb"></div></label></div>
+                <div class="cfg-row"><span class="c-lbl">Volumen</span><div class="sl-wrap"><input type="range" id="vol-sl" min="0" max="100" value="70"><span class="sv" id="vol-v">70%</span></div></div>
+            </div>
+        </div>
+        <div class="cfg-footer"><button class="btn btn-s" id="cfg-reset">RESTABLECER</button><button class="btn btn-p" id="cfg-save">GUARDAR Y VOLVER</button></div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="screen hidden" id="results-screen">
+        <h2>RESULTADOS</h2>
+        <div class="grade" id="grade-el">—</div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="s-val" id="r-score">0</div><div class="s-lbl">PUNTUACIÓN</div></div>
+            <div class="stat-card"><div class="s-val" id="r-acc">0%</div><div class="s-lbl">PRECISIÓN</div></div>
+            <div class="stat-card"><div class="s-val" id="r-hits">0</div><div class="s-lbl">ACIERTOS</div></div>
+            <div class="stat-card"><div class="s-val" id="r-misses">0</div><div class="s-lbl">FALLOS</div></div>
+            <div class="stat-card"><div class="s-val" id="r-combo">0</div><div class="s-lbl">MEJOR COMBO</div></div>
+            <div class="stat-card"><div class="s-val" id="r-mode">—</div><div class="s-lbl">MODO</div></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-p" id="play-again-btn">JUGAR DE NUEVO</button><button class="btn btn-s" id="menu-btn">MENÚ</button></div>
+    </div>
+
+    <!-- ONLINE SCREENS -->
+    <div class="screen hidden" id="duel-lobby-screen" style="gap:0;background:radial-gradient(ellipse at center,rgba(255,61,113,.07) 0%,transparent 70%)">
+        <div class="login-logo">
+            <h1 style="color:#ff3d71;animation:glow 3s ease-in-out infinite">⚔ ONLINE</h1>
+            <p style="letter-spacing:.4em;color:var(--dim)">SALAS MULTIJUGADOR · INA MAP</p>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+                <span style="width:7px;height:7px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;display:inline-block;animation:ping-pulse 2s infinite"></span>
+                <span style="font-size:.58rem;letter-spacing:.2em;color:#00ff88"><span id="lobby-online-count">—</span> JUGANDO AHORA</span>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span id="lobby-conn-dot" style="width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;transition:background .3s"></span>
+            <span id="lobby-conn-label" style="font-size:.55rem;letter-spacing:.2em;color:var(--dim)">CONECTANDO...</span>
+        </div>
+        <div style="max-width:680px;width:100%;padding:0 20px">
+            <div style="display:flex;gap:8px;margin-bottom:14px;justify-content:center;flex-wrap:wrap">
+                <button class="login-btn" id="duel-open-create" style="background:#ff3d71;border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:900;letter-spacing:.2em;padding:10px 24px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">+ CREAR SALA</button>
+                <button class="extra-btn" id="duel-refresh-rooms">&#8635; ACTUALIZAR</button>
+                <button class="extra-btn" id="duel-lobby-back">&#8592; VOLVER</button>
+            </div>
+            <div id="duel-room-list" style="display:flex;flex-direction:column;gap:7px;max-height:50vh;overflow-y:auto;padding-right:4px"></div>
+            <div class="auth-msg error" id="duel-lobby-err" style="margin-top:10px;text-align:center"></div>
+        </div>
+    </div>
+
+    <div class="screen hidden" id="duel-create-screen" style="gap:0">
+        <div class="auth-box" style="border-color:rgba(255,61,113,.3);width:410px">
+            <div style="padding:20px 28px 0;font-family:'Orbitron',monospace;font-size:.88rem;letter-spacing:.25em;color:#ff3d71;text-align:center">&#10022; CREAR SALA</div>
+            <div class="auth-panel" style="gap:12px">
+                <div class="field-wrap"><label>NOMBRE DE LA SALA</label><input class="auth-input no-icon" id="duel-room-name" placeholder="Ej: La sala de ina..." maxlength="30" autocomplete="off"></div>
+                <div class="field-wrap"><label>MODO DE JUEGO</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="duel-mode-pills"><button class="diff-btn act" data-mode="1v1">1v1</button><button class="diff-btn" data-mode="2v2">2v2</button><button class="diff-btn" data-mode="3v3">3v3</button><button class="diff-btn" data-mode="4v4">4v4</button><button class="diff-btn" data-mode="ffa">FFA</button></div></div>
+                <div class="field-wrap"><label style="display:flex;align-items:center;gap:10px;cursor:pointer"><label class="toggle" style="flex-shrink:0"><input type="checkbox" id="duel-is-private"><div class="ttrack"></div><div class="tthumb"></div></label>SALA PRIVADA (con contraseña)</label></div>
+                <div class="field-wrap" id="duel-password-wrap" style="display:none"><label>CONTRASEÑA</label><input class="auth-input no-icon" id="duel-room-password" type="password" placeholder="Contraseña..." maxlength="20"></div>
+                <div class="auth-msg error" id="duel-create-err"></div>
+                <button class="auth-submit" id="duel-do-create" style="background:#ff3d71"><span class="btn-text">&#9889; CREAR Y ENTRAR</span><div class="btn-loader"><div class="spinner"></div></div></button>
+                <button style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;padding:9px;cursor:pointer;transition:all .2s;width:100%" id="duel-create-back-btn">&#8592; VOLVER</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen hidden" id="duel-waiting-screen" style="gap:10px">
+        <div style="font-family:'Orbitron',monospace;font-size:1.4rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">&#9203; SALA DE ESPERA</div>
+        <div id="duel-room-info" style="font-size:.6rem;letter-spacing:.2em;color:var(--dim)"></div>
+        <div id="duel-players-in-room" style="display:flex;flex-direction:column;gap:5px;min-width:320px;max-width:500px;width:90%"></div>
+        <div style="font-size:.55rem;letter-spacing:.2em;color:var(--dim);margin-top:2px">COMPARTE EL LINK:</div>
+        <div id="duel-share-url" style="font-size:.6rem;color:var(--accent3);background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);padding:10px 18px;max-width:520px;word-break:break-all;text-align:center">cargando...</div>
+        <div style="width:100%;max-width:500px">
+            <div style="font-size:.5rem;letter-spacing:.25em;color:var(--dim);margin-bottom:5px">💬 CHAT DE SALA</div>
+            <div id="duel-chat-msgs" style="background:rgba(5,8,15,.85);border:1px solid var(--border);height:100px;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:3px;margin-bottom:6px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px))"></div>
+            <div style="display:flex;gap:6px">
+                <input id="duel-chat-input" class="auth-input no-icon" style="flex:1;padding:8px 11px;font-size:.65rem" placeholder="Escribe algo..." maxlength="80" autocomplete="off">
+                <button onclick="onSendChat()" style="background:rgba(255,61,113,.15);border:1px solid rgba(255,61,113,.4);color:#ff3d71;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;padding:8px 13px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);transition:all .15s;letter-spacing:.1em" onmouseover="this.style.background='rgba(255,61,113,.3)'" onmouseout="this.style.background='rgba(255,61,113,.15)'">ENVIAR</button>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="auth-submit" id="duel-force-start" style="background:#ff3d71;width:auto;padding:10px 20px;display:none;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)">&#9654; INICIAR PARTIDA</button>
+            <button class="btn btn-s" id="duel-waiting-back">&#10005; SALIR</button>
+        </div>
+    </div>
+
+    <div class="screen hidden" id="duel-gameover-screen" style="gap:18px">
+        <div id="duel-go-title" style="font-family:'Orbitron',monospace;font-size:3.2rem;font-weight:900"></div>
+        <div id="duel-go-vs" style="font-size:.72rem;letter-spacing:.2em;color:var(--dim)"></div>
+        <div id="duel-go-score" style="font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:700;color:var(--accent)"></div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="auth-submit" id="duel-rematch-btn" style="width:200px;background:#ff3d71">↺ REVANCHA</button>
+            <button style="width:200px;background:transparent;border:1px solid var(--border);color:var(--text);font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.2em;padding:13px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)" id="duel-menu-btn">☰ MENÚ</button>
+        </div>
+    </div>
+
+    <!-- 1v1 CANVAS + HUD -->
+    <canvas id="duel-canvas" style="position:fixed;inset:0;display:none;cursor:none;z-index:5"></canvas>
+    <div id="duel-crosshair" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:50;display:none">
+        <div style="width:20px;height:2px;background:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+        <div style="width:2px;height:20px;background:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+        <div style="width:3px;height:3px;background:#fff;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    </div>
+    <div id="duel-hit-flash" style="position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(255,61,113,.35) 0%,transparent 70%);pointer-events:none;z-index:52;opacity:0;transition:opacity .08s"></div>
+    <div id="duel-death-vignette" style="position:fixed;inset:0;background:rgba(255,0,0,.25);pointer-events:none;z-index:53;display:none"></div>
+    <div id="duel-respawn-msg" style="position:fixed;top:56%;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:1.1rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 14px #ff3d71;z-index:60;display:none">💀 REAPARECIENDO...</div>
+    <div id="duel-kill-notif" style="position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:60;opacity:0;transition:opacity .15s;text-align:center">
+        <div style="font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:900;color:var(--green);text-shadow:0 0 20px var(--green)">¡ELIMINADO!</div>
+        <div style="font-size:.62rem;letter-spacing:.3em;color:var(--dim)">+1 KILL</div>
+    </div>
+    <div id="duel-hud" style="position:fixed;inset:0;pointer-events:none;z-index:40;display:none">
+        <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;background:rgba(5,8,15,.88);border:1px solid rgba(255,61,113,.2);padding:10px 22px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))">
+            <div style="text-align:center"><div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-my-name-hud">YO</div><div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#ff4444;text-shadow:0 0 12px #ff4444;line-height:1" id="duel-my-kills">0</div></div>
+            <div style="text-align:center;color:var(--dim);font-size:.7rem">⚔<br><span style="font-size:.4rem;letter-spacing:.2em">FIRST TO <span id="duel-firstto">6</span></span></div>
+            <div style="text-align:center"><div style="font-size:.48rem;letter-spacing:.2em;color:var(--dim)" id="duel-opp-name-hud">RIVAL</div><div style="font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#4488ff;text-shadow:0 0 12px #4488ff;line-height:1" id="duel-opp-kills">0</div></div>
+        </div>
+        <div style="position:absolute;bottom:14px;left:16px;font-size:.55rem;letter-spacing:.15em;color:var(--dim)">EQUIPO: <span id="duel-team-label" style="font-weight:700">—</span></div>
+        <div style="position:absolute;top:14px;right:16px;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div style="font-family:'Orbitron',monospace;font-size:.75rem;color:var(--green)" id="duel-fps-hud">— FPS</div>
+            <div style="font-family:'Orbitron',monospace;font-size:.75rem" id="duel-ping-hud">— MS</div>
+            <div id="duel-conn-quality" style="font-size:.48rem;letter-spacing:.15em;padding:2px 7px;border-radius:3px;background:rgba(58,74,106,.3);color:var(--dim)">● —</div>
+        </div>
+        <div id="duel-kill-feed" style="position:absolute;top:82px;right:14px;display:flex;flex-direction:column;gap:4px"></div>
+        <!-- BARRA DE SALUD PROPIA -->
+        <div style="position:absolute;bottom:54px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:.5rem;letter-spacing:.2em;color:#ff4444">❤ SALUD</span>
+                <span id="duel-hp-num" style="font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;color:#ff4444">100</span>
+            </div>
+            <div style="width:200px;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;border:1px solid rgba(255,68,68,.3)">
+                <div id="duel-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff4444,#ff6644);border-radius:4px;transition:width .15s,background .3s"></div>
+            </div>
+        </div>
+        <!-- BARRA DE SALUD RIVAL (solo 1v1) -->
+        <div id="duel-opp-hp-hud" style="position:absolute;top:80px;left:50%;transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:3px">
+            <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:.42rem;letter-spacing:.2em;color:#4488ff" id="duel-opp-hp-label">RIVAL</span>
+                <span id="duel-opp-hp-num" style="font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;color:#4488ff">100</span>
+            </div>
+            <div style="width:160px;height:6px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;border:1px solid rgba(68,136,255,.3)">
+                <div id="duel-opp-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#4488ff,#88ccff);border-radius:4px;transition:width .2s,background .3s"></div>
+            </div>
+        </div>
+        <div id="duel-opp-hp-wrap" style="position:absolute;top:54px;right:16px;display:none;flex-direction:column;align-items:flex-end;gap:3px">
+            <div style="display:flex;align-items:center;gap:6px">
+                <span id="duel-opp-hp-num" style="font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;color:#ff4444">100</span>
+                <span style="font-size:.45rem;letter-spacing:.2em;color:#ff6644">❤ RIVAL</span>
+            </div>
+            <div style="width:160px;height:7px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;border:1px solid rgba(255,68,68,.25)">
+                <div id="duel-opp-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff2200,#ff6644);border-radius:3px;transition:width .2s,background .3s"></div>
+            </div>
+        </div>
+        <!-- ARMA ACTUAL + MUNICIÓN -->
+        <div id="duel-weapon-hud" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px">
+            <div style="display:flex;gap:6px" id="duel-weapon-slots"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                <span id="duel-weapon-name" style="font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;letter-spacing:.2em;color:#fff">PISTOLA</span>
+                <span id="duel-ammo-hud" style="font-family:'Orbitron',monospace;font-size:.85rem;font-weight:900;color:var(--accent3)">12 / 12</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;border-left:1px solid rgba(255,255,255,.15);padding-left:12px">
+                <span style="font-size:.45rem;letter-spacing:.15em;color:var(--dim)">GRANADAS</span>
+                <span id="duel-gren-hud" style="font-size:.8rem">💣💣</span>
+            </div>
+        </div>
+        <div style="position:absolute;bottom:14px;right:16px;font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.8">1/2/3 ARMA · R RECARGAR · G GRANADA · ESPACIO SALTAR</div>
+    </div>
+
+    <div id="duel-mobile-controls">
+        <div id="duel-joy-zone" style="position:absolute;left:0;bottom:0;width:50%;height:55%;pointer-events:all;"></div>
+        <div id="duel-joy-base" style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,61,113,.4);transform:translate(-50%,-50%);display:none;"></div>
+        <div id="duel-joy-knob" style="position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(255,61,113,.7);box-shadow:0 0 18px rgba(255,61,113,.5);border:2px solid rgba(255,61,113,.9);transform:translate(-50%,-50%);display:none;"></div>
+        <div id="duel-look-zone" style="position:absolute;right:0;bottom:0;width:50%;height:100%;pointer-events:all;"></div>
+        <div id="duel-btn-fire" style="position:absolute;right:24px;bottom:90px;width:80px;height:80px;border-radius:50%;background:rgba(255,61,113,.25);border:3px solid rgba(255,61,113,.7);color:#ff3d71;font-size:1.8rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">🔴</div>
+        <div id="duel-btn-jump" style="position:absolute;right:120px;bottom:90px;width:60px;height:60px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid rgba(0,229,255,.5);color:#00e5ff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;">⬆</div>
+        <button id="duel-btn-pause-mob" style="position:absolute;top:80px;left:50%;transform:translateX(-50%);background:rgba(5,8,15,.75);border:1px solid rgba(255,61,113,.3);color:#ff3d71;font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.2em;padding:8px 16px;pointer-events:all;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);-webkit-tap-highlight-color:transparent;">⏸ PAUSA</button>
+        <button class="mob-toggle-btn" id="mob-toggle-duel-btn" style="position:absolute;top:14px;right:14px;padding:6px 12px;font-size:.52rem;pointer-events:all;">📱</button>
+    </div>
+
+    <!-- Pantalla de bloqueo online con botón de salida -->
+    <div id="duel-lock-screen" style="position:fixed;inset:0;z-index:80;background:rgba(5,8,15,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;letter-spacing:.3em;color:#ff3d71;text-shadow:0 0 20px #ff3d71">⚔ 1v1 · INA MAP</div>
+        <div style="font-size:.68rem;letter-spacing:.13em;color:var(--dim);text-align:center;line-height:2">VS <strong id="duel-opp-name-lock" style="color:#ff3d71">Rival</strong><br><strong style="color:var(--accent)">WASD</strong> mover · <strong style="color:var(--accent)">MOUSE</strong> apuntar · <strong style="color:var(--accent)">CLIC</strong> disparar · <strong style="color:var(--accent)">ESPACIO</strong> saltar · <strong style="color:var(--accent)">ESC</strong> pausar</div>
+        <button class="lock-btn" id="duel-lock-btn" style="background:#ff3d71">🖱 CLIC PARA JUGAR</button>
+        <button class="mob-toggle-btn" id="mob-toggle-duel-btn-lock" style="margin-top:2px">📱 MODO MÓVIL</button>
+        <button id="duel-exit-menu-btn" style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.2em;padding:11px 22px;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:all .2s;margin-top:10px;">← SALIR AL MENÚ</button>
+        <div style="font-size:.52rem;letter-spacing:.2em;color:var(--dim)" id="duel-lock-team">—</div>
+    </div>
+
+    <!-- JavaScript modular -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/sounds.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/multiplayer.js"></script>
+    <script src="js/bots.js"></script>
+    <script src="js/zombies.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/mobile.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
